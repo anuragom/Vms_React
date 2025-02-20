@@ -155,7 +155,7 @@ const Login = () => {
         
         setTimeout(() => {
           navigate('/dashboard');
-        }, 2000); // Delay navigation slightly to show toast
+        }, 700); // Delay navigation slightly to show toast
       } else {
         toast.error(response.data.message || response.data.msg || 'Invalid credentials', { position: "top-right" });
       }
