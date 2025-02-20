@@ -1,31 +1,88 @@
-import React from 'react';
-import { FaBuilding, FaPhone, FaEnvelope } from 'react-icons/fa';
+
+
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import DataTable from "react-data-table-component";
+import { useNavigate } from "react-router-dom";
+
+const columns = (visiblePasswordId, handleTogglePassword) => [
+  {
+    name: "User ID",
+    selector: (row) => row.userId,
+    sortable: true,
+  },
+  {
+    name: "User Name",
+    selector: (row) => row.userName,
+    sortable: true,
+  },
+  {
+    name: "Password",
+    cell: (row) => (
+      <span
+        className="cursor-pointer"
+        onClick={() => handleTogglePassword(row.userId)}
+      >
+        {visiblePasswordId === row.userId ? row.userPwd : "••••••••"}
+      </span>
+    ),
+    sortable: false,
+  },
+];
 
 const VendorDetails = () => {
-  const vendors = [
-    { id: 1, name: 'Global Transport Co.', contact: '+1 234 567 890', email: 'contact@globaltransport.com' },
-    { id: 2, name: 'Rapid Logistics', contact: '+1 987 654 321', email: 'info@rapidlogistics.com' },
-    { id: 3, name: 'Eco Freight Services', contact: '+1 456 789 123', email: 'support@ecofreight.com' },
-  ];
+  const navigate = useNavigate();
+  const [tableData, setTableData] = useState([]);
+  const [visiblePasswordId, setVisiblePasswordId] = useState(null);
+
+  const handleTogglePassword = (userId) => {
+    // Toggle the visibility of the clicked password
+    setVisiblePasswordId((prevId) => (prevId === userId ? null : userId));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      let data = JSON.stringify({});
+      let config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: "https://vmsnode.omlogistics.co.in/api/SearchFlag",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: data,
+      };
+
+      try {
+        const response = await axios.request(config);
+        console.log("API Response:", response.data);
+
+        if (response.data && !response.data.error) {
+          const mappedData = response.data.data.map((item) => ({
+            userId: item.USER_ID,
+            userName: item.USER_NAME,
+            userPwd: item.USER_PWD,
+          }));
+          setTableData(mappedData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="mt-12 bg-gradient-to-r from-[#00578e] via-white  p-10 rounded-3xl shadow-2xl">
-      <h2 className="text-4xl font-extrabold text-center text-black mb-8 drop-shadow-lg">Vendor Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {vendors.map((vendor) => (
-          <div key={vendor.id} className="p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition duration-300">
-            <h3 className="text-2xl font-bold text-[#00578e] flex items-center gap-3 mb-3">
-              <FaBuilding className="text-3xl text-[#da1b11]" /> {vendor.name}
-            </h3>
-            <p className="text-gray-700 mt-2 flex items-center gap-3 text-lg">
-              <FaPhone className="text-green-600" /> {vendor.contact}
-            </p>
-            <p className="text-gray-700 flex items-center gap-3 text-lg">
-              <FaEnvelope className="text-blue-500" /> {vendor.email}
-            </p>
-          </div>
-        ))}
-      </div>
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl font-bold text-black mb-4">Vendor Details</h2>
+      <DataTable
+        columns={columns(visiblePasswordId, handleTogglePassword)}
+        data={tableData}
+        pagination
+        striped
+      />
     </div>
   );
 };
