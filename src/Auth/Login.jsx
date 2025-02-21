@@ -185,6 +185,7 @@ const Login = () => {
               <option value="ACCOUNTS">Accounts</option>
               <option value="AUDIT">Audit</option>
               <option value="VENDOR">Vendor</option>
+              <option value="CORDINATOR">Cordinator</option>
             </select>
 
             <label className="text-base font-semibold text-[#181818] mt-3 block">User ID</label>
