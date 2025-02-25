@@ -1,4 +1,5 @@
 
+
 // import React, { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import axios from 'axios';
@@ -14,7 +15,7 @@
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     let data = JSON.stringify({
 //       "USER_USER_TYPE": userType.toUpperCase(),
 //       "USER_USER_ID": userId.toUpperCase(),
@@ -34,16 +35,20 @@
 //     try {
 //       const response = await axios.request(config);
 //       if (!response.data.error) {
+//         const userRole = response.data.data; // Extract role from response
+        
+//         // Save token and role in sessionStorage
+//         sessionStorage.setItem('token', response.data.Authorization);
+//         sessionStorage.setItem('userRole', userRole);
+
 //         toast.success('Login Successful!', { position: "top-right" });
-        
-//         // Save token in sessionStorage
-//         sessionStorage.setItem('token', response.data.Authorization); 
-        
+
+//         // Redirect to dashboard
 //         setTimeout(() => {
 //           navigate('/dashboard');
-//         }, 700); // Delay navigation slightly to show toast
+//         }, 700);
 //       } else {
-//         toast.error(response.data.message || response.data.msg || 'Invalid credentials', { position: "top-right" });
+//         toast.error(response.data.message || 'Invalid credentials', { position: "top-right" });
 //       }
 //     } catch (error) {
 //       toast.error('Login Failed! Please try again.', { position: "top-right" });
@@ -125,7 +130,7 @@ const Login = () => {
 
     let data = JSON.stringify({
       "USER_USER_TYPE": userType.toUpperCase(),
-      "USER_USER_ID": userId.toUpperCase(),
+      "USER_USER_ID": userId,
       "USER_PASS_WORD": password
     });
 
@@ -142,15 +147,13 @@ const Login = () => {
     try {
       const response = await axios.request(config);
       if (!response.data.error) {
-        const userRole = response.data.data; // Extract role from response
+        const userRole = response.data.data;
         
-        // Save token and role in sessionStorage
         sessionStorage.setItem('token', response.data.Authorization);
         sessionStorage.setItem('userRole', userRole);
 
         toast.success('Login Successful!', { position: "top-right" });
 
-        // Redirect to dashboard
         setTimeout(() => {
           navigate('/dashboard');
         }, 700);
@@ -161,6 +164,21 @@ const Login = () => {
       toast.error('Login Failed! Please try again.', { position: "top-right" });
     }
   };
+
+  const handleUserIdChange = (e) => {
+    // Only allow numeric characters, no spaces, max length 10
+    const value = e.target.value.replace(/[^0-9]/g, '').substring(0, 10);
+    setUserId(value);
+  };
+
+  const handlePasswordChange = (e) => {
+    // Prevent spaces in password
+    const value = e.target.value.replace(/\s/g, '');
+    setPassword(value);
+  };
+
+  // Check if all fields are valid and filled
+  const isFormValid = userType && userId && password;
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-cover bg-center p-4" 
@@ -183,18 +201,24 @@ const Login = () => {
               <option value="ACCOUNTS">Accounts</option>
               <option value="AUDIT">Audit</option>
               <option value="VENDOR">Vendor</option>
-              <option value="CORDINATOR">Cordinator</option>
+              <option value="CORDINATOR">Coordinator</option>
             </select>
 
             <label className="text-base font-semibold text-[#181818] mt-3 block">User ID</label>
-            <input type="text" value={userId} onChange={(e) => setUserId(e.target.value.toUpperCase())} className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#c7c7c7] rounded" placeholder="Enter your user ID" />
+            <input 
+              type="text" 
+              value={userId} 
+              onChange={handleUserIdChange} 
+              className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#c7c7c7] rounded" 
+              placeholder="Enter your user ID" 
+            />
 
             <label className="text-base font-semibold text-[#181818] mt-3 block">Password</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
                 value={password} 
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#c7c7c7] rounded" 
                 placeholder="Enter your password" 
               />
@@ -208,7 +232,14 @@ const Login = () => {
             </div>
           </div>
 
-          <button type="submit" className="w-full py-2 bg-[#013f66] text-white text-base font-semibold uppercase rounded shadow-md hover:bg-blue-800 transition">
+          <button 
+            type="submit" 
+            className={`
+              w-full py-2 text-white text-base font-semibold uppercase rounded shadow-md transition
+              ${isFormValid ? 'bg-[#013f66] hover:bg-blue-800 cursor-pointer' : 'bg-gray-400 cursor-not-allowed'}
+            `}
+            disabled={!isFormValid}
+          >
             Login
           </button>
         </form>
