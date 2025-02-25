@@ -2,7 +2,7 @@ import React from 'react'
 
 const PendingBillGeneration = () => {
   return (
-    <div>PendingBillGeneration</div>
+    <div>PendingBillGenerations</div>
   )
 }
 
