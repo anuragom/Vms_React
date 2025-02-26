@@ -24,9 +24,9 @@ import BillGenerateUsingExlUpload from "./componets/pages/BillGenerateUsingExlUp
 import Reports from "./componets/pages/Reports";
 import BillNoc from "./componets/pages/BillNoc";
 import AssignedVendor from "./componets/pages/AssignedVendor";
-import PostingBill from "./componets/pages/postingBill";
+// import PostingBill from "./componets/pages/postingBill";
 import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
-import PostedBill from "./componets/pages/PostedBill";
+// import PostedBill from "./componets/pages/PostedBill";
 
 // Layout Component
 const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
@@ -74,8 +74,8 @@ function App() {
           <Route path="/reports" element={<ProtectedRoute element={<Reports />} />} />
           <Route path="/bill-noc" element={<ProtectedRoute element={<BillNoc />} />} />
           <Route path="/assigned-vendor" element={<ProtectedRoute element={< AssignedVendor/>} />} />
-          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill/>} />} />
-          <Route path="/posting-bill" element={<ProtectedRoute element={<PostingBill />} />} />
+          {/* <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill/>} />} />
+          <Route path="/posting-bill" element={<ProtectedRoute element={<PostingBill />} />} /> */}
           <Route path="/verify-expance-of-cn" element={<ProtectedRoute element={<VerifyExpansesofCN />} />} />
           
 
