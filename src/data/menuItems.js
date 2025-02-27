@@ -99,5 +99,9 @@ export const menuItems = [
   { id: 'assigned-vendor', label: 'Assigned Vendor', icon: Users, path: '/assigned-vendor', roles: ['CORDINATOR', 'BILL VERIFY'] },
   { id: 'posted-bill', label: 'Posted Bill', icon: FileSpreadsheet, path: '/posted-bill', roles: ['AUDIT'] },
   { id: 'posting-bill', label: 'Posting Bill', icon: FileSpreadsheet, path: '/posting-bill', roles: ['ACCOUNTS'] },
-  { id: 'verify-expaness-of-cn', label: 'Verify Expanses of CN', icon: FileSpreadsheet, path: '/verify-expance-of-cn', roles: ['CORDINATOR'] }
+  { id: 'verify-expaness-of-cn', label: 'Verify Expanses of CN', icon: FileSpreadsheet, path: '/verify-expance-of-cn', roles: ['CORDINATOR'] },
+  { id: 'reports', label: 'Reports', icon: FileSpreadsheet, path: '/reports', roles: ['VENDOR'] },
+  { id: 'upload-lr-details', label: 'Upload Lr Detail', icon: FileSpreadsheet, path: '/upload-lr-details', roles: ['BRANCH'] },
+  { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
+
 ];
