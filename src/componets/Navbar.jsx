@@ -47,75 +47,109 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { MoreVertical } from 'lucide-react';
 
+
+
 // const roleBasedMenuItems = {
 //   "ADMIN": [
 //     "dashboard", 
 //     "vendor-details", 
 //     "cn-without-challan", 
+//     "lr-details", 
 //     "cn-details", 
 //     "bill-status", 
-//     "lr-details", // Added
+//     "bill-generate-using-exel-upload", 
+//     "bill-noc", 
 //     "pending-bill-generation", 
 //     "bill-delete", 
 //     "pod-report", 
 //     "cn-reports", 
 //     "user-management", 
-//     "user-log", 
-//     "bill-generate-using-exel-upload", // Added
-//     "reports", // Added
-//     "bill-noc", // Added
-//     "assigned-vendor", // Added
-//     "posted-bill", // Added
-//     "posting-bill"  // Added
+//     "user-log",
+//     "verify-expaness-of-cn"
 //   ],
-//   "BRANCH": ["dashboard", "vendor-details"],
-//   "BILL VERIFY": ["dashboard", "cn-details", "pod-report", "cn-reports"],
-//   "ACCOUNTS": ["dashboard", "bill-status", "pod-report", "cn-reports", "bill-generate-using-exel-upload", "posted-bill", "posting-bill"],
-//   "AUDIT": ["dashboard", "lr-details", "pending-bill-generation", "bill-delete", "user-log", "reports"],
-//   "VENDOR": ["dashboard", "assigned-vendor"],
-//   "CORDINATOR": ["dashboard", "cn-reports"]
+//   "VENDOR": [
+//     "dashboard", 
+//     "lr-details", 
+//     "bill-status", 
+//     "bill-generate-using-exel-upload", 
+//     "bill-noc", 
+//     "pending-bill-generation"
+//   ],
+//   "BRANCH": [
+//     "dashboard", 
+//     "lr-details", 
+//     "bill-status"
+//   ],
+//   "CORDINATOR": [
+//     "dashboard", 
+//     "assigned-vendor", 
+//     "bill-status", 
+//     "cn-reports",
+//     "verify-expaness-of-cn"
+//   ],
+//   "BILL VERIFY": [
+//     "dashboard", 
+//     "assigned-vendor", 
+//     "bill-status", 
+//     "cn-reports"
+//   ],
+//   "ACCOUNTS": [
+//     "dashboard", 
+//     "posting-bill", 
+//     "bill-status", 
+//     "pending-bill-generation"
+//   ],
+//   "AUDIT": [
+//     "dashboard", 
+//     "posted-bill", 
+//     "bill-status",
+//     "pending-bill-generation"
+//   ]
 // };
+
 const roleBasedMenuItems = {
   "ADMIN": [
     "dashboard", 
     "vendor-details", 
-    "cn-without-challan", 
-    "lr-details", 
-    "cn-details", 
+    "cn-without-challan",  
+    "cn-details",
     "bill-status", 
-    "bill-generate-using-exel-upload", 
-    "bill-noc", 
     "pending-bill-generation", 
     "bill-delete", 
     "pod-report", 
     "cn-reports", 
     "user-management", 
     "user-log",
-    "verify-expaness-of-cn"
+  
   ],
   "VENDOR": [
     "dashboard", 
-    "lr-details", 
-    "bill-status", 
+    "lr-details",
     "bill-generate-using-exel-upload", 
+    "bill-status",  
     "bill-noc", 
-    "pending-bill-generation"
+    "pending-bill-generation",
+    "reports",
+    
   ],
   "BRANCH": [
     "dashboard", 
-    "lr-details", 
+    "lr-details",
+    "upload-lr-detail" ,
     "bill-status"
   ],
   "CORDINATOR": [
     "dashboard", 
     "assigned-vendor", 
+    "verify-expaness-of-cn",
     "bill-status", 
     "cn-reports",
-    "verify-expaness-of-cn"
+   
   ],
   "BILL VERIFY": [
     "dashboard", 
-    "assigned-vendor", 
+    "assigned-vendor",
+    "verify-bill-for-posting", 
     "bill-status", 
     "cn-reports"
   ],
@@ -123,7 +157,7 @@ const roleBasedMenuItems = {
     "dashboard", 
     "posting-bill", 
     "bill-status", 
-    "pending-bill-generation"
+   
   ],
   "AUDIT": [
     "dashboard", 
@@ -132,8 +166,6 @@ const roleBasedMenuItems = {
     "pending-bill-generation"
   ]
 };
-
-
 const Navbar = ({ items, isCollapsed }) => {
   const userRole = sessionStorage.getItem("userRole") || "VENDOR"; // Default role if none found
   const allowedMenuIds = roleBasedMenuItems[userRole] || [];
