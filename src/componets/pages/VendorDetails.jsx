@@ -165,11 +165,7 @@ const VendorDetails = () => {
 
   const debouncedFetchVendorSuggestions = debounce(fetchVendorSuggestions, 800);
 
-  // const handleVendorCodeChange = (e) => {
-  //   const value = e.target.value;
-  //   setNewVendor({ ...newVendor, USER_ID: value });
-  //   debouncedFetchVendorSuggestions(value);
-  // };
+
 
   // const handleSuggestionClick = (suggestion) => {
   //   setNewVendor({

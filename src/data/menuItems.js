@@ -104,4 +104,5 @@ export const menuItems = [
   { id: 'upload-lr-details', label: 'Upload Lr Detail', icon: FileSpreadsheet, path: '/upload-lr-details', roles: ['BRANCH'] },
   { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
 
+
 ];
