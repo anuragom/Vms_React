@@ -96,7 +96,7 @@ const VendorDetails = () => {
       ENTERED_BY: newVendor.ENTERED_BY,
     };
 
-    console.log("Payload:", payload); 
+
 
     let config = {
       method: "post",
