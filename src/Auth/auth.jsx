@@ -1,25 +1,26 @@
 
-// // src/Auth/auth.js
 
 // // Store user data and token in memory for faster access
 // let user = null;
 // let token = null;
+// let userRole = null;  // Store "data": "Admin"
 
-// // Set user and token after login
-// export const setUser = (userData, userToken) => {
+// // Set user, token, and role after login
+// export const setUser = (userData, userToken, role) => {
 //   user = userData;
 //   token = userToken;
+//   userRole = role;  // Store role
 
-//   // Persist user and token
+//   // Persist user, token, and role
 //   sessionStorage.setItem("user", JSON.stringify(userData));
 //   sessionStorage.setItem("token", userToken);
+//   sessionStorage.setItem("userRole", role);  // Save role
 // };
 
 // // Get user data for components
 // export const getUser = () => {
-//   // Fallback to sessionStorage if user is null
 //   if (!user) {
-//     const storedUser = sessionStorage.getItem('user');
+//     const storedUser = sessionStorage.getItem("user");
 //     if (storedUser) user = JSON.parse(storedUser);
 //   }
 //   return user;
@@ -27,38 +28,51 @@
 
 // // Get token for API calls
 // export const getToken = () => {
-//   // Fallback to sessionStorage if token is null
 //   if (!token) {
-//     token = sessionStorage.getItem('token');
+//     token = sessionStorage.getItem("token");
 //   }
 //   return token;
 // };
 
-// // Clear user and token on logout
+// // Get user role (Admin or other)
+// export const getUserRole = () => {
+//   if (!userRole) {
+//     userRole = sessionStorage.getItem("userRole");
+//   }
+//   return userRole;
+// };
+
+// // Clear user, token, and role on logout
 // export const clearUser = () => {
 //   user = null;
 //   token = null;
+//   userRole = null;
 
 //   // Clear sessionStorage
-//   sessionStorage.removeItem('user');
-//   sessionStorage.removeItem('token');
+//   sessionStorage.removeItem("user");
+//   sessionStorage.removeItem("token");
+//   sessionStorage.removeItem("userRole");
 // };
 
-// Store user data and token in memory for faster access
+
+// Store user data, token, role, and user ID in memory for faster access
 let user = null;
 let token = null;
-let userRole = null;  // Store "data": "Admin"
+let userRole = null;
+let userId = null;  // Store User_id
 
-// Set user, token, and role after login
-export const setUser = (userData, userToken, role) => {
+// Set user, token, role, and User_id after login
+export const setUser = (userData, userToken, role, id) => {
   user = userData;
   token = userToken;
-  userRole = role;  // Store role
+  userRole = role;
+  userId = id;
 
-  // Persist user, token, and role
+  // Persist data in sessionStorage
   sessionStorage.setItem("user", JSON.stringify(userData));
   sessionStorage.setItem("token", userToken);
-  sessionStorage.setItem("userRole", role);  // Save role
+  sessionStorage.setItem("userRole", role);
+  sessionStorage.setItem("User_id", id); // Store User ID
 };
 
 // Get user data for components
@@ -78,7 +92,7 @@ export const getToken = () => {
   return token;
 };
 
-// Get user role (Admin or other)
+// Get user role (Admin, Vendor, etc.)
 export const getUserRole = () => {
   if (!userRole) {
     userRole = sessionStorage.getItem("userRole");
@@ -86,14 +100,24 @@ export const getUserRole = () => {
   return userRole;
 };
 
-// Clear user, token, and role on logout
+// Get User ID
+export const getUserId = () => {
+  if (!userId) {
+    userId = sessionStorage.getItem("User_id");
+  }
+  return userId;
+};
+
+// Clear user, token, role, and User ID on logout
 export const clearUser = () => {
   user = null;
   token = null;
   userRole = null;
+  userId = null;
 
   // Clear sessionStorage
   sessionStorage.removeItem("user");
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("userRole");
+  sessionStorage.removeItem("User_id");
 };

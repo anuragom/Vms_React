@@ -1,10 +1,12 @@
 
+
+
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getToken } from "../../Auth/auth";
+import { getToken, getUserId } from "../../Auth/auth";
 
 const columns = (visiblePasswordId, handleTogglePassword) => [
   {
@@ -35,10 +37,13 @@ const VendorDetails = () => {
   const [tableData, setTableData] = useState([]);
   const [visiblePasswordId, setVisiblePasswordId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const enteredBy = getUserId(); 
   const [newVendor, setNewVendor] = useState({
     USER_ID: "",
     USER_NAME: "",
+    ENTERED_BY: enteredBy, 
   });
+
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const token = getToken();
@@ -84,6 +89,15 @@ const VendorDetails = () => {
       return;
     }
 
+   
+    const payload = {
+      USER_ID: newVendor.USER_ID,
+      USER_NAME: newVendor.USER_NAME,
+      ENTERED_BY: newVendor.ENTERED_BY,
+    };
+
+    console.log("Payload:", payload); 
+
     let config = {
       method: "post",
       maxBodyLength: Infinity,
@@ -92,7 +106,7 @@ const VendorDetails = () => {
         Authorization: ` ${token}`,
         "Content-Type": "application/json",
       },
-      data: JSON.stringify(newVendor),
+      data: JSON.stringify(payload), // Send the payload
     };
 
     try {
@@ -101,7 +115,7 @@ const VendorDetails = () => {
         toast.success("Vendor added successfully!", {
           autoClose: 800,
         });
-        setNewVendor({ USER_ID: "", USER_NAME: "" });
+        setNewVendor({ USER_ID: "", USER_NAME: "", ENTERED_BY: enteredBy }); // Reset the form
         setShowAddForm(false);
         fetchData();
       } else {
@@ -165,36 +179,30 @@ const VendorDetails = () => {
 
   const debouncedFetchVendorSuggestions = debounce(fetchVendorSuggestions, 800);
 
-
-
-  // const handleSuggestionClick = (suggestion) => {
-  //   setNewVendor({
-  //     USER_ID: suggestion.VEND_OLD_CODE,
-  //     USER_NAME: suggestion.VEND_VEND_NAME,
-  //   });
-  //   setShowSuggestions(false);
-  // };
   const handleVendorCodeChange = (e) => {
     const value = e.target.value;
-  
+
     // Check if the input starts with 5 or 6
     if (value.length > 0 && !/^[56]/.test(value)) {
       toast.error("Vendor Code must start with 5 or 6.");
       return; // Stop further processing if the input doesn't start with 5 or 6
     }
-  
+
     // Update the state if the input is valid
     setNewVendor({ ...newVendor, USER_ID: value });
     debouncedFetchVendorSuggestions(value);
   };
+
   const handleSuggestionClick = (suggestion) => {
     setNewVendor({
       USER_ID: suggestion.VEND_OLD_CODE,
       USER_NAME: suggestion.VEND_VEND_NAME,
+      ENTERED_BY: enteredBy, // Preserve ENTERED_BY
     });
     setShowSuggestions(false);
     setIsVendorCodeDisabled(true); // Disable the Vendor Code field
   };
+
   const handleClickOutside = (e) => {
     if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
       setShowSuggestions(false);
@@ -251,13 +259,13 @@ const VendorDetails = () => {
                     className="w-full p-2 border rounded"
                     value={newVendor.USER_ID}
                     onChange={handleVendorCodeChange}
-                    disabled={isVendorCodeDisabled} 
+                    disabled={isVendorCodeDisabled}
                     required
                   />
                   {showSuggestions && (
                     <div
                       ref={dropdownRef}
-                      className="absolute z-10 mt-2 w-96 shadow-lg max-h-60 overflow-y-auto  bg-white border border-gray-300 rounded-lg shadow-lg"
+                      className="absolute z-10 mt-2 w-96 shadow-lg max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
                     >
                       {suggestions.map((suggestion) => (
                         <div
@@ -285,26 +293,16 @@ const VendorDetails = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  {/* <button
-                    type="button"
-                    className="px-4 py-2 mr-2 bg-gray-300 rounded-lg"
-                    onClick={() => {
-                      setNewVendor({ USER_ID: "", USER_NAME: "" });
-                      setShowAddForm(false);
-                    }}
-                  >
-                    Cancel
-                  </button> */}
                   <button
                     type="button"
                     className="px-4 py-2 mr-2 bg-gray-300 rounded-lg"
                     onClick={() => {
-                    setNewVendor({ USER_ID: "", USER_NAME: "" });
-                    setShowAddForm(false);
-                    setIsVendorCodeDisabled(false); // Reset the disabled state
-                       }}
-                   >
-                        Cancel
+                      setNewVendor({ USER_ID: "", USER_NAME: "", ENTERED_BY: enteredBy });
+                      setShowAddForm(false);
+                      setIsVendorCodeDisabled(false); // Reset the disabled state
+                    }}
+                  >
+                    Cancel
                   </button>
                   <button
                     type="submit"
