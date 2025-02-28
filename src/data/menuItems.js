@@ -101,7 +101,7 @@ export const menuItems = [
   { id: 'posting-bill', label: 'Posting Bill', icon: FileSpreadsheet, path: '/posting-bill', roles: ['ACCOUNTS'] },
   { id: 'verify-expaness-of-cn', label: 'Verify Expanses of CN', icon: FileSpreadsheet, path: '/verify-expance-of-cn', roles: ['CORDINATOR'] },
   { id: 'reports', label: 'Reports', icon: FileSpreadsheet, path: '/reports', roles: ['VENDOR'] },
-  { id: 'upload-lr-details', label: 'Upload Lr Detail', icon: FileSpreadsheet, path: '/upload-lr-details', roles: ['BRANCH'] },
+  { id: 'upload-lr-detail', label: 'Upload Lr Detail', icon: FileSpreadsheet, path: '/upload-lr-details', roles: ['BRANCH'] },
   { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
 
 
