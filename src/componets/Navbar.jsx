@@ -3,10 +3,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { MoreVertical } from 'lucide-react';
-
-
-
-
 const roleBasedMenuItems = {
   "ADMIN": [
     "dashboard", 
