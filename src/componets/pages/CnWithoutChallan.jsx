@@ -131,39 +131,46 @@ const CnWithoutChallan = () => {
       selector: (row) => row.CN_MANUAL_CN_NO,
       sortable: true,
       wrap: true,
+      width:"160px"
     },
     {
       name: "CN Date",
       selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(),
       sortable: true,
+       width:"140px"
     },
     {
       name: "Source Branch Code",
       selector: (row) => row.CN_SOURCE_BRANCH_CODE,
       sortable: true,
       wrap: true,
+       width:"180px"
     },
     {
       name: "Destination Branch Code",
       selector: (row) => row.CN_DESTINATION_BRANCH_CODE,
       sortable: true,
       wrap: true,
+       width:"180px"
     },
     {
       name: "Item Description",
       selector: (row) => row.CN_ITEM_DESCRIPT,
       sortable: true,
       wrap: true,
+       width:"170px"
     },
     {
       name: "Total Packages",
       selector: (row) => row.TOTAL_CN_PKG,
       sortable: true,
+       width:"160px"
     },
     {
       name: "Total Weight",
       selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT,
       sortable: true,
+       width:"160px"
     },
   ];
 
@@ -172,7 +179,7 @@ const CnWithoutChallan = () => {
 
   return (
     <div className="p-4 w-full max-w-screen-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">CN Without Challan</h1>
+      {/* <h1 className="text-2xl font-bold mb-4">CN Without Challan</h1> */}
 
       {/* Input Fields for CNWithoutChallan API */}
       <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -124,16 +124,16 @@ const CnWithChallan = () => {
 
   const columns = [
     { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true },
-    { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true },
+    { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true , width:"160px"},
     { name: "CN Date", selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(), sortable: true, wrap: true },
-    { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true },
-    { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE, sortable: true, wrap: true },
-    { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true },
-    { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true },
-    { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT, sortable: true, wrap: true },
-    { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true },
-    { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true },
-    { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true },
+    { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true , width:"180px"},
+    { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE, sortable: true, wrap: true , width:"190px" },
+    { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true , width:"160px"},
+    { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true , width:"160px" },
+    { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT, sortable: true, wrap: true , width:"160px" },
+    { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true , width:"180px" },
+    { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true , width:"150px" },
+    { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true , width:"160px"},
     { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true },
   ];
 
@@ -141,7 +141,7 @@ const CnWithChallan = () => {
 
   return (
     <div className="p-4 w-full max-w-screen-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">CN With Challan</h1>
+      {/* <h1 className="text-2xl font-bold mb-4">CN With Challan</h1> */}
 
       {/* Input Fields */}
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
