@@ -265,7 +265,25 @@ const CnWithoutChallan = () => {
             customStyles={{
               headRow: {
                 style: {
-                  backgroundColor: "#f7fafc",
+                  backgroundColor: "#01588E",
+                  color: "white",
+                  fontWeight: "bold",
+                },
+              },
+              cells: {
+                style: {
+                  fontSize: "14px",
+                  color: "#374151", // text-gray-700
+                },
+              },
+              rows: {
+                style: {
+                  "&:nth-child(even)": {
+                    backgroundColor: "#f9fafb", // bg-gray-50
+                  },
+                  "&:hover": {
+                    backgroundColor: "#f3f4f6", // bg-gray-100
+                  },
                 },
               },
             }}
