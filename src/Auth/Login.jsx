@@ -80,7 +80,7 @@ const Login = () => {
   
         sessionStorage.setItem('token', response.data.Authorization);
         sessionStorage.setItem('userRole', userRole);
-        sessionStorage.setItem('User_id', userId); // Save User ID
+        // sessionStorage.setItem('User_id', userId); // Save User ID
   
         toast.success('Login Successful!', { position: "top-right" });
   

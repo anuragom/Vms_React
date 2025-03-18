@@ -123,7 +123,7 @@ const CnWithChallan = () => {
   };
 
   const columns = [
-    { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true },
+    { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true ,width: "150px" },
     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true , width:"160px"},
     { name: "CN Date", selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(), sortable: true, wrap: true },
     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true , width:"180px"},
@@ -134,7 +134,7 @@ const CnWithChallan = () => {
     { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true , width:"180px" },
     { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true , width:"150px" },
     { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true , width:"160px"},
-    { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true },
+    { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true ,width: "150px" },
   ];
 
   const rowPerPageOptions = [50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];

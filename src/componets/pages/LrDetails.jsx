@@ -1,12 +1,18 @@
+
+
+
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
 // import DataTable from "react-data-table-component";
 // import { getToken } from "../../Auth/auth";
 // import { saveAs } from "file-saver";
 
-// const LrDetails = () => {
+// const LrDetails = ({ isNavbarCollapsed }) => {
+//   // Adjust margin based on Navbar collapse state
+//   const marginClass = isNavbarCollapsed ? "" : "";
+
 //   const [data, setData] = useState([]);
-//   const [search, setSearch] = useState("");
+//   const [search, setSearch] = useState(""); // CNNO value for search
 //   const [filteredData, setFilteredData] = useState([]);
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(false);
@@ -14,15 +20,11 @@
 //   const [limit, setLimit] = useState(100);
 //   const [fromDate, setFromDate] = useState("");
 //   const [toDate, setToDate] = useState("");
-//   const [chlnVendorCode, setChlnVendorCode] = useState("");
 //   const [totalRows, setTotalRows] = useState(0);
 //   const token = getToken();
 
-//   useEffect(() => {
-//     fetchCnWithChallanData();
-//   }, [page, limit]);
-
-//   const fetchCnWithChallanData = async () => {
+//   // Function to fetch data from the API
+//   const fetchLrDetailsData = async () => {
 //     setLoading(true);
 //     setError(false);
 
@@ -34,7 +36,7 @@
 //           limit: limit,
 //           FROMDATE: fromDate,
 //           TODATE: toDate,
-//           CHLN_VENDOR_CODE: chlnVendorCode,
+//           CNNO: search, // Include CNNO in the API request payload
 //         },
 //         {
 //           headers: {
@@ -49,7 +51,7 @@
 //       }
 
 //       setData(response.data.data);
-//       setFilteredData(response.data.data);
+//       setFilteredData(response.data.data); // No client-side filtering; use API response directly
 //       setTotalRows(response.data.total || response.data.data.length);
 //     } catch (error) {
 //       console.error("Error fetching data:", error);
@@ -59,12 +61,16 @@
 //     setLoading(false);
 //   };
 
+//   // Fetch data on component mount (default fetch)
 //   useEffect(() => {
-//     const result = data.filter((item) =>
-//       item.CN_CN_NO.toString().includes(search)
-//     );
-//     setFilteredData(result);
-//   }, [search, data]);
+//     fetchLrDetailsData();
+//   }, [page, limit]); // Fetch data when page or limit changes
+
+//   // Handle search button click
+//   const handleSearch = () => {
+//     setPage(1); // Reset to first page on new search
+//     fetchLrDetailsData(); // Fetch data with the current search (CNNO) value
+//   };
 
 //   const handlePageChange = (page) => {
 //     setPage(page);
@@ -116,34 +122,36 @@
 //     ].join("\n");
 
 //     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-//     saveAs(blob, "CN_With_Challan.csv");
+//     saveAs(blob, "LR_Details.csv");
 //   };
 
 //   const columns = [
 //     { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true },
-//     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true ,width:"150px" },
+//     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true, width: "150px" },
 //     { name: "CN Date", selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(), sortable: true, wrap: true },
-//     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true ,width:"170px"},
-//     { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE, sortable: true, wrap: true,width:"190px" },
-//     { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true ,width:"150px" },
-//     { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true ,width:"150px" },
-//     { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT, sortable: true, wrap: true,width:"150px" },
-//     { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true,width:"190px" },
-//     { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true , width:"150px" },
-//     { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true , width:"170px" },
+//     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true, width: "170px" },
+//     { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE, sortable: true, wrap: true, width: "190px" },
+//     { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true, width: "150px" },
+//     { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true, width: "150px" },
+//     { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT, sortable: true, wrap: true, width: "150px" },
+//     { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true, width: "190px" },
+//     { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true, width: "150px" },
+//     { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true, width: "170px" },
 //     { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true },
 //   ];
 
 //   const rowPerPageOptions = [50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
 
 //   return (
-//     <div className="p-4 w-full max-w-screen-2xl mx-auto">
-//       {/* <h1 className="text-2xl font-bold mb-4">CN With Challan</h1> */}
+//     <div className={`min-h-screen bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
+//       {/* <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12 tracking-tight">
+//         LR Details
+//       </h1> */}
 
 //       {/* Input Fields */}
-//       <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+//       <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
 //         <div>
-//           <label htmlFor="fromDate" className="block font-medium mb-1">
+//           <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">
 //             From Date
 //           </label>
 //           <input
@@ -156,7 +164,7 @@
 //         </div>
 
 //         <div>
-//           <label htmlFor="toDate" className="block font-medium mb-1">
+//           <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">
 //             To Date
 //           </label>
 //           <input
@@ -169,47 +177,43 @@
 //         </div>
 
 //         <div>
-//           <label htmlFor="chlnVendorCode" className="block font-medium mb-1">
-//              Vendor Code
+//           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+//             Search by CN No
 //           </label>
 //           <input
-//             id="chlnVendorCode"
+//             id="search"
 //             type="text"
-//             placeholder="Enter Challan Vendor Code"
+//             placeholder="Enter CN No"
 //             className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-//             value={chlnVendorCode}
-//             onChange={(e) => setChlnVendorCode(e.target.value)}
+//             value={search}
+//             onChange={(e) => setSearch(e.target.value)}
 //           />
 //         </div>
 //       </div>
 
-//       {/* Search, Export, and Search by CN No */}
-//       <div className="flex flex-col sm:flex-row gap-4 mb-4">
+//       {/* Search and Export Buttons */}
+//       <div className="flex flex-col sm:flex-row gap-4 mb-6 max-w-6xl mx-auto">
 //         <button
-//           onClick={fetchCnWithChallanData}
-//           className="p-2 bg-blue-900 text-white rounded-lg font-semibold hover:bg-[#2e2e2e]"
+//           onClick={handleSearch}
+//           className="px-4 py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
 //         >
 //           Search
 //         </button>
-// {/* 
-    
-//         /> */}
-
 //         <button
 //           onClick={exportToCSV}
-//           className="p-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600"
+//           className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
 //         >
 //           Export to CSV
 //         </button>
 //       </div>
 
 //       {/* Loading and Error Messages */}
-//       {loading && <div className="text-blue-500">Loading...</div>}
-//       {error && <div className="text-red-500">No data found</div>}
+//       {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
+//       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
 //       {/* DataTable */}
 //       {!loading && !error && data.length > 0 && (
-//         <div className="overflow-x-auto">
+//         <div className="overflow-x-auto max-w-6xl mx-auto">
 //           <DataTable
 //             columns={columns}
 //             data={filteredData}
@@ -225,12 +229,25 @@
 //             customStyles={{
 //               headRow: {
 //                 style: {
-//                   backgroundColor: "#f7fafc",
+//                   backgroundColor: "#01588E",
+//                   color: "white",
+//                   fontWeight: "bold",
 //                 },
 //               },
 //               cells: {
 //                 style: {
 //                   fontSize: "14px",
+//                   color: "#374151", // text-gray-700
+//                 },
+//               },
+//               rows: {
+//                 style: {
+//                   "&:nth-child(even)": {
+//                     backgroundColor: "#f9fafb", // bg-gray-50
+//                   },
+//                   "&:hover": {
+//                     backgroundColor: "#f3f4f6", // bg-gray-100
+//                   },
 //                 },
 //               },
 //             }}
@@ -244,19 +261,19 @@
 // export default LrDetails;
 
 
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver";
+import { jwtDecode } from "jwt-decode"; // Correct import for jwt-decode
 
 const LrDetails = ({ isNavbarCollapsed }) => {
-  // Adjust margin based on Navbar collapse state
   const marginClass = isNavbarCollapsed ? "" : "";
 
+  // State variables
   const [data, setData] = useState([]);
-  const [search, setSearch] = useState(""); // CNNO value for search
+  const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -265,7 +282,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [totalRows, setTotalRows] = useState(0);
+
+  // Get the token from your authentication logic
   const token = getToken();
+
+  // Decode the token to extract the `id` field
+  const decodedToken = jwtDecode(token);
+  console.log("Decoded Token:", decodedToken); // Debugging: Check the decoded token
+  const USER_ID = decodedToken.id; // Extract `id` from the token
+  console.log("USER_ID:", USER_ID); // Debugging: Verify USER_ID is correctly extracted
 
   // Function to fetch data from the API
   const fetchLrDetailsData = async () => {
@@ -273,15 +298,22 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setError(false);
 
     try {
+      // Prepare the payload for the API request
+      const payload = {
+        page: page,
+        limit: limit,
+        FROMDATE: fromDate,
+        TODATE: toDate,
+        CNNO: search,
+        USER_ID: USER_ID, // Include USER_ID in the payload
+      };
+
+      console.log("API Payload:", payload); // Debugging: Verify the payload
+
+      // Make the API request
       const response = await axios.post(
         "https://vmsnode.omlogistics.co.in/api/lrDetails",
-        {
-          page: page,
-          limit: limit,
-          FROMDATE: fromDate,
-          TODATE: toDate,
-          CNNO: search, // Include CNNO in the API request payload
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -290,12 +322,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         }
       );
 
+      // Handle empty response
       if (response.data.data.length === 0) {
         setError(true);
       }
 
+      // Update state with the fetched data
       setData(response.data.data);
-      setFilteredData(response.data.data); // No client-side filtering; use API response directly
+      setFilteredData(response.data.data);
       setTotalRows(response.data.total || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -305,26 +339,29 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setLoading(false);
   };
 
-  // Fetch data on component mount (default fetch)
+  // Fetch data on component mount or when page/limit changes
   useEffect(() => {
     fetchLrDetailsData();
-  }, [page, limit]); // Fetch data when page or limit changes
+  }, [page, limit]);
 
   // Handle search button click
   const handleSearch = () => {
-    setPage(1); // Reset to first page on new search
+    setPage(1); // Reset to the first page on new search
     fetchLrDetailsData(); // Fetch data with the current search (CNNO) value
   };
 
+  // Handle page change for pagination
   const handlePageChange = (page) => {
     setPage(page);
   };
 
+  // Handle rows per page change for pagination
   const handleRowsPerPageChange = (newLimit, page) => {
     setLimit(newLimit);
     setPage(page);
   };
 
+  // Export data to CSV
   const exportToCSV = () => {
     const csvData = filteredData.map((row) => ({
       CN_CN_NO: row.CN_CN_NO,
@@ -369,10 +406,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     saveAs(blob, "LR_Details.csv");
   };
 
+  // Define columns for the DataTable
   const columns = [
-    { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true },
+    { name: "CN No", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true ,width: "150px" },
     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true, width: "150px" },
-    { name: "CN Date", selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(), sortable: true, wrap: true },
+    { name: "CN Date", selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(), sortable: true, wrap: true ,width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true, width: "170px" },
     { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE, sortable: true, wrap: true, width: "190px" },
     { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true, width: "150px" },
@@ -381,17 +419,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE, sortable: true, wrap: true, width: "190px" },
     { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO, sortable: true, wrap: true, width: "150px" },
     { name: "Challan Date", selector: (row) => new Date(row.CHLN_CHLN_DATE).toLocaleDateString(), sortable: true, wrap: true, width: "170px" },
-    { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true },
+    { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO, sortable: true, wrap: true ,width: "150px" },
   ];
 
+  // Row per page options for pagination
   const rowPerPageOptions = [50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
 
   return (
     <div className={`min-h-screen bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
-      {/* <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12 tracking-tight">
-        LR Details
-      </h1> */}
-
       {/* Input Fields */}
       <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
         <div>

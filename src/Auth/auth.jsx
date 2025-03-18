@@ -1,59 +1,5 @@
 
 
-// // Store user data and token in memory for faster access
-// let user = null;
-// let token = null;
-// let userRole = null;  // Store "data": "Admin"
-
-// // Set user, token, and role after login
-// export const setUser = (userData, userToken, role) => {
-//   user = userData;
-//   token = userToken;
-//   userRole = role;  // Store role
-
-//   // Persist user, token, and role
-//   sessionStorage.setItem("user", JSON.stringify(userData));
-//   sessionStorage.setItem("token", userToken);
-//   sessionStorage.setItem("userRole", role);  // Save role
-// };
-
-// // Get user data for components
-// export const getUser = () => {
-//   if (!user) {
-//     const storedUser = sessionStorage.getItem("user");
-//     if (storedUser) user = JSON.parse(storedUser);
-//   }
-//   return user;
-// };
-
-// // Get token for API calls
-// export const getToken = () => {
-//   if (!token) {
-//     token = sessionStorage.getItem("token");
-//   }
-//   return token;
-// };
-
-// // Get user role (Admin or other)
-// export const getUserRole = () => {
-//   if (!userRole) {
-//     userRole = sessionStorage.getItem("userRole");
-//   }
-//   return userRole;
-// };
-
-// // Clear user, token, and role on logout
-// export const clearUser = () => {
-//   user = null;
-//   token = null;
-//   userRole = null;
-
-//   // Clear sessionStorage
-//   sessionStorage.removeItem("user");
-//   sessionStorage.removeItem("token");
-//   sessionStorage.removeItem("userRole");
-// };
-
 
 // Store user data, token, role, and user ID in memory for faster access
 let user = null;
@@ -62,7 +8,7 @@ let userRole = null;
 let userId = null;  // Store User_id
 
 // Set user, token, role, and User_id after login
-export const setUser = (userData, userToken, role, id) => {
+export const setUser = (userData, userToken, role, ) => {
   user = userData;
   token = userToken;
   userRole = role;
@@ -72,7 +18,7 @@ export const setUser = (userData, userToken, role, id) => {
   sessionStorage.setItem("user", JSON.stringify(userData));
   sessionStorage.setItem("token", userToken);
   sessionStorage.setItem("userRole", role);
-  sessionStorage.setItem("User_id", id); // Store User ID
+  // sessionStorage.setItem("User_id", id); // Store User ID
 };
 
 // Get user data for components

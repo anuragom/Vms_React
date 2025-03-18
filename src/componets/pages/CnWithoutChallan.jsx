@@ -125,6 +125,7 @@ const CnWithoutChallan = () => {
       name: "CN No",
       selector: (row) => row.CN_CN_NO,
       sortable: true,
+      width: "150px" 
     },
     {
       name: "Manual CN No",
