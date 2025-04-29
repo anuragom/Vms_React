@@ -311,7 +311,6 @@ import AssignedVendor from "./componets/pages/AssignedVendor";
 import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
 import { ToastContainer } from "react-toastify";
 
-
 // Layout Component
 const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
   const location = useLocation();
@@ -379,7 +378,6 @@ function App() {
           <Route path="/user-management" element={<ProtectedRoute element={<UserManageement />} />} />
           <Route path="/user-log" element={<ProtectedRoute element={<UserLog />} />} />
           <Route path="/lr-details" element={<ProtectedRoute element={<LrDetails />} />} />
-
           <Route
             path="/bill-generate-using-exel-upload"
             element={<ProtectedRoute element={<BillGenerateUsingExlUpload />} />}
