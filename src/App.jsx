@@ -318,10 +318,10 @@ const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-        <ToastContainer />
+      <ToastContainer />
       {/* Fixed Header */}
       {!isLoginPage && (
-        <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="fixed top-0 left-0 w-full z-50">
           <Header onToggleNavbar={toggleNavbar} menuItems={menuItems} />
         </div>
       )}
@@ -330,16 +330,16 @@ const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
       <div className={`flex flex-1 ${!isLoginPage ? "pt-16" : ""}`}>
         {/* Fixed Navbar */}
         {!isLoginPage && (
-          <div className="fixed top-10 left-0 bottom-0 z-40">
+          <div className="fixed top-14 left-0 h-40">
             <Navbar items={menuItems} isCollapsed={isNavbarCollapsed} />
           </div>
         )}
 
         {/* Main Content */}
         <main
-          className={`flex-1 ${
-            !isLoginPage ? (isNavbarCollapsed ? "ml-16" : "ml-64") : ""
-          } overflow-x-auto `}
+          className={`flex-1 overflow-x-auto ${
+            !isLoginPage ? (isNavbarCollapsed ? "ml-16" : "ml-72") : ""
+          }`}
         >
           {children}
         </main>

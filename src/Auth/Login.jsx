@@ -74,6 +74,7 @@ const Login = () => {
   
     try {
       const response = await axios.request(config);
+      console.log(response.data);
       if (!response.data.error) {
         const userRole = response.data.data;
         const userId = response.data.User_id; // Extract User ID
@@ -88,10 +89,11 @@ const Login = () => {
           navigate('/dashboard');
         }, 700);
       } else {
-        toast.error(response.data.message || 'Invalid credentials', { position: "top-right" });
+        toast.error(response.data.message || response.data.msg || 'Invalid credentials', { position: "top-right" });
       }
     } catch (error) {
-      toast.error('Login Failed! Please try again.', { position: "top-right" });
+      console.log(error);
+      toast.error(error.response.data.message || error.response.data.msg || 'Login Failed! Please try again.', { position: "top-right" });
     }
   };
   
