@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
@@ -8,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getToken, getUserId } from "../../Auth/auth";
 
-const columns = (visiblePasswordId, handleTogglePassword) => [
+const columns = (visiblePasswordId, handleTogglePassword, updateUserStatus) => [
   {
     name: "Vendor ID",
     selector: (row) => row.userId,
@@ -31,15 +28,15 @@ const columns = (visiblePasswordId, handleTogglePassword) => [
     ),
     sortable: false,
   },
-  
+
   {
     name: "Status",
-    cell: () => (
+    cell: (row) => (
       <button
-     
-      type= "toggle"
-        className="cursor-pointer bg-green-500 rounded-full p-1">
-        Active
+        onClick={() => updateUserStatus(row.userId, row.userStatus)}
+        type="toggle"
+        className={`cursor-pointer rounded-full px-2 py-1 ${row.userStatus === "1" ? "bg-green-500" : "bg-red-500"}`}>
+        {row.userStatus === "1" ? "Active" : "Inactive"}
       </button>
     ),
     sortable: true,
@@ -50,12 +47,13 @@ const VendorDetails = () => {
   const [tableData, setTableData] = useState([]);
   const [visiblePasswordId, setVisiblePasswordId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+
   const enteredBy = getUserId();
   const [newVendor, setNewVendor] = useState({
     USER_ID: "",
     USER_NAME: "",
     ENTERED_BY: enteredBy,
-    Status:  1
+    Status: 1
   });
 
   const [suggestions, setSuggestions] = useState([]);
@@ -69,6 +67,41 @@ const VendorDetails = () => {
   const handleTogglePassword = (userId) => {
     setVisiblePasswordId((prevId) => (prevId === userId ? null : userId));
   };
+
+  const updateUserStatus = async (userId, st) => {
+    const payload = {
+      USER_STATUS: st === "1" ? "0" : "1", //change the status to 0 or 1
+      USER_ID: userId
+    };
+
+    let config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "https://vmsnode.omlogistics.co.in/api/updateVendorStatus",
+      headers: {
+        Authorization: ` ${token}`,
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify(payload)
+    }
+    try {
+      const res = await axios.request(config)
+      if (res.data.error) {
+        toast.error(res.data.msg)
+      } else {
+        toast.success(res.data.msg)
+        setTableData(prev =>
+          prev.map(row =>
+            row.userId === userId
+              ? { ...row, userStatus: st === "1" ? "0" : "1" }
+              : row
+          )
+        );
+      }
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  }
 
   const fetchData = async () => {
     let data = JSON.stringify({});
@@ -90,6 +123,7 @@ const VendorDetails = () => {
           userId: item.USER_ID,
           userName: item.USER_NAME,
           userPwd: item.USER_PASSWORD,
+          userStatus: item.USER_STATUS,
         }));
         setTableData(mappedData);
       }
@@ -175,7 +209,7 @@ const VendorDetails = () => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-      
+
     } catch (error) {
       console.error("Error fetching vendor suggestions:", error);
       setSuggestions([]);
@@ -255,7 +289,7 @@ const VendorDetails = () => {
       </div>
 
       <DataTable
-        columns={columns(visiblePasswordId, handleTogglePassword)}
+        columns={columns(visiblePasswordId, handleTogglePassword, updateUserStatus)}
         data={tableData}
         pagination
         striped
