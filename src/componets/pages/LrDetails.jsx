@@ -33,6 +33,17 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   const [formReadOnly, setFormReadOnly] = useState(false);
 
+  const CNMODEVATMap = {
+    "1": "NRGP",
+    "2": "SRN",
+    "3": "CAM",
+    "4": "IUT",
+    "5": "RMO",
+    "6": "MGMT GR",
+    "7": "FIX NRGP",
+    "8": "FIX SRN",
+  }
+
   const token = getToken();
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
@@ -663,7 +674,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "CN Date", selector: (row) => (row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
     { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE || "-", sortable: true, wrap: true, width: "190px" },
-    { name: "Mode VAT", selector: (row) => row.CN_MODE_VAT || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Mode VAT", selector: (row) => CNMODEVATMap[row.CN_MODE_VAT] || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT || "-", sortable: true, wrap: true, width: "150px" },
