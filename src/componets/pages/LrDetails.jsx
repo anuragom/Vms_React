@@ -5,6 +5,7 @@ import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
+import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
 import { Eye } from 'lucide-react';
 
@@ -24,8 +25,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [totalRows, setTotalRows] = useState(0);
   const [selectedRow, setSelectedRow] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState("add"); // "add" or "update"
-  const [formReadOnly, setFormReadOnly] = useState(false); // true for read-only mode
+  const [formMode, setFormMode] = useState("add");
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResults, setUploadResults] = useState(null);
 
   const token = getToken();
   const decodedToken = jwtDecode(token);
@@ -37,8 +41,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: "",
       RATE: "",
-      LATITUDE: "",
-      LONGITUDE: "",
       FREIGHT: "",
       UNION_KM: "",
       EXTRA_POINT: "",
@@ -265,12 +267,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setFormReadOnly(false);
   };
 
+  const closeBulkUpload = () => {
+    setIsBulkUploadOpen(false);
+    setUploadFile(null);
+    setUploadProgress(0);
+    setUploadResults(null);
+  };
+
   const handleSaveExpenses = async () => {
     if (!selectedRow) return;
 
     let payload;
     if (formMode === "add") {
-      // Payload for addExpenses (uppercase keys, includes ENTERED_BY)
       payload = {
         CN_CN_NO: selectedRow.CN_CN_NO,
         KILOMETER: parseFloat(selectedRow.KILOMETER) || 0,
@@ -297,7 +305,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         MODIFIED_BY: "admin",
       };
     } else {
-      // Payload for updateExpenses (lowercase keys, no ENTERED_BY)
       payload = {
         cn_cn_no: selectedRow.CN_CN_NO,
         kilometer: parseFloat(selectedRow.KILOMETER) || 0,
@@ -323,9 +330,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         modified_by: "admin",
       };
     }
-
-    console.log("Payload:", payload);
-    console.log("Token:", token);
 
     const apiUrl = formMode === "add"
       ? "https://vmsnode.omlogistics.co.in/api/addExpenses"
@@ -374,6 +378,244 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         theme: "colored",
       });
     }
+  };
+
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        "CN No": "",
+        "Kilometer": "",
+        "Rate (per Km)": "",
+        "Latitude": "",
+        "Longitude": "",
+        "Union/Km": "",
+        "Extra Point": "",
+        "Dt Expense": "",
+        "Escort Expense": "",
+        "Headload Expense": "",
+        "Loading Expense": "",
+        "Unloading Expense": "",
+        "Labour Expense": "",
+        "Other Expense": "",
+        "Crane/Hydra Expense": "",
+        "Chain Pulley Expense": "",
+        "Toll Tax": "",
+        "Packing Expense": "",
+        "Remarks": ""
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses Template");
+    XLSX.writeFile(workbook, "Expenses_Template.xlsx");
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validExtensions = [".xlsx", ".xls", ".csv"];
+    const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+
+    if (!validExtensions.includes(fileExtension)) {
+      toast.error("Please upload a valid Excel file (.xlsx, .xls, .csv)", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    setUploadFile(file);
+  };
+
+  const processBulkUpload = async () => {
+    if (!uploadFile) {
+      toast.error("Please select a file to upload", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+
+    setUploadProgress(0);
+    setUploadResults(null);
+
+    try {
+      const data = await readExcelFile(uploadFile);
+      if (!data || data.length === 0) {
+        throw new Error("No valid data found in the file");
+      }
+
+      // Process each row
+      const processedData = data.map(row => {
+        const kilometer = parseFloat(row["Kilometer"]) || 0;
+        const rate = parseFloat(row["Rate (per Km)"]) || 0;
+        const freight = kilometer * rate;
+
+        const expenses = [
+          freight,
+          parseFloat(row["Union/Km"]) || 0,
+          parseFloat(row["Extra Point"]) || 0,
+          parseFloat(row["Dt Expense"]) || 0,
+          parseFloat(row["Escort Expense"]) || 0,
+          parseFloat(row["Loading Expense"]) || 0,
+          parseFloat(row["Unloading Expense"]) || 0,
+          parseFloat(row["Labour Expense"]) || 0,
+          parseFloat(row["Other Expense"]) || 0,
+          parseFloat(row["Crane/Hydra Expense"]) || 0,
+          parseFloat(row["Chain Pulley Expense"]) || 0,
+          parseFloat(row["Toll Tax"]) || 0,
+          parseFloat(row["Packing Expense"]) || 0,
+          parseFloat(row["Headload Expense"]) || 0,
+
+        ];
+        const totalAmount = expenses.reduce((sum, val) => sum + val, 0);
+
+        return {
+          CN_CN_NO: row["CN No"],
+          KILOMETER: kilometer,
+          RATE: rate,
+          LATITUDE: parseFloat(row["Latitude"]) || 0,
+          LONGITUDE: parseFloat(row["Longitude"]) || 0,
+          FREIGHT: freight,
+          UNION_KM: parseFloat(row["Union/Km"]) || 0,
+          EXTRA_POINT: parseFloat(row["Extra Point"]) || 0,
+          DT_EXPENSE: parseFloat(row["Dt Expense"]) || 0,
+          HEADLOAD_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
+          ESCORT_EXPENSE: parseFloat(row["Escort Expense"]) || 0,
+          LOADING_EXPENSE: parseFloat(row["Loading Expense"]) || 0,
+          UNLOADING_EXPENSE: parseFloat(row["Unloading Expense"]) || 0,
+          LABOUR_EXPENSE: parseFloat(row["Labour Expense"]) || 0,
+          OTHER_EXPENSE: parseFloat(row["Other Expense"]) || 0,
+          CRANE_HYDRA_EXPENSE: parseFloat(row["Crane/Hydra Expense"]) || 0,
+          CHAIN_PULLEY_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
+          TOLL_TAX: parseFloat(row["Toll Tax"]) || 0,
+          PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
+          TOTAL_AMOUNT: totalAmount,
+          REMARKS: row["Remarks"] || "No remarks",
+          ENTERED_BY: "admin",
+          MODIFIED_BY: "admin",
+        };
+      });
+
+      // Validate data
+      const validationResults = processedData.map((item, index) => {
+        const errors = [];
+        if (!item.CN_CN_NO) errors.push("CN No is required");
+        if (isNaN(item.KILOMETER)) errors.push("Kilometer must be a number");
+        if (isNaN(item.RATE)) errors.push("Rate must be a number");
+        if (item.KILOMETER < 0) errors.push("Kilometer must be positive");
+        if (item.RATE < 0) errors.push("Rate must be positive");
+
+        return {
+          row: index + 2, // +2 because Excel rows start at 1 and header is row 1
+          cnNo: item.CN_CN_NO,
+          isValid: errors.length === 0,
+          errors: errors.length > 0 ? errors.join(", ") : null
+        };
+      });
+
+      const invalidRows = validationResults.filter(item => !item.isValid);
+      if (invalidRows.length > 0) {
+        setUploadResults({
+          total: processedData.length,
+          invalid: invalidRows,
+          valid: processedData.length - invalidRows.length
+        });
+        return;
+      }
+
+      // Upload valid data
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: []
+      };
+
+      for (let i = 0; i < processedData.length; i++) {
+        try {
+          const response = await axios.post(
+            "https://vmsnode.omlogistics.co.in/api/addExpenses",
+            processedData[i],
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.data.error === false) {
+            results.success++;
+          } else {
+            results.failed++;
+            results.errors.push({
+              cnNo: processedData[i].CN_CN_NO,
+              message: response.data.msg || "Unknown error"
+            });
+          }
+        } catch (error) {
+          results.failed++;
+          results.errors.push({
+            cnNo: processedData[i].CN_CN_NO,
+            message: error.response?.data?.msg || error.message || "Unknown error"
+          });
+        }
+
+        // Update progress
+        setUploadProgress(Math.round(((i + 1) / processedData.length) * 100));
+      }
+
+      setUploadResults(results);
+      fetchLrDetailsData();
+    } catch (error) {
+      console.error("Error processing file:", error);
+      toast.error(`Error processing file: ${error.message}`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+    }
+  };
+
+  const readExcelFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          resolve(jsonData);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   const columns = [
@@ -426,8 +668,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Site ID", selector: (row) => row.SITE_ID || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Kilometer", selector: (row) => row.KILOMETER || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Rate", selector: (row) => row.RATE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Latitude", selector: (row) => row.LATITUDE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Longitude", selector: (row) => row.LONGITUDE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Freight", selector: (row) => row.FREIGHT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Union KM", selector: (row) => row.UNION_KM || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Extra Point", selector: (row) => row.EXTRA_POINT || "-", sortable: true, wrap: true, width: "150px" },
@@ -443,6 +683,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Toll Tax", selector: (row) => row.TOLL_TAX || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Packing Expense", selector: (row) => row.PACKING_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Amount", selector: (row) => row.TOTAL_AMOUNT || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Latitude", selector: (row) => row.LATITUDE || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Longitude", selector: (row) => row.LONGITUDE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
@@ -506,6 +748,12 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             >
               Export to CSV
             </button>
+        <button
+          onClick={() => setIsBulkUploadOpen(true)}
+          className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+        >
+          Bulk Upload
+        </button>
           </div>
         </div>
       </div>
@@ -723,6 +971,24 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
+                <label>HeadLoad Expense</label>
+                  <input
+                    type="text"
+                    value={selectedRow.HEADLOAD_EXPENSE || ""}
+                    onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
+                    className="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                <label>HeadLoad Expense</label>
+                  <input
+                    type="text"
+                    value={selectedRow.HEADLOAD_EXPENSE || ""}
+                    onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
+                    className="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
                   <label>Chain Pulley Expense</label>
                   <input
                     type="text"
@@ -789,6 +1055,278 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   {formMode === "add" ? "Add" : "Update"}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBulkUploadOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Excel File (.xlsx, .xls, .csv)
+              </label>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+              {uploadFile && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected file: {uploadFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <button
+                onClick={downloadTemplate}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              >
+                Download Sample Template
+              </button>
+            </div>
+
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Uploading: {uploadProgress}% complete
+                </p>
+              </div>
+            )}
+
+            {uploadResults && (
+              <div className="mb-4 p-4 border rounded-lg">
+                <h3 className="font-bold mb-2">Upload Results:</h3>
+                {uploadResults.invalid ? (
+                  <>
+                    <p className="text-red-600">
+                      {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
+                    </p>
+                    <div className="mt-2 max-h-40 overflow-y-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Row</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {uploadResults.invalid.map((row, index) => (
+                            <tr key={index}>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.row}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.cnNo || "-"}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{row.errors}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Please correct the errors and try again.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-green-600">
+                      Successfully processed {uploadResults.success} records
+                    </p>
+                    {uploadResults.failed > 0 && (
+                      <p className="text-red-600">
+                        Failed to process {uploadResults.failed} records
+                      </p>
+                    )}
+                    {uploadResults.errors.length > 0 && (
+                      <div className="mt-2 max-h-40 overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {uploadResults.errors.map((error, index) => (
+                              <tr key={index}>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{error.cnNo}</td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{error.message}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={closeBulkUpload}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Close
+              </button>
+              <button
+                onClick={processBulkUpload}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                disabled={!uploadFile}
+              >
+                Process Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBulkUploadOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Excel File (.xlsx, .xls, .csv)
+              </label>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+              {uploadFile && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected file: {uploadFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <button
+                onClick={downloadTemplate}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              >
+                Download Sample Template
+              </button>
+            </div>
+
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Uploading: {uploadProgress}% complete
+                </p>
+              </div>
+            )}
+
+            {uploadResults && (
+              <div className="mb-4 p-4 border rounded-lg">
+                <h3 className="font-bold mb-2">Upload Results:</h3>
+                {uploadResults.invalid ? (
+                  <>
+                    <p className="text-red-600">
+                      {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
+                    </p>
+                    <div className="mt-2 max-h-40 overflow-y-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Row</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {uploadResults.invalid.map((row, index) => (
+                            <tr key={index}>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.row}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.cnNo || "-"}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{row.errors}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Please correct the errors and try again.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-green-600">
+                      Successfully processed {uploadResults.success} records
+                    </p>
+                    {uploadResults.failed > 0 && (
+                      <p className="text-red-600">
+                        Failed to process {uploadResults.failed} records
+                      </p>
+                    )}
+                    {uploadResults.errors.length > 0 && (
+                      <div className="mt-2 max-h-40 overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {uploadResults.errors.map((error, index) => (
+                              <tr key={index}>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{error.cnNo}</td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{error.message}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={closeBulkUpload}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Close
+              </button>
+              <button
+                onClick={processBulkUpload}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                disabled={!uploadFile}
+              >
+                Process Upload
+              </button>
             </div>
           </div>
         </div>

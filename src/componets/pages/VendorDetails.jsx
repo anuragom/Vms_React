@@ -1,7 +1,7 @@
 
 
 
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { ToastContainer, toast } from "react-toastify";
@@ -31,6 +31,19 @@ const columns = (visiblePasswordId, handleTogglePassword) => [
     ),
     sortable: false,
   },
+  
+  {
+    name: "Status",
+    cell: () => (
+      <button
+     
+      type= "toggle"
+        className="cursor-pointer bg-green-500 rounded-full p-1">
+        Active
+      </button>
+    ),
+    sortable: true,
+  }
 ];
 
 const VendorDetails = () => {
@@ -42,6 +55,10 @@ const VendorDetails = () => {
     USER_ID: "",
     USER_NAME: "",
     ENTERED_BY: enteredBy,
+<<<<<<< HEAD
+=======
+    Status:  1
+>>>>>>> main
   });
 
   const [suggestions, setSuggestions] = useState([]);
