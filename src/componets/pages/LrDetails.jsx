@@ -759,7 +759,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           <div className="w-full md:w-auto">
             <button
               onClick={() => setIsBulkUploadOpen(true)}
-              className="whitespace-nowrap px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+              className="whitespace-nowrap px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors w-full"
             >
               Bulk Upload
             </button>
