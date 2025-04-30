@@ -55,10 +55,7 @@ const VendorDetails = () => {
     USER_ID: "",
     USER_NAME: "",
     ENTERED_BY: enteredBy,
-<<<<<<< HEAD
-=======
     Status:  1
->>>>>>> main
   });
 
   const [suggestions, setSuggestions] = useState([]);

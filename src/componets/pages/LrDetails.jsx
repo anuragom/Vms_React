@@ -31,6 +31,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResults, setUploadResults] = useState(null);
 
+  const [formReadOnly, setFormReadOnly] = useState(false);
+
   const token = getToken();
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
@@ -596,7 +598,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const readExcelFile = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
@@ -609,11 +611,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           reject(error);
         }
       };
-      
+
       reader.onerror = (error) => {
         reject(error);
       };
-      
+
       reader.readAsArrayBuffer(file);
     });
   };
@@ -627,11 +629,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         <div className="flex gap-3">
           {row.KILOMETER || row.RATE || row.FREIGHT || row.TOTAL_AMOUNT ? (
             <button
-              className="text-blue-500 text-xs cursor-pointer"
-              title="View Expenses"
               onClick={() => openFormInReadMode(row)}
+              className="text-blue-500 text-xs"
+              title="View Expenses"
             >
-              <Eye className="w-4 h-4" />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12C3 7 8 4 12 4C16 4 21 7 23 12C21 17 16 20 12 20C8 20 3 17 1 12Z" stroke="blue" stroke-width="2" fill="none" />
+                <circle cx="12" cy="12" r="3" stroke="black" stroke-width="2" fill="none" />
+              </svg>
+
             </button>
           ) : (
             <button
@@ -694,7 +700,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     <div className={` bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300 `}>
       <ToastContainer />
 
-      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto ">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto ">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
@@ -719,7 +725,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
-        <div className="col-span-2 space-y-2 md:flex items-end pb-1 gap-2">
+        <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
           <div className="w-full">
             <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1 ">
               Search by CN No
@@ -748,12 +754,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             >
               Export to CSV
             </button>
-        <button
-          onClick={() => setIsBulkUploadOpen(true)}
-          className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
-        >
-          Bulk Upload
-        </button>
+
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={() => setIsBulkUploadOpen(true)}
+              className="whitespace-nowrap px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+            >
+              Bulk Upload
+            </button>
           </div>
         </div>
       </div>
@@ -971,7 +980,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                <label>HeadLoad Expense</label>
+                  <label>HeadLoad Expense</label>
                   <input
                     type="text"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
@@ -980,7 +989,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                <label>HeadLoad Expense</label>
+                  <label>HeadLoad Expense</label>
                   <input
                     type="text"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
@@ -1064,7 +1073,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)
@@ -1200,7 +1209,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)
