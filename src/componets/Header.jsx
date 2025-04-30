@@ -4,10 +4,13 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearUser, getUser } from "../Auth/auth"; // Import clearUser and getUser
+import { AlignCenter, AlignJustify, AlignLeft, LogOut } from 'lucide-react';
 
 const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
 
   const [username, setUsername] = useState("");
 
@@ -31,28 +34,22 @@ const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-[#01588E] px-4 py-3 z-50 shadow-lg">
-      <div className="max-w-[2000px] mx-auto flex items-center justify-between">
+    <header className="bg-[#01588E] p-3 z-50 shadow-sm w-full">
+      <div className="w-full mx-auto flex items-center justify-between">
         {/* Left Side: Logo + Sidebar Toggle Button */}
         <div className="flex items-center gap-3">
-          <img
-            src="/image/logo.png"
-            alt="logo"
-            className="h-14 w-32 rounded-lg"
-          />
 
-          {/* Sidebar Toggle Button */}
           <button
-            onClick={onToggleNavbar}
+            onClick={() => setIsNavbarOpen(!isNavbarOpen)}
             className="p-2 rounded-lg transition-colors"
           >
             <div
               data-svg-wrapper
-              className={`relative transform transition-transform duration-300 ease-in-out translate-y-5 ${
-                isNavbarCollapsed ? "rotate-180" : "rotate-0"
-              }`}
+              onClick={onToggleNavbar}
+              className={` relative transform transition-transform duration-300 ease-in-out  ${isNavbarCollapsed ? "rotate-180" : "rotate-0"
+                }`}
             >
-              <svg
+              {/* <svg
                 width="24"
                 height="24"
                 viewBox="0 0 24 24"
@@ -87,13 +84,28 @@ const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-              </svg>
+              </svg> */}
+              {
+                isNavbarOpen ? <AlignLeft className="w-6 h-6 text-white" /> : <AlignJustify className="w-6 h-6 text-white" />
+              }
+
             </div>
           </button>
+
+          <div className="hidden sm:block">
+            <img
+              src="/image/logo.png"
+              alt="logo"
+              className=" h-8 w-16 sm:h-10 sm:w-24 rounded-lg"
+            />
+          </div>
+
+          {/* Sidebar Toggle Button */}
+
         </div>
 
         {/* Center: Page Title */}
-        <h1 className="text-xl md:text-xl font-bold text-white">{currentPage}</h1>
+        <h1 className=" lg:text-2xl md:text-xl sm:text-base xs:text-xs text-white">{currentPage}</h1>
 
         {/* Right Side: Username and Logout Button */}
         <div className="flex items-center gap-4">
@@ -107,7 +119,7 @@ const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
             onClick={handleLogout}
             className="bg-white hover:bg-black hover:text-white font-semibold text-black px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm rounded-md"
           >
-            Logout
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>

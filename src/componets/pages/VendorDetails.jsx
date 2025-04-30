@@ -37,11 +37,11 @@ const VendorDetails = () => {
   const [tableData, setTableData] = useState([]);
   const [visiblePasswordId, setVisiblePasswordId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const enteredBy = getUserId(); 
+  const enteredBy = getUserId();
   const [newVendor, setNewVendor] = useState({
     USER_ID: "",
     USER_NAME: "",
-    ENTERED_BY: enteredBy, 
+    ENTERED_BY: enteredBy,
   });
 
   const [suggestions, setSuggestions] = useState([]);
@@ -49,6 +49,8 @@ const VendorDetails = () => {
   const token = getToken();
   const dropdownRef = useRef(null);
   const [isVendorCodeDisabled, setIsVendorCodeDisabled] = useState(false);
+
+  const [showChar, setShowChar] = useState(false);
 
   const handleTogglePassword = (userId) => {
     setVisiblePasswordId((prevId) => (prevId === userId ? null : userId));
@@ -89,7 +91,7 @@ const VendorDetails = () => {
       return;
     }
 
-   
+
     const payload = {
       USER_ID: newVendor.USER_ID,
       USER_NAME: newVendor.USER_NAME,
@@ -112,18 +114,19 @@ const VendorDetails = () => {
     try {
       const response = await axios.request(config);
       if (response.data && !response.data.error) {
-        toast.success("Vendor added successfully!", {
+        toast.success(response.data.msg, {
           autoClose: 800,
         });
         setNewVendor({ USER_ID: "", USER_NAME: "", ENTERED_BY: enteredBy }); // Reset the form
         setShowAddForm(false);
         fetchData();
       } else {
-        toast.error("Failed to add vendor.");
+        toast.error(response.data.msg);
       }
+      setIsVendorCodeDisabled(false);
     } catch (error) {
-      console.error("Error adding vendor:", error);
-      toast.error("Failed to add vendor.");
+      console.error(error.response.data.msg, error);
+      toast.error(error.response.data.msg);
     }
   };
 
@@ -158,6 +161,7 @@ const VendorDetails = () => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
+      
     } catch (error) {
       console.error("Error fetching vendor suggestions:", error);
       setSuggestions([]);
@@ -181,7 +185,11 @@ const VendorDetails = () => {
 
   const handleVendorCodeChange = (e) => {
     const value = e.target.value;
-
+    if (value.length < 5) {
+      setShowChar(true);
+    } else {
+      setShowChar(false);
+    }
     // Check if the input starts with 5 or 6
     if (value.length > 0 && !/^[56]/.test(value)) {
       toast.error("Vendor Code must start with 5 or 6.");
@@ -252,7 +260,14 @@ const VendorDetails = () => {
               <form onSubmit={handleAddVendor}>
                 <div className="mb-4">
                   <label className="block text-gray-700 font-bold mb-2">
-                    Vendor Code:
+                    <div>
+                      Vendor Code:
+                    </div>
+                    {showChar &&
+                      <div className="text-xs font-normal text-red-500">
+                        * Add atleast 5 characters
+                      </div>
+                    }
                   </label>
                   <input
                     type="number"
@@ -265,7 +280,7 @@ const VendorDetails = () => {
                   {showSuggestions && (
                     <div
                       ref={dropdownRef}
-                      className="absolute z-10 mt-2 w-96 shadow-lg max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
+                      className="absolute z-10 mt-2 w-96  max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
                     >
                       {suggestions.map((suggestion) => (
                         <div
