@@ -1213,15 +1213,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
-                <div>
-                  <label>HeadLoad Expense</label>
-                  <input
-                    type="text"
-                    value={selectedRow.HEADLOAD_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
+
                 <div>
                   <label>Chain Pulley Expense</label>
                   <input
