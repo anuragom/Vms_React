@@ -12,7 +12,7 @@ import { Eye } from 'lucide-react';
 const LrDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
 
-  // State variables
+  // State variables (unchanged)
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -30,8 +30,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResults, setUploadResults] = useState(null);
-
   const [formReadOnly, setFormReadOnly] = useState(false);
+  // New state for form errors
+  const [formErrors, setFormErrors] = useState({});
 
   const CNMODEVATMap = {
     "1": "NRGP",
@@ -42,18 +43,56 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     "6": "MGMT GR",
     "7": "FIX NRGP",
     "8": "FIX SRN",
-  }
+  };
 
   const token = getToken();
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
 
+  // Validation function for form fields
+  const validateForm = (row) => {
+    const errors = {};
+    const requiredFields = [
+      "KILOMETER",
+      "RATE",
+      "LATITUDE",
+      "LONGITUDE",
+      "UNION_KM",
+      "EXTRA_POINT",
+      "DT_EXPENSE",
+      "ESCORT_EXPENSE",
+      "LOADING_EXPENSE",
+      "UNLOADING_EXPENSE",
+      "LABOUR_EXPENSE",
+      "OTHER_EXPENSE",
+      "CRANE_HYDRA_EXPENSE",
+      "HEADLOAD_EXPENSE",
+      "CHAIN_PULLEY_EXPENSE",
+      "TOLL_TAX",
+      "PACKING_EXPENSE",
+      "REMARKS",
+    ];
+
+    requiredFields.forEach((field) => {
+      if (!row[field] && row[field] !== 0) {
+        errors[field] = `${field.replace(/_/g, ' ')} is required`;
+      } else if (field !== "REMARKS" && isNaN(parseFloat(row[field]))) {
+        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+      }
+    });
+
+    return errors;
+  };
+
+  // Unchanged functions: openFormInAddMode, openFormInUpdateMode, openFormInReadMode
   const openFormInAddMode = (row) => {
     setFormMode("add");
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: "",
       RATE: "",
+      LATITUDE: "",
+      LONGITUDE: "",
       FREIGHT: "",
       UNION_KM: "",
       EXTRA_POINT: "",
@@ -71,6 +110,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       TOTAL_AMOUNT: "",
       REMARKS: "",
     });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -100,6 +140,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       TOTAL_AMOUNT: row.TOTAL_AMOUNT || "",
       REMARKS: row.REMARKS || "",
     });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -129,6 +170,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       TOTAL_AMOUNT: row.TOTAL_AMOUNT || "",
       REMARKS: row.REMARKS || "",
     });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -162,15 +204,27 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       return updatedRow;
     });
+
+    // Validate the field on change
+    setFormErrors((prev) => {
+      const errors = { ...prev };
+      if (!value && value !== 0) {
+        errors[field] = `${field.replace(/_/g, ' ')} is required`;
+      } else if (field !== "REMARKS" && isNaN(parseFloat(value))) {
+        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+      } else {
+        delete errors[field];
+      }
+      return errors;
+    });
   };
 
-  // Add a helper for numeric input
   const handleNumericInputChange = (field, value) => {
-    // Allow only numbers and a single decimal point
     const filteredValue = value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
     handleInputChange(field, filteredValue);
   };
 
+  // Unchanged functions: fetchLrDetailsData, useEffect, handleSearch, handlePageChange, handleRowsPerPageChange, exportToCSV, closeForm, closeBulkUpload
   const fetchLrDetailsData = async () => {
     setLoading(true);
     setError(false);
@@ -203,7 +257,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       setData(response.data.data);
       setFilteredData(response.data.data);
       setTotalRows(response.data.total || response.data.data.length);
-
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(true);
@@ -278,6 +331,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setIsFormOpen(false);
     setSelectedRow(null);
     setFormReadOnly(false);
+    setFormErrors({});
   };
 
   const closeBulkUpload = () => {
@@ -290,56 +344,73 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const handleSaveExpenses = async () => {
     if (!selectedRow) return;
 
+    // Validate form before saving
+    const errors = validateForm(selectedRow);
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please fill in all required fields correctly", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+
     let payload;
     if (formMode === "add") {
       payload = {
         CN_CN_NO: selectedRow.CN_CN_NO,
-        KILOMETER: parseFloat(selectedRow.KILOMETER) || 0,
-        RATE: parseFloat(selectedRow.RATE) || 0,
-        LATITUDE: parseFloat(selectedRow.LATITUDE) || 0,
-        LONGITUDE: parseFloat(selectedRow.LONGITUDE) || 0,
-        FREIGHT: parseFloat(selectedRow.FREIGHT) || 0,
-        UNION_KM: parseFloat(selectedRow.UNION_KM) || 0,
-        EXTRA_POINT: parseFloat(selectedRow.EXTRA_POINT) || 0,
-        DT_EXPENSE: parseFloat(selectedRow.DT_EXPENSE) || 0,
-        ESCORT_EXPENSE: parseFloat(selectedRow.ESCORT_EXPENSE) || 0,
-        LOADING_EXPENSE: parseFloat(selectedRow.LOADING_EXPENSE) || 0,
-        UNLOADING_EXPENSE: parseFloat(selectedRow.UNLOADING_EXPENSE) || 0,
-        LABOUR_EXPENSE: parseFloat(selectedRow.LABOUR_EXPENSE) || 0,
-        OTHER_EXPENSE: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
-        CRANE_HYDRA_EXPENSE: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
-        HEADLOAD_EXPENSE: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
-        CHAIN_PULLEY_EXPENSE: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
-        TOLL_TAX: parseFloat(selectedRow.TOLL_TAX) || 0,
-        PACKING_EXPENSE: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
-        TOTAL_AMOUNT: parseFloat(selectedRow.TOTAL_AMOUNT) || 0,
-        REMARKS: selectedRow.REMARKS || "No remarks",
+        KILOMETER: parseFloat(selectedRow.KILOMETER),
+        RATE: parseFloat(selectedRow.RATE),
+        LATITUDE: parseFloat(selectedRow.LATITUDE),
+        LONGITUDE: parseFloat(selectedRow.LONGITUDE),
+        FREIGHT: parseFloat(selectedRow.FREIGHT),
+        UNION_KM: parseFloat(selectedRow.UNION_KM),
+        EXTRA_POINT: parseFloat(selectedRow.EXTRA_POINT),
+        DT_EXPENSE: parseFloat(selectedRow.DT_EXPENSE),
+        ESCORT_EXPENSE: parseFloat(selectedRow.ESCORT_EXPENSE),
+        LOADING_EXPENSE: parseFloat(selectedRow.LOADING_EXPENSE),
+        UNLOADING_EXPENSE: parseFloat(selectedRow.UNLOADING_EXPENSE),
+        LABOUR_EXPENSE: parseFloat(selectedRow.LABOUR_EXPENSE),
+        OTHER_EXPENSE: parseFloat(selectedRow.OTHER_EXPENSE),
+        CRANE_HYDRA_EXPENSE: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE),
+        HEADLOAD_EXPENSE: parseFloat(selectedRow.HEADLOAD_EXPENSE),
+        CHAIN_PULLEY_EXPENSE: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE),
+        TOLL_TAX: parseFloat(selectedRow.TOLL_TAX),
+        PACKING_EXPENSE: parseFloat(selectedRow.PACKING_EXPENSE),
+        TOTAL_AMOUNT: parseFloat(selectedRow.TOTAL_AMOUNT),
+        REMARKS: selectedRow.REMARKS,
         ENTERED_BY: "admin",
         MODIFIED_BY: "admin",
       };
     } else {
       payload = {
         cn_cn_no: selectedRow.CN_CN_NO,
-        kilometer: parseFloat(selectedRow.KILOMETER) || 0,
-        rate: parseFloat(selectedRow.RATE) || 0,
-        latitude: parseFloat(selectedRow.LATITUDE) || 0,
-        longitude: parseFloat(selectedRow.LONGITUDE) || 0,
-        freight: parseFloat(selectedRow.FREIGHT) || 0,
-        union_km: parseFloat(selectedRow.UNION_KM) || 0,
-        extra_point: parseFloat(selectedRow.EXTRA_POINT) || 0,
-        dt_expense: parseFloat(selectedRow.DT_EXPENSE) || 0,
-        escort_expense: parseFloat(selectedRow.ESCORT_EXPENSE) || 0,
-        loading_expense: parseFloat(selectedRow.LOADING_EXPENSE) || 0,
-        unloading_expense: parseFloat(selectedRow.UNLOADING_EXPENSE) || 0,
-        labour_expense: parseFloat(selectedRow.LABOUR_EXPENSE) || 0,
-        other_expense: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
-        crane_hydra_expense: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
-        headload_expense: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
-        chain_pulley_expense: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
-        toll_tax: parseFloat(selectedRow.TOLL_TAX) || 0,
-        packing_expense: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
-        total_amount: parseFloat(selectedRow.TOTAL_AMOUNT) || 0,
-        remarks: selectedRow.REMARKS || "No remarks",
+        kilometer: parseFloat(selectedRow.KILOMETER),
+        rate: parseFloat(selectedRow.RATE),
+        latitude: parseFloat(selectedRow.LATITUDE),
+        longitude: parseFloat(selectedRow.LONGITUDE),
+        freight: parseFloat(selectedRow.FREIGHT),
+        union_km: parseFloat(selectedRow.UNION_KM),
+        extra_point: parseFloat(selectedRow.EXTRA_POINT),
+        dt_expense: parseFloat(selectedRow.DT_EXPENSE),
+        escort_expense: parseFloat(selectedRow.ESCORT_EXPENSE),
+        loading_expense: parseFloat(selectedRow.LOADING_EXPENSE),
+        unloading_expense: parseFloat(selectedRow.UNLOADING_EXPENSE),
+        labour_expense: parseFloat(selectedRow.LABOUR_EXPENSE),
+        other_expense: parseFloat(selectedRow.OTHER_EXPENSE),
+        crane_hydra_expense: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE),
+        headload_expense: parseFloat(selectedRow.HEADLOAD_EXPENSE),
+        chain_pulley_expense: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE),
+        toll_tax: parseFloat(selectedRow.TOLL_TAX),
+        packing_expense: parseFloat(selectedRow.PACKING_EXPENSE),
+        total_amount: parseFloat(selectedRow.TOTAL_AMOUNT),
+        remarks: selectedRow.REMARKS,
         modified_by: "admin",
       };
     }
@@ -414,8 +485,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Chain Pulley Expense": "",
         "Toll Tax": "",
         "Packing Expense": "",
-        "Remarks": ""
-      }
+        "Remarks": "",
+      },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(templateData);
@@ -446,6 +517,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
     setUploadFile(file);
   };
+
   const processBulkUpload = async () => {
     if (!uploadFile) {
       toast.error("Please select a file to upload", {
@@ -459,40 +531,22 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       });
       return;
     }
-  
+
     setUploadProgress(0);
     setUploadResults(null);
-  
-    console.log("Starting bulk upload...");
-    console.log("Token:", token);
-  
-    if (!token) {
-      toast.error("Authentication token is missing. Please log in again.", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      });
-      return;
-    }
-  
+
     try {
       const data = await readExcelFile(uploadFile);
-      console.log("Excel Data:", data);
-  
       if (!data || data.length === 0) {
         throw new Error("No valid data found in the file");
       }
-  
+
       // Process each row
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
         const rate = parseFloat(row["Rate (per Km)"]) || 0;
         const freight = kilometer * rate;
-  
+
         const expenses = [
           freight,
           parseFloat(row["Union/Km"]) || 0,
@@ -510,7 +564,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           parseFloat(row["Packing Expense"]) || 0,
         ];
         const totalAmount = expenses.reduce((sum, val) => sum + val, 0);
-  
+
         return {
           CN_CN_NO: row["CN No"],
           KILOMETER: kilometer,
@@ -532,23 +586,61 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           TOLL_TAX: parseFloat(row["Toll Tax"]) || 0,
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
           TOTAL_AMOUNT: totalAmount,
-          REMARKS: row["Remarks"] || "No remarks",
+          REMARKS: row["Remarks"] || "",
           ENTERED_BY: "admin",
           MODIFIED_BY: "admin",
         };
       });
-  
-      console.log("Processed Data:", processedData);
-  
+
       // Validate data
       const validationResults = processedData.map((item, index) => {
         const errors = [];
         if (!item.CN_CN_NO) errors.push("CN No is required");
-        if (isNaN(item.KILOMETER)) errors.push("Kilometer must be a number");
-        if (isNaN(item.RATE)) errors.push("Rate must be a number");
-        if (item.KILOMETER < 0) errors.push("Kilometer must be positive");
-        if (item.RATE < 0) errors.push("Rate must be positive");
-  
+        if (!item.KILOMETER && item.KILOMETER !== 0) errors.push("Kilometer is required");
+        if (!item.RATE && item.RATE !== 0) errors.push("Rate is required");
+        if (!item.LATITUDE && item.LATITUDE !== 0) errors.push("Latitude is required");
+        if (!item.LONGITUDE && item.LONGITUDE !== 0) errors.push("Longitude is required");
+        if (!item.UNION_KM && item.UNION_KM !== 0) errors.push("Union/Km is required");
+        if (!item.EXTRA_POINT && item.EXTRA_POINT !== 0) errors.push("Extra Point is required");
+        if (!item.DT_EXPENSE && item.DT_EXPENSE !== 0) errors.push("Dt Expense is required");
+        if (!item.ESCORT_EXPENSE && item.ESCORT_EXPENSE !== 0) errors.push("Escort Expense is required");
+        if (!item.LOADING_EXPENSE && item.LOADING_EXPENSE !== 0) errors.push("Loading Expense is required");
+        if (!item.UNLOADING_EXPENSE && item.UNLOADING_EXPENSE !== 0) errors.push("Unloading Expense is required");
+        if (!item.LABOUR_EXPENSE && item.LABOUR_EXPENSE !== 0) errors.push("Labour Expense is required");
+        if (!item.OTHER_EXPENSE && item.OTHER_EXPENSE !== 0) errors.push("Other Expense is required");
+        if (!item.CRANE_HYDRA_EXPENSE && item.CRANE_HYDRA_EXPENSE !== 0) errors.push("Crane/Hydra Expense is required");
+        if (!item.HEADLOAD_EXPENSE && item.HEADLOAD_EXPENSE !== 0) errors.push("Headload Expense is required");
+        if (!item.CHAIN_PULLEY_EXPENSE && item.CHAIN_PULLEY_EXPENSE !== 0) errors.push("Chain Pulley Expense is required");
+        if (!item.TOLL_TAX && item.TOLL_TAX !== 0) errors.push("Toll Tax is required");
+        if (!item.PACKING_EXPENSE && item.PACKING_EXPENSE !== 0) errors.push("Packing Expense is required");
+        if (!item.REMARKS) errors.push("Remarks is required");
+
+        // Numeric validation
+        const numericFields = [
+          "KILOMETER",
+          "RATE",
+          "LATITUDE",
+          "LONGITUDE",
+          "UNION_KM",
+          "EXTRA_POINT",
+          "DT_EXPENSE",
+          "ESCORT_EXPENSE",
+          "LOADING_EXPENSE",
+          "UNLOADING_EXPENSE",
+          "LABOUR_EXPENSE",
+          "OTHER_EXPENSE",
+          "CRANE_HYDRA_EXPENSE",
+          "HEADLOAD_EXPENSE",
+          "CHAIN_PULLEY_EXPENSE",
+          "TOLL_TAX",
+          "PACKING_EXPENSE",
+        ];
+        numericFields.forEach((field) => {
+          if (item[field] && isNaN(parseFloat(item[field]))) {
+            errors.push(`${field.replace(/_/g, ' ')} must be a valid number`);
+          }
+        });
+
         return {
           row: index + 2,
           cnNo: item.CN_CN_NO,
@@ -556,10 +648,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           errors: errors.length > 0 ? errors.join(", ") : null,
         };
       });
-  
+
       const invalidRows = validationResults.filter((item) => !item.isValid);
       if (invalidRows.length > 0) {
-        console.log("Invalid Rows:", invalidRows);
         setUploadResults({
           total: processedData.length,
           invalid: invalidRows,
@@ -571,17 +662,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         });
         return;
       }
-  
-      // Prepare results
+
+      // Rest of the bulk upload logic remains unchanged
       const results = {
         added: 0,
         updated: 0,
         failed: 0,
         errors: [],
       };
-  
-      // Attempt to add all expenses in a single API call
-      console.log("Sending add expenses request with payload:", processedData);
+
       try {
         const addResponse = await axios.post(
           "https://vmsnode.omlogistics.co.in/api/addExpenses",
@@ -593,20 +682,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             },
           }
         );
-        console.log("Add Response:", addResponse.data);
-  
+
         if (addResponse.data.error === false) {
           results.added += processedData.length;
-          console.log(`Successfully added ${processedData.length} expenses`);
         } else {
-          // If some records failed due to existing expenses, attempt to update
           if (
             addResponse.data.msg?.includes("Expenses already added") ||
             addResponse.data.error
           ) {
-            console.log("Some expenses already exist. Attempting to update...");
-  
-            // Prepare update payload with lowercase keys
             const updatePayload = processedData.map((item) => ({
               cn_cn_no: item.CN_CN_NO,
               kilometer: item.KILOMETER,
@@ -631,8 +714,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               remarks: item.REMARKS,
               modified_by: item.MODIFIED_BY,
             }));
-  
-            console.log("Sending update expenses request with payload:", updatePayload);
+
             try {
               const updateResponse = await axios.post(
                 "https://vmsnode.omlogistics.co.in/api/updateExpenses",
@@ -644,11 +726,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   },
                 }
               );
-              console.log("Update Response:", updateResponse.data);
-  
+
               if (updateResponse.data.error === false) {
                 results.updated += processedData.length;
-                console.log(`Successfully updated ${processedData.length} expenses`);
               } else {
                 results.failed += processedData.length;
                 results.errors.push({
@@ -656,10 +736,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   message: updateResponse.data.msg || "Failed to update expenses",
                   operation: "update",
                 });
-                console.error("Update failed:", updateResponse.data.msg);
               }
             } catch (updateError) {
-              console.error("Update Error:", updateError.response?.data || updateError.message);
               results.failed += processedData.length;
               results.errors.push({
                 cnNo: "Multiple",
@@ -674,19 +752,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               message: addResponse.data.msg || "Failed to add expenses",
               operation: "add",
             });
-            console.error("Add failed:", addResponse.data.msg);
           }
         }
       } catch (addError) {
-        console.error("Add Error:", addError.response?.data || addError.message);
-  
-        // If the error indicates existing expenses, attempt to update
         if (
           addError.response?.data?.error &&
           addError.response?.data?.msg?.trim() === "Expenses already added in this CN no"
         ) {
-          console.log("Expenses already exist. Attempting to update...");
-  
           const updatePayload = processedData.map((item) => ({
             cn_cn_no: item.CN_CN_NO,
             kilometer: item.KILOMETER,
@@ -711,8 +783,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             remarks: item.REMARKS,
             modified_by: item.MODIFIED_BY,
           }));
-  
-          console.log("Sending update expenses request with payload:", updatePayload);
+
           try {
             const updateResponse = await axios.post(
               "https://vmsnode.omlogistics.co.in/api/updateExpenses",
@@ -724,11 +795,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 },
               }
             );
-            console.log("Update Response:", updateResponse.data);
-  
+
             if (updateResponse.data.error === false) {
               results.updated += processedData.length;
-              console.log(`Successfully updated ${processedData.length} expenses`);
             } else {
               results.failed += processedData.length;
               results.errors.push({
@@ -736,10 +805,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 message: updateResponse.data.msg || "Failed to update expenses",
                 operation: "update",
               });
-              console.error("Update failed:", updateResponse.data.msg);
             }
           } catch (updateError) {
-            console.error("Update Error:", updateError.response?.data || updateError.message);
             results.failed += processedData.length;
             results.errors.push({
               cnNo: "Multiple",
@@ -754,11 +821,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             message: addError.response?.data?.msg || addError.message || "Unknown error during add",
             operation: "add",
           });
-          console.error("Add failed:", addError.response?.data?.msg || addError.message);
         }
       }
-  
-      console.log("Upload Results:", results);
+
       setUploadResults({
         total: processedData.length,
         invalid: [],
@@ -769,8 +834,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         errors: results.errors,
       });
       setUploadProgress(100);
-  
-      // Show toast notifications for added and updated counts
+
       if (results.added > 0) {
         toast.success(`${results.added} records added successfully`, {
           position: "top-right",
@@ -804,7 +868,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           theme: "colored",
         });
       }
-  
+
       fetchLrDetailsData();
     } catch (error) {
       console.error("Error processing file:", error);
@@ -814,7 +878,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true, 
+        draggable: true,
         theme: "colored",
       });
     }
@@ -845,6 +909,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     });
   };
 
+  // Unchanged columns definition
   const columns = [
     { name: "Row Number", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "" },
     { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
@@ -862,7 +927,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 <path d="M1 12C3 7 8 4 12 4C16 4 21 7 23 12C21 17 16 20 12 20C8 20 3 17 1 12Z" stroke="blue" stroke-width="2" fill="none" />
                 <circle cx="12" cy="12" r="3" stroke="black" stroke-width="2" fill="none" />
               </svg>
-
             </button>
           ) : (
             <button
@@ -875,7 +939,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           )}
           <button
             onClick={() => openFormInUpdateMode(row)}
-            className="text-green-500 text-2xl hover:text-green-700 "
+            className="text-green-500 text-2xl hover:text-green-700"
             title="Edit Expenses"
           >
             ✎
@@ -979,7 +1043,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             >
               Export to CSV
             </button>
-
           </div>
           <div className="w-full md:w-auto">
             <button
@@ -1053,7 +1116,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               {/* Left Column */}
               <div>
                 <div>
-                  <label>CN No</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    CN No
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.CN_CN_NO || ""}
@@ -1062,47 +1127,69 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                  <label>Kilometer</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Kilometer <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.KILOMETER || ""}
                     onChange={(e) => handleNumericInputChange("KILOMETER", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.KILOMETER ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.KILOMETER && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.KILOMETER}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Rate (per Km)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Rate (per Km) <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.RATE || ""}
                     onChange={(e) => handleNumericInputChange("RATE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.RATE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.RATE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.RATE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Latitude</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Latitude <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.LATITUDE || ""}
                     onChange={(e) => handleNumericInputChange("LATITUDE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.LATITUDE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.LATITUDE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.LATITUDE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Longitude</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Longitude <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.LONGITUDE || ""}
                     onChange={(e) => handleNumericInputChange("LONGITUDE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.LONGITUDE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.LONGITUDE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.LONGITUDE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Freight (Auto-calculated)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Freight (Auto-calculated)
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.FREIGHT || ""}
@@ -1111,141 +1198,208 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                  <label>Union/Km</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Union/Km <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.UNION_KM || ""}
                     onChange={(e) => handleNumericInputChange("UNION_KM", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.UNION_KM ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.UNION_KM && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.UNION_KM}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Extra Point</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Extra Point <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.EXTRA_POINT || ""}
                     onChange={(e) => handleNumericInputChange("EXTRA_POINT", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.EXTRA_POINT ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.EXTRA_POINT && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.EXTRA_POINT}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Dt Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Dt Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.DT_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("DT_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.DT_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.DT_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.DT_EXPENSE}</p>
+                  )}
                 </div>
               </div>
 
               {/* Right Column */}
               <div>
                 <div>
-                  <label>Escort Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Escort Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.ESCORT_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("ESCORT_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.ESCORT_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.ESCORT_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.ESCORT_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Loading Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Loading Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.LOADING_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("LOADING_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.LOADING_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.LOADING_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.LOADING_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Unloading Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Unloading Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.UNLOADING_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("UNLOADING_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.UNLOADING_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.UNLOADING_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.UNLOADING_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Labour Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Labour Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.LABOUR_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("LABOUR_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.LABOUR_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.LABOUR_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.LABOUR_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Other Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Other Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.OTHER_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("OTHER_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.OTHER_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.OTHER_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.OTHER_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Crane/Hydra Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Crane/Hydra Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.CRANE_HYDRA_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("CRANE_HYDRA_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.CRANE_HYDRA_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.CRANE_HYDRA_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.CRANE_HYDRA_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Headload Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Headload Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
-                    className="w-full border rounded-lg p-2"
+                    onChange={(e) => handleNumericInputChange("HEADLOAD_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
+                    className={`w-full border rounded-lg p-2 ${formErrors.HEADLOAD_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.HEADLOAD_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.HEADLOAD_EXPENSE}</p>
+                  )}
                 </div>
-
                 <div>
-                  <label>Chain Pulley Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Chain Pulley Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.CHAIN_PULLEY_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("CHAIN_PULLEY_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.CHAIN_PULLEY_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.CHAIN_PULLEY_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.CHAIN_PULLEY_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Toll Tax</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Toll Tax <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.TOLL_TAX || ""}
                     onChange={(e) => handleNumericInputChange("TOLL_TAX", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.TOLL_TAX ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.TOLL_TAX && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.TOLL_TAX}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Packing Expense</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Packing Expense <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.PACKING_EXPENSE || ""}
                     onChange={(e) => handleNumericInputChange("PACKING_EXPENSE", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.PACKING_EXPENSE ? 'border-red-500' : ''}`}
                   />
+                  {formErrors.PACKING_EXPENSE && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.PACKING_EXPENSE}</p>
+                  )}
                 </div>
                 <div>
-                  <label>Total Amount (Auto-calculated)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Total Amount (Auto-calculated)
+                  </label>
                   <input
                     type="text"
                     value={selectedRow.TOTAL_AMOUNT || ""}
@@ -1254,14 +1408,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                  <label>Remarks</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Remarks <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     value={selectedRow.REMARKS || ""}
                     onChange={(e) => handleInputChange("REMARKS", e.target.value)}
                     readOnly={formReadOnly}
-                    className="w-full border rounded-lg p-2"
+                    className={`w-full border rounded-lg p-2 ${formErrors.REMARKS ? 'border-red-500' : ''}`}
                     rows="3"
                   />
+                  {formErrors.REMARKS && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.REMARKS}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1339,7 +1498,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             {uploadResults && (
               <div className="mb-4 p-4 border rounded-lg">
                 <h3 className="font-bold mb-2">Upload Results:</h3>
-                {uploadResults.invalid ? (
+                {uploadResults.invalid.length > 0 ? (
                   <>
                     <p className="text-red-600">
                       {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
@@ -1371,143 +1530,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 ) : (
                   <>
                     <p className="text-green-600">
-                      Successfully processed {uploadResults.success} records
-                    </p>
-                    {uploadResults.failed > 0 && (
-                      <p className="text-red-600">
-                        Failed to process {uploadResults.failed} records
-                      </p>
-                    )}
-                    {uploadResults.errors.length > 0 && (
-                      <div className="mt-2 max-h-40 overflow-y-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
-                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {uploadResults.errors.map((error, index) => (
-                              <tr key={index}>
-                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{error.cnNo}</td>
-                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{error.message}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={closeBulkUpload}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                Close
-              </button>
-              <button
-                onClick={processBulkUpload}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                disabled={!uploadFile}
-              >
-                Process Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isBulkUploadOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Excel File (.xlsx, .xls, .csv)
-              </label>
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUpload}
-                className="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
-              />
-              {uploadFile && (
-                <p className="mt-2 text-sm text-gray-600">
-                  Selected file: {uploadFile.name}
-                </p>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <button
-                onClick={downloadTemplate}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
-              >
-                Download Sample Template
-              </button>
-            </div>
-
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  Uploading: {uploadProgress}% complete
-                </p>
-              </div>
-            )}
-
-            {uploadResults && (
-              <div className="mb-4 p-4 border rounded-lg">
-                <h3 className="font-bold mb-2">Upload Results:</h3>
-                {uploadResults.invalid ? (
-                  <>
-                    <p className="text-red-600">
-                      {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
-                    </p>
-                    <div className="mt-2 max-h-40 overflow-y-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Row</th>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {uploadResults.invalid.map((row, index) => (
-                            <tr key={index}>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.row}</td>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.cnNo || "-"}</td>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{row.errors}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-600">
-                      Please correct the errors and try again.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-green-600">
-                      Successfully processed {uploadResults.success} records
+                      Successfully added {uploadResults.added} and updated {uploadResults.updated} records
                     </p>
                     {uploadResults.failed > 0 && (
                       <p className="text-red-600">
