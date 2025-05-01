@@ -814,7 +814,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,i 
+        draggable: true, 
         theme: "colored",
       });
     }
