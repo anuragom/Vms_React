@@ -600,20 +600,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         if (!item.RATE && item.RATE !== 0) errors.push("Rate is required");
         if (!item.LATITUDE && item.LATITUDE !== 0) errors.push("Latitude is required");
         if (!item.LONGITUDE && item.LONGITUDE !== 0) errors.push("Longitude is required");
-        if (!item.UNION_KM && item.UNION_KM !== 0) errors.push("Union/Km is required");
-        if (!item.EXTRA_POINT && item.EXTRA_POINT !== 0) errors.push("Extra Point is required");
-        if (!item.DT_EXPENSE && item.DT_EXPENSE !== 0) errors.push("Dt Expense is required");
-        if (!item.ESCORT_EXPENSE && item.ESCORT_EXPENSE !== 0) errors.push("Escort Expense is required");
-        if (!item.LOADING_EXPENSE && item.LOADING_EXPENSE !== 0) errors.push("Loading Expense is required");
-        if (!item.UNLOADING_EXPENSE && item.UNLOADING_EXPENSE !== 0) errors.push("Unloading Expense is required");
-        if (!item.LABOUR_EXPENSE && item.LABOUR_EXPENSE !== 0) errors.push("Labour Expense is required");
-        if (!item.OTHER_EXPENSE && item.OTHER_EXPENSE !== 0) errors.push("Other Expense is required");
-        if (!item.CRANE_HYDRA_EXPENSE && item.CRANE_HYDRA_EXPENSE !== 0) errors.push("Crane/Hydra Expense is required");
-        if (!item.HEADLOAD_EXPENSE && item.HEADLOAD_EXPENSE !== 0) errors.push("Headload Expense is required");
-        if (!item.CHAIN_PULLEY_EXPENSE && item.CHAIN_PULLEY_EXPENSE !== 0) errors.push("Chain Pulley Expense is required");
-        if (!item.TOLL_TAX && item.TOLL_TAX !== 0) errors.push("Toll Tax is required");
-        if (!item.PACKING_EXPENSE && item.PACKING_EXPENSE !== 0) errors.push("Packing Expense is required");
-        if (!item.REMARKS) errors.push("Remarks is required");
+
 
         // Numeric validation
         const numericFields = [
@@ -872,7 +859,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       fetchLrDetailsData();
     } catch (error) {
       console.error("Error processing file:", error);
-      toast.error(`Error processing file: ${error.message}`, {
+      toast.error(`Error processing file: ${error.message || 'All column should be available'  }`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
