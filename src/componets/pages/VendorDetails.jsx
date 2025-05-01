@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
@@ -8,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getToken, getUserId } from "../../Auth/auth";
 
-const columns = (visiblePasswordId, handleTogglePassword) => [
+const columns = (visiblePasswordId, handleTogglePassword, updateUserStatus) => [
   {
     name: "Vendor ID",
     selector: (row) => row.userId,
@@ -31,15 +28,15 @@ const columns = (visiblePasswordId, handleTogglePassword) => [
     ),
     sortable: false,
   },
-  
+
   {
     name: "Status",
-    cell: () => (
+    cell: (row) => (
       <button
-     
-      type= "toggle"
-        className="cursor-pointer bg-green-500 rounded-full p-1">
-        Active
+        onClick={() => updateUserStatus(row.userId, row.userStatus)}
+        type="toggle"
+        className={`cursor-pointer rounded-full px-2 py-1 ${row.userStatus === "1" ? "bg-green-500" : "bg-red-500"}`}>
+        {row.userStatus === "1" ? "Active" : "Inactive"}
       </button>
     ),
     sortable: true,
@@ -50,12 +47,13 @@ const VendorDetails = () => {
   const [tableData, setTableData] = useState([]);
   const [visiblePasswordId, setVisiblePasswordId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const enteredBy = getUserId(); 
+
+  const enteredBy = getUserId();
   const [newVendor, setNewVendor] = useState({
     USER_ID: "",
     USER_NAME: "",
     ENTERED_BY: enteredBy,
-    Status:  1
+    Status: 1
   });
 
   const [suggestions, setSuggestions] = useState([]);
@@ -64,9 +62,46 @@ const VendorDetails = () => {
   const dropdownRef = useRef(null);
   const [isVendorCodeDisabled, setIsVendorCodeDisabled] = useState(false);
 
+  const [showChar, setShowChar] = useState(false);
+
   const handleTogglePassword = (userId) => {
     setVisiblePasswordId((prevId) => (prevId === userId ? null : userId));
   };
+
+  const updateUserStatus = async (userId, st) => {
+    const payload = {
+      USER_STATUS: st === "1" ? "0" : "1", //change the status to 0 or 1
+      USER_ID: userId
+    };
+
+    let config = {
+      method: "post",
+      maxBodyLength: Infinity,
+      url: "https://vmsnode.omlogistics.co.in/api/updateVendorStatus",
+      headers: {
+        Authorization: ` ${token}`,
+        "Content-Type": "application/json",
+      },
+      data: JSON.stringify(payload)
+    }
+    try {
+      const res = await axios.request(config)
+      if (res.data.error) {
+        toast.error(res.data.msg)
+      } else {
+        toast.success(res.data.msg)
+        setTableData(prev =>
+          prev.map(row =>
+            row.userId === userId
+              ? { ...row, userStatus: st === "1" ? "0" : "1" }
+              : row
+          )
+        );
+      }
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  }
 
   const fetchData = async () => {
     let data = JSON.stringify({});
@@ -88,6 +123,7 @@ const VendorDetails = () => {
           userId: item.USER_ID,
           userName: item.USER_NAME,
           userPwd: item.USER_PASSWORD,
+          userStatus: item.USER_STATUS,
         }));
         setTableData(mappedData);
       }
@@ -103,7 +139,7 @@ const VendorDetails = () => {
       return;
     }
 
-   
+
     const payload = {
       USER_ID: newVendor.USER_ID,
       USER_NAME: newVendor.USER_NAME,
@@ -126,18 +162,19 @@ const VendorDetails = () => {
     try {
       const response = await axios.request(config);
       if (response.data && !response.data.error) {
-        toast.success("Vendor added successfully!", {
+        toast.success(response.data.msg, {
           autoClose: 800,
         });
         setNewVendor({ USER_ID: "", USER_NAME: "", ENTERED_BY: enteredBy }); // Reset the form
         setShowAddForm(false);
         fetchData();
       } else {
-        toast.error("Failed to add vendor.");
+        toast.error(response.data.msg);
       }
+      setIsVendorCodeDisabled(false);
     } catch (error) {
-      console.error("Error adding vendor:", error);
-      toast.error("Failed to add vendor.");
+      console.error(error.response.data.msg, error);
+      toast.error(error.response.data.msg);
     }
   };
 
@@ -172,6 +209,7 @@ const VendorDetails = () => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
+
     } catch (error) {
       console.error("Error fetching vendor suggestions:", error);
       setSuggestions([]);
@@ -195,7 +233,11 @@ const VendorDetails = () => {
 
   const handleVendorCodeChange = (e) => {
     const value = e.target.value;
-
+    if (value.length < 5) {
+      setShowChar(true);
+    } else {
+      setShowChar(false);
+    }
     // Check if the input starts with 5 or 6
     if (value.length > 0 && !/^[56]/.test(value)) {
       toast.error("Vendor Code must start with 5 or 6.");
@@ -247,7 +289,7 @@ const VendorDetails = () => {
       </div>
 
       <DataTable
-        columns={columns(visiblePasswordId, handleTogglePassword)}
+        columns={columns(visiblePasswordId, handleTogglePassword, updateUserStatus)}
         data={tableData}
         pagination
         striped
@@ -266,7 +308,14 @@ const VendorDetails = () => {
               <form onSubmit={handleAddVendor}>
                 <div className="mb-4">
                   <label className="block text-gray-700 font-bold mb-2">
-                    Vendor Code:
+                    <div>
+                      Vendor Code:
+                    </div>
+                    {showChar &&
+                      <div className="text-xs font-normal text-red-500">
+                        * Add atleast 5 characters
+                      </div>
+                    }
                   </label>
                   <input
                     type="number"
@@ -279,7 +328,7 @@ const VendorDetails = () => {
                   {showSuggestions && (
                     <div
                       ref={dropdownRef}
-                      className="absolute z-10 mt-2 w-96 shadow-lg max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
+                      className="absolute z-10 mt-2 w-96  max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
                     >
                       {suggestions.map((suggestion) => (
                         <div

@@ -7,9 +7,10 @@ import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
+import { Eye } from 'lucide-react';
 
 const LrDetails = ({ isNavbarCollapsed }) => {
-  const marginClass = isNavbarCollapsed ? "" : "";
+  const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
 
   // State variables
   const [data, setData] = useState([]);
@@ -18,7 +19,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(15);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [totalRows, setTotalRows] = useState(0);
@@ -29,6 +30,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResults, setUploadResults] = useState(null);
+
+  const [formReadOnly, setFormReadOnly] = useState(false);
+
+  const CNMODEVATMap = {
+    "1": "NRGP",
+    "2": "SRN",
+    "3": "CAM",
+    "4": "IUT",
+    "5": "RMO",
+    "6": "MGMT GR",
+    "7": "FIX NRGP",
+    "8": "FIX SRN",
+  }
 
   const token = getToken();
   const decodedToken = jwtDecode(token);
@@ -62,6 +76,36 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   const openFormInUpdateMode = (row) => {
     setFormMode("update");
+    setFormReadOnly(false);
+    setSelectedRow({
+      CN_CN_NO: row.CN_CN_NO,
+      KILOMETER: row.KILOMETER || "",
+      RATE: row.RATE || "",
+      LATITUDE: row.LATITUDE || "",
+      LONGITUDE: row.LONGITUDE || "",
+      FREIGHT: row.FREIGHT || "",
+      UNION_KM: row.UNION_KM || "",
+      EXTRA_POINT: row.EXTRA_POINT || "",
+      DT_EXPENSE: row.DT_EXPENSE || "",
+      ESCORT_EXPENSE: row.ESCORT_EXPENSE || "",
+      LOADING_EXPENSE: row.LOADING_EXPENSE || "",
+      UNLOADING_EXPENSE: row.UNLOADING_EXPENSE || "",
+      LABOUR_EXPENSE: row.LABOUR_EXPENSE || "",
+      OTHER_EXPENSE: row.OTHER_EXPENSE || "",
+      CRANE_HYDRA_EXPENSE: row.CRANE_HYDRA_EXPENSE || "",
+      HEADLOAD_EXPENSE: row.HEADLOAD_EXPENSE || "",
+      CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE || "",
+      TOLL_TAX: row.TOLL_TAX || "",
+      PACKING_EXPENSE: row.PACKING_EXPENSE || "",
+      TOTAL_AMOUNT: row.TOTAL_AMOUNT || "",
+      REMARKS: row.REMARKS || "",
+    });
+    setIsFormOpen(true);
+  };
+
+  const openFormInReadMode = (row) => {
+    setFormMode("read");
+    setFormReadOnly(true);
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
@@ -120,6 +164,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     });
   };
 
+  // Add a helper for numeric input
+  const handleNumericInputChange = (field, value) => {
+    // Allow only numbers and a single decimal point
+    const filteredValue = value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+    handleInputChange(field, filteredValue);
+  };
+
   const fetchLrDetailsData = async () => {
     setLoading(true);
     setError(false);
@@ -152,6 +203,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       setData(response.data.data);
       setFilteredData(response.data.data);
       setTotalRows(response.data.total || response.data.data.length);
+
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(true);
@@ -225,6 +277,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const closeForm = () => {
     setIsFormOpen(false);
     setSelectedRow(null);
+    setFormReadOnly(false);
   };
 
   const closeBulkUpload = () => {
@@ -770,7 +823,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const readExcelFile = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
@@ -783,31 +836,47 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           reject(error);
         }
       };
-      
+
       reader.onerror = (error) => {
         reject(error);
       };
-      
+
       reader.readAsArrayBuffer(file);
     });
   };
 
   const columns = [
-    { name: "Row Number", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Row Number", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "" },
     { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     {
       name: "Action",
       cell: (row) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => openFormInAddMode(row)}
-            className="text-blue-500 text-xl hover:text-blue-700"
-          >
-            +
-          </button>
+        <div className="flex gap-3">
+          {row.KILOMETER || row.RATE || row.FREIGHT || row.TOTAL_AMOUNT ? (
+            <button
+              onClick={() => openFormInReadMode(row)}
+              className="text-blue-500 text-xs"
+              title="View Expenses"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12C3 7 8 4 12 4C16 4 21 7 23 12C21 17 16 20 12 20C8 20 3 17 1 12Z" stroke="blue" stroke-width="2" fill="none" />
+                <circle cx="12" cy="12" r="3" stroke="black" stroke-width="2" fill="none" />
+              </svg>
+
+            </button>
+          ) : (
+            <button
+              onClick={() => openFormInAddMode(row)}
+              className="text-blue-500 text-2xl hover:text-blue-700"
+              title="Add Expenses"
+            >
+              +
+            </button>
+          )}
           <button
             onClick={() => openFormInUpdateMode(row)}
-            className="text-green-500 text-xl hover:text-green-700"
+            className="text-green-500 text-2xl hover:text-green-700 "
+            title="Edit Expenses"
           >
             ✎
           </button>
@@ -819,7 +888,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "CN Date", selector: (row) => (row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
     { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE || "-", sortable: true, wrap: true, width: "190px" },
-    { name: "Mode VAT", selector: (row) => row.CN_MODE_VAT || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Mode VAT", selector: (row) => CNMODEVATMap[row.CN_MODE_VAT] || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT || "-", sortable: true, wrap: true, width: "150px" },
@@ -850,15 +919,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
-  const rowPerPageOptions = [50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
+  const rowPerPageOptions = [10, 50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
 
   return (
-    <div className={`min-h-screen bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
+    <div className={` bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300 `}>
       <ToastContainer />
 
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto ">
         <div>
-          <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
           </label>
           <input
@@ -870,7 +939,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           />
         </div>
         <div>
-          <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="toDate" className="block text-xs font-medium text-gray-700 mb-1">
             To Date
           </label>
           <input
@@ -881,47 +950,53 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
-        <div>
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-            Search by CN No
-          </label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Enter CN No"
-            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
+        <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
+          <div className="w-full">
+            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1 ">
+              Search by CN No
+            </label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Enter CN No"
+              className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={handleSearch}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
+            >
+              Search
+            </button>
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={exportToCSV}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            >
+              Export to CSV
+            </button>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 max-w-6xl mx-auto">
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
-        >
-          Search
-        </button>
-        <button
-          onClick={exportToCSV}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
-        >
-          Export to CSV
-        </button>
-        <button
-          onClick={() => setIsBulkUploadOpen(true)}
-          className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
-        >
-          Bulk Upload
-        </button>
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={() => setIsBulkUploadOpen(true)}
+              className="whitespace-nowrap px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors w-full"
+            >
+              Bulk Upload
+            </button>
+          </div>
+        </div>
       </div>
 
       {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto max-w-6xl mx-auto">
+        <div className="overflow-x-auto max-w-6xl mx-auto rounded-lg shadow-xl">
           <DataTable
             columns={columns}
             data={filteredData}
@@ -943,7 +1018,23 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   "&:hover": { backgroundColor: "#f3f4f6" },
                 },
               },
+              table: {
+                style: {
+                  overflowX: 'hidden',
+                },
+              },
+              tableWrapper: {
+                style: {
+                  '::-webkit-scrollbar': {
+                    display: 'none',
+                  },
+                  'scrollbarWidth': 'none',
+                  '-ms-overflow-style': 'none',
+                },
+              },
             }}
+            fixedHeader
+            fixedHeaderScrollHeight="70vh"
           />
         </div>
       )}
@@ -952,7 +1043,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">
-              {formMode === "add" ? "Add Expenses" : "Update Expenses"} for CN No: {selectedRow.CN_CN_NO}
+              {formMode === "add"
+                ? "Add Expenses"
+                : formMode === "update"
+                  ? "Update Expenses"
+                  : "View Expenses"} for CN No: {selectedRow.CN_CN_NO}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Left Column */}
@@ -969,43 +1064,47 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 <div>
                   <label>Kilometer</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.KILOMETER || ""}
-                    onChange={(e) => handleInputChange("KILOMETER", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("KILOMETER", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Rate (per Km)</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.RATE || ""}
-                    onChange={(e) => handleInputChange("RATE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("RATE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Latitude</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.LATITUDE || ""}
-                    onChange={(e) => handleInputChange("LATITUDE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("LATITUDE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Longitude</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.LONGITUDE || ""}
-                    onChange={(e) => handleInputChange("LONGITUDE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("LONGITUDE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Freight (Auto-calculated)</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.FREIGHT || ""}
                     className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
                     readOnly
@@ -1014,27 +1113,30 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 <div>
                   <label>Union/Km</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.UNION_KM || ""}
-                    onChange={(e) => handleInputChange("UNION_KM", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("UNION_KM", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Extra Point</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.EXTRA_POINT || ""}
-                    onChange={(e) => handleInputChange("EXTRA_POINT", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("EXTRA_POINT", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Dt Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.DT_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("DT_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("DT_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
@@ -1045,61 +1147,76 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 <div>
                   <label>Escort Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.ESCORT_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("ESCORT_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("ESCORT_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Loading Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.LOADING_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("LOADING_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("LOADING_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Unloading Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.UNLOADING_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("UNLOADING_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("UNLOADING_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Labour Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.LABOUR_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("LABOUR_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("LABOUR_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Other Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.OTHER_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("OTHER_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("OTHER_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Crane/Hydra Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.CRANE_HYDRA_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("CRANE_HYDRA_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("CRANE_HYDRA_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Headload Expense</label>
                   <input
-                    type="number"
+                    type="text"
+                    value={selectedRow.HEADLOAD_EXPENSE || ""}
+                    onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
+                    className="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                  <label>HeadLoad Expense</label>
+                  <input
+                    type="text"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
                     onChange={(e) => handleInputChange("HEADLOAD_EXPENSE", e.target.value)}
                     className="w-full border rounded-lg p-2"
@@ -1108,34 +1225,37 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 <div>
                   <label>Chain Pulley Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.CHAIN_PULLEY_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("CHAIN_PULLEY_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("CHAIN_PULLEY_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Toll Tax</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.TOLL_TAX || ""}
-                    onChange={(e) => handleInputChange("TOLL_TAX", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("TOLL_TAX", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Packing Expense</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.PACKING_EXPENSE || ""}
-                    onChange={(e) => handleInputChange("PACKING_EXPENSE", e.target.value)}
+                    onChange={(e) => handleNumericInputChange("PACKING_EXPENSE", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
                 <div>
                   <label>Total Amount (Auto-calculated)</label>
                   <input
-                    type="number"
+                    type="text"
                     value={selectedRow.TOTAL_AMOUNT || ""}
                     className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
                     readOnly
@@ -1146,6 +1266,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <textarea
                     value={selectedRow.REMARKS || ""}
                     onChange={(e) => handleInputChange("REMARKS", e.target.value)}
+                    readOnly={formReadOnly}
                     className="w-full border rounded-lg p-2"
                     rows="3"
                   />
@@ -1160,11 +1281,149 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               >
                 Close
               </button>
+              {!formReadOnly && (
+                <button
+                  onClick={handleSaveExpenses}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  {formMode === "add" ? "Add" : "Update"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBulkUploadOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Excel File (.xlsx, .xls, .csv)
+              </label>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileUpload}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+              {uploadFile && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected file: {uploadFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4">
               <button
-                onClick={handleSaveExpenses}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                onClick={downloadTemplate}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
               >
-                {formMode === "add" ? "Add" : "Update"}
+                Download Sample Template
+              </button>
+            </div>
+
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Uploading: {uploadProgress}% complete
+                </p>
+              </div>
+            )}
+
+            {uploadResults && (
+              <div className="mb-4 p-4 border rounded-lg">
+                <h3 className="font-bold mb-2">Upload Results:</h3>
+                {uploadResults.invalid ? (
+                  <>
+                    <p className="text-red-600">
+                      {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
+                    </p>
+                    <div className="mt-2 max-h-40 overflow-y-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Row</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {uploadResults.invalid.map((row, index) => (
+                            <tr key={index}>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.row}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.cnNo || "-"}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{row.errors}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Please correct the errors and try again.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-green-600">
+                      Successfully processed {uploadResults.success} records
+                    </p>
+                    {uploadResults.failed > 0 && (
+                      <p className="text-red-600">
+                        Failed to process {uploadResults.failed} records
+                      </p>
+                    )}
+                    {uploadResults.errors.length > 0 && (
+                      <div className="mt-2 max-h-40 overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {uploadResults.errors.map((error, index) => (
+                              <tr key={index}>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{error.cnNo}</td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{error.message}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={closeBulkUpload}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Close
+              </button>
+              <button
+                onClick={processBulkUpload}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                disabled={!uploadFile}
+              >
+                Process Upload
               </button>
             </div>
           </div>
@@ -1175,7 +1434,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)

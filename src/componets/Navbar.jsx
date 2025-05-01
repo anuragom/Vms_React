@@ -186,8 +186,8 @@ const Navbar = ({ items, isCollapsed }) => {
 
   return (
     <nav
-      className={`bg-[#01588E] mt-4 border-r border-gray-200 transition-all duration-300 ease-in-out
-        ${isCollapsed ? "w-16" : "w-66"} h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar`}
+      className={`bg-[#01588E] transition-all duration-300 ease-in-out
+        ${isCollapsed ? "w-16" : "w-72"} h-[calc(100vh-3rem)] overflow-y-auto custom-scrollbar`}
     >
       <div className="flex flex-col gap-1 p-2">
         {items.filter((item) => allowedMenuIds.includes(item.id)).map((item) => {
