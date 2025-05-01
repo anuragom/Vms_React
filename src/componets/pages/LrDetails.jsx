@@ -393,7 +393,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
     setUploadFile(file);
   };
-
   const processBulkUpload = async () => {
     if (!uploadFile) {
       toast.error("Please select a file to upload", {
@@ -407,22 +406,40 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       });
       return;
     }
-
+  
     setUploadProgress(0);
     setUploadResults(null);
-
+  
+    console.log("Starting bulk upload...");
+    console.log("Token:", token);
+  
+    if (!token) {
+      toast.error("Authentication token is missing. Please log in again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+  
     try {
       const data = await readExcelFile(uploadFile);
+      console.log("Excel Data:", data);
+  
       if (!data || data.length === 0) {
         throw new Error("No valid data found in the file");
       }
-
+  
       // Process each row
-      const processedData = data.map(row => {
+      const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
         const rate = parseFloat(row["Rate (per Km)"]) || 0;
         const freight = kilometer * rate;
-
+  
         const expenses = [
           freight,
           parseFloat(row["Union/Km"]) || 0,
@@ -434,14 +451,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           parseFloat(row["Labour Expense"]) || 0,
           parseFloat(row["Other Expense"]) || 0,
           parseFloat(row["Crane/Hydra Expense"]) || 0,
+          parseFloat(row["Headload Expense"]) || 0,
           parseFloat(row["Chain Pulley Expense"]) || 0,
           parseFloat(row["Toll Tax"]) || 0,
           parseFloat(row["Packing Expense"]) || 0,
-          parseFloat(row["Headload Expense"]) || 0,
-
         ];
         const totalAmount = expenses.reduce((sum, val) => sum + val, 0);
-
+  
         return {
           CN_CN_NO: row["CN No"],
           KILOMETER: kilometer,
@@ -452,13 +468,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           UNION_KM: parseFloat(row["Union/Km"]) || 0,
           EXTRA_POINT: parseFloat(row["Extra Point"]) || 0,
           DT_EXPENSE: parseFloat(row["Dt Expense"]) || 0,
-          HEADLOAD_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
           ESCORT_EXPENSE: parseFloat(row["Escort Expense"]) || 0,
           LOADING_EXPENSE: parseFloat(row["Loading Expense"]) || 0,
           UNLOADING_EXPENSE: parseFloat(row["Unloading Expense"]) || 0,
           LABOUR_EXPENSE: parseFloat(row["Labour Expense"]) || 0,
           OTHER_EXPENSE: parseFloat(row["Other Expense"]) || 0,
           CRANE_HYDRA_EXPENSE: parseFloat(row["Crane/Hydra Expense"]) || 0,
+          HEADLOAD_EXPENSE: parseFloat(row["Headload Expense"]) || 0,
           CHAIN_PULLEY_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
           TOLL_TAX: parseFloat(row["Toll Tax"]) || 0,
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
@@ -468,7 +484,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           MODIFIED_BY: "admin",
         };
       });
-
+  
+      console.log("Processed Data:", processedData);
+  
       // Validate data
       const validationResults = processedData.map((item, index) => {
         const errors = [];
@@ -477,67 +495,263 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         if (isNaN(item.RATE)) errors.push("Rate must be a number");
         if (item.KILOMETER < 0) errors.push("Kilometer must be positive");
         if (item.RATE < 0) errors.push("Rate must be positive");
-
+  
         return {
-          row: index + 2, // +2 because Excel rows start at 1 and header is row 1
+          row: index + 2,
           cnNo: item.CN_CN_NO,
           isValid: errors.length === 0,
-          errors: errors.length > 0 ? errors.join(", ") : null
+          errors: errors.length > 0 ? errors.join(", ") : null,
         };
       });
-
-      const invalidRows = validationResults.filter(item => !item.isValid);
+  
+      const invalidRows = validationResults.filter((item) => !item.isValid);
       if (invalidRows.length > 0) {
+        console.log("Invalid Rows:", invalidRows);
         setUploadResults({
           total: processedData.length,
           invalid: invalidRows,
-          valid: processedData.length - invalidRows.length
+          valid: processedData.length - invalidRows.length,
+          added: 0,
+          updated: 0,
+          failed: 0,
+          errors: [],
         });
         return;
       }
-
-      // Upload valid data
+  
+      // Prepare results
       const results = {
-        success: 0,
+        added: 0,
+        updated: 0,
         failed: 0,
-        errors: []
+        errors: [],
       };
-
-      for (let i = 0; i < processedData.length; i++) {
-        try {
-          const response = await axios.post(
-            "https://vmsnode.omlogistics.co.in/api/addExpenses",
-            processedData[i],
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
+  
+      // Attempt to add all expenses in a single API call
+      console.log("Sending add expenses request with payload:", processedData);
+      try {
+        const addResponse = await axios.post(
+          "https://vmsnode.omlogistics.co.in/api/addExpenses",
+          processedData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Add Response:", addResponse.data);
+  
+        if (addResponse.data.error === false) {
+          results.added += processedData.length;
+          console.log(`Successfully added ${processedData.length} expenses`);
+        } else {
+          // If some records failed due to existing expenses, attempt to update
+          if (
+            addResponse.data.msg?.includes("Expenses already added") ||
+            addResponse.data.error
+          ) {
+            console.log("Some expenses already exist. Attempting to update...");
+  
+            // Prepare update payload with lowercase keys
+            const updatePayload = processedData.map((item) => ({
+              cn_cn_no: item.CN_CN_NO,
+              kilometer: item.KILOMETER,
+              rate: item.RATE,
+              latitude: item.LATITUDE,
+              longitude: item.LONGITUDE,
+              freight: item.FREIGHT,
+              union_km: item.UNION_KM,
+              extra_point: item.EXTRA_POINT,
+              dt_expense: item.DT_EXPENSE,
+              escort_expense: item.ESCORT_EXPENSE,
+              loading_expense: item.LOADING_EXPENSE,
+              unloading_expense: item.UNLOADING_EXPENSE,
+              labour_expense: item.LABOUR_EXPENSE,
+              other_expense: item.OTHER_EXPENSE,
+              crane_hydra_expense: item.CRANE_HYDRA_EXPENSE,
+              headload_expense: item.HEADLOAD_EXPENSE,
+              chain_pulley_expense: item.CHAIN_PULLEY_EXPENSE,
+              toll_tax: item.TOLL_TAX,
+              packing_expense: item.PACKING_EXPENSE,
+              total_amount: item.TOTAL_AMOUNT,
+              remarks: item.REMARKS,
+              modified_by: item.MODIFIED_BY,
+            }));
+  
+            console.log("Sending update expenses request with payload:", updatePayload);
+            try {
+              const updateResponse = await axios.post(
+                "https://vmsnode.omlogistics.co.in/api/updateExpenses",
+                updatePayload,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+              console.log("Update Response:", updateResponse.data);
+  
+              if (updateResponse.data.error === false) {
+                results.updated += processedData.length;
+                console.log(`Successfully updated ${processedData.length} expenses`);
+              } else {
+                results.failed += processedData.length;
+                results.errors.push({
+                  cnNo: "Multiple",
+                  message: updateResponse.data.msg || "Failed to update expenses",
+                  operation: "update",
+                });
+                console.error("Update failed:", updateResponse.data.msg);
+              }
+            } catch (updateError) {
+              console.error("Update Error:", updateError.response?.data || updateError.message);
+              results.failed += processedData.length;
+              results.errors.push({
+                cnNo: "Multiple",
+                message: updateError.response?.data?.msg || updateError.message || "Unknown error during update",
+                operation: "update",
+              });
             }
-          );
-
-          if (response.data.error === false) {
-            results.success++;
           } else {
-            results.failed++;
+            results.failed += processedData.length;
             results.errors.push({
-              cnNo: processedData[i].CN_CN_NO,
-              message: response.data.msg || "Unknown error"
+              cnNo: "Multiple",
+              message: addResponse.data.msg || "Failed to add expenses",
+              operation: "add",
+            });
+            console.error("Add failed:", addResponse.data.msg);
+          }
+        }
+      } catch (addError) {
+        console.error("Add Error:", addError.response?.data || addError.message);
+  
+        // If the error indicates existing expenses, attempt to update
+        if (
+          addError.response?.data?.error &&
+          addError.response?.data?.msg?.trim() === "Expenses already added in this CN no"
+        ) {
+          console.log("Expenses already exist. Attempting to update...");
+  
+          const updatePayload = processedData.map((item) => ({
+            cn_cn_no: item.CN_CN_NO,
+            kilometer: item.KILOMETER,
+            rate: item.RATE,
+            latitude: item.LATITUDE,
+            longitude: item.LONGITUDE,
+            freight: item.FREIGHT,
+            union_km: item.UNION_KM,
+            extra_point: item.EXTRA_POINT,
+            dt_expense: item.DT_EXPENSE,
+            escort_expense: item.ESCORT_EXPENSE,
+            loading_expense: item.LOADING_EXPENSE,
+            unloading_expense: item.UNLOADING_EXPENSE,
+            labour_expense: item.LABOUR_EXPENSE,
+            other_expense: item.OTHER_EXPENSE,
+            crane_hydra_expense: item.CRANE_HYDRA_EXPENSE,
+            headload_expense: item.HEADLOAD_EXPENSE,
+            chain_pulley_expense: item.CHAIN_PULLEY_EXPENSE,
+            toll_tax: item.TOLL_TAX,
+            packing_expense: item.PACKING_EXPENSE,
+            total_amount: item.TOTAL_AMOUNT,
+            remarks: item.REMARKS,
+            modified_by: item.MODIFIED_BY,
+          }));
+  
+          console.log("Sending update expenses request with payload:", updatePayload);
+          try {
+            const updateResponse = await axios.post(
+              "https://vmsnode.omlogistics.co.in/api/updateExpenses",
+              updatePayload,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            console.log("Update Response:", updateResponse.data);
+  
+            if (updateResponse.data.error === false) {
+              results.updated += processedData.length;
+              console.log(`Successfully updated ${processedData.length} expenses`);
+            } else {
+              results.failed += processedData.length;
+              results.errors.push({
+                cnNo: "Multiple",
+                message: updateResponse.data.msg || "Failed to update expenses",
+                operation: "update",
+              });
+              console.error("Update failed:", updateResponse.data.msg);
+            }
+          } catch (updateError) {
+            console.error("Update Error:", updateError.response?.data || updateError.message);
+            results.failed += processedData.length;
+            results.errors.push({
+              cnNo: "Multiple",
+              message: updateError.response?.data?.msg || updateError.message || "Unknown error during update",
+              operation: "update",
             });
           }
-        } catch (error) {
-          results.failed++;
+        } else {
+          results.failed += processedData.length;
           results.errors.push({
-            cnNo: processedData[i].CN_CN_NO,
-            message: error.response?.data?.msg || error.message || "Unknown error"
+            cnNo: "Multiple",
+            message: addError.response?.data?.msg || addError.message || "Unknown error during add",
+            operation: "add",
           });
+          console.error("Add failed:", addError.response?.data?.msg || addError.message);
         }
-
-        // Update progress
-        setUploadProgress(Math.round(((i + 1) / processedData.length) * 100));
       }
-
-      setUploadResults(results);
+  
+      console.log("Upload Results:", results);
+      setUploadResults({
+        total: processedData.length,
+        invalid: [],
+        valid: processedData.length,
+        added: results.added,
+        updated: results.updated,
+        failed: results.failed,
+        errors: results.errors,
+      });
+      setUploadProgress(100);
+  
+      // Show toast notifications for added and updated counts
+      if (results.added > 0) {
+        toast.success(`${results.added} records added successfully`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+      }
+      if (results.updated > 0) {
+        toast.success(`${results.updated} records updated successfully`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+      }
+      if (results.failed > 0) {
+        toast.error(`${results.failed} records failed to process`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+      }
+  
       fetchLrDetailsData();
     } catch (error) {
       console.error("Error processing file:", error);
@@ -547,7 +761,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
-        draggable: true,
+        draggable: true,i 
         theme: "colored",
       });
     }
@@ -883,7 +1097,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                <label>HeadLoad Expense</label>
+                  <label>Headload Expense</label>
                   <input
                     type="number"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
