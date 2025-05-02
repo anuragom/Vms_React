@@ -19,8 +19,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
     "6": "MGMT GR",
     "7": "FIX NRGP",
     "8": "FIX SRN",
-  }
-
+  };
 
   // State variables
   const [data, setData] = useState([]);
@@ -33,6 +32,8 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [totalRows, setTotalRows] = useState(0);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   const token = getToken();
   const decodedToken = jwtDecode(token);
@@ -82,6 +83,103 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
     fetchLrDetailsData();
   }, [page, limit, fromDate, toDate, search]);
 
+  // Handle individual row checkbox
+  const handleRowSelect = (row) => {
+    let updatedSelectedRows;
+    if (selectedRows.some((selected) => selected.CN_CN_NO === row.CN_CN_NO)) {
+      updatedSelectedRows = selectedRows.filter(
+        (selected) => selected.CN_CN_NO !== row.CN_CN_NO
+      );
+    } else {
+      updatedSelectedRows = [...selectedRows, row];
+    }
+    setSelectedRows(updatedSelectedRows);
+    setSelectAll(updatedSelectedRows.length === filteredData.length);
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows([...filteredData]);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Handle submit button click
+  const handleSubmitSelected = async () => {
+    if (selectedRows.length === 0) {
+      toast.warn("No rows selected!");
+      return;
+    }
+
+    // Log selected rows to console
+    console.log("Selected Rows:", selectedRows);
+
+    // Make API call with selected rows
+    try {
+      const payload = {
+        
+        selectedRows: selectedRows.map((row) => ({
+          CN_NO: row.CN_CN_NO,
+          MANUAL_CN_NO: row.CN_MANUAL_CN_NO,
+          CN_DATE: row.CN_CN_DATE,
+          SOURCE_BRANCH_CODE: row.CN_SOURCE_BRANCH_CODE,
+          DESTINATION_BRANCH_CODE: row.CN_DESTINATION_BRANCH_CODE,
+          MODE_VAT: row.CN_MODE_VAT,
+          ITEM_DESCRIPTION: row.CN_ITEM_DESCRIPT,
+          TOTAL_PACKAGES: row.TOTAL_CN_PKG,
+          TOTAL_WEIGHT: row.TOTAL_CN_ACTUAL_WEIGHT,
+          CHALLAN_VENDOR_CODE: row.CHLN_VENDOR_CODE,
+          CHALLAN_NO: row.CHLN_CHLN_NO,
+          CHALLAN_DATE: new Date(row.CHLN_CHLN_DATE).toISOString().split('T')[0],
+          LORRY_NO: row.CHLN_LORRY_NO,
+          SITE_ID: row.SITE_ID,
+          KILOMETER: row.KILOMETER,
+          RATE: row.RATE,
+          FREIGHT: row.FREIGHT,
+          UNION_KM: row.UNION_KM,
+          EXTRA_POINT: row.EXTRA_POINT,
+          DT_EXPENSE: row.DT_EXPENSE,
+          ESCORT_EXPENSE: row.ESCORT_EXPENSE,
+          LOADING_EXPENSE: row.LOADING_EXPENSE,
+          UNLOADING_EXPENSE: row.UNLOADING_EXPENSE,
+          LABOUR_EXPENSE: row.LABOUR_EXPENSE,
+          OTHER_EXPENSE: row.OTHER_EXPENSE,
+          CRANE_HYDRA_EXPENSE: row.CRANE_HYDRA_EXPENSE,
+          HEADLOAD_EXPENSE: row.HEADLOAD_EXPENSE,
+          CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE, // Add this field in your row if not present
+          TOLL_TAX: row.TOLL_TAX,
+          PACKING_EXPENSE: row.PACKING_EXPENSE,
+          TOTAL_AMOUNT: row.TOTAL_AMOUNT,
+          LATITUDE: row.LATITUDE,
+          LONGITUDE: row.LONGITUDE,
+          REMARKS: row.REMARKS,
+          ENTERED_BY: USER_ID,
+          MODIFIED_BY: USER_ID,
+          ANEXURE_FLAG: "Y"})),
+      };
+
+      const response = await axios.post(
+        "https://vmsnode.omlogistics.co.in/api/AddbillProcessing", // Placeholder endpoint
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      ); 
+
+      toast.success("Selected rows processed successfully!");
+      console.log("API Response:", response.data);
+    } catch (error) {
+      console.error("Error processing selected rows:", error);
+      toast.error(error.response?.data?.msg || "Error processing selected rows");
+    }
+  };
+
   const handleSearch = () => {
     setPage(1);
     fetchLrDetailsData();
@@ -89,11 +187,15 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
 
   const handlePageChange = (page) => {
     setPage(page);
+    setSelectedRows([]);
+    setSelectAll(false);
   };
 
   const handleRowsPerPageChange = (newLimit, page) => {
     setLimit(newLimit);
     setPage(page);
+    setSelectedRows([]);
+    setSelectAll(false);
   };
 
   const exportToCSV = () => {
@@ -141,6 +243,26 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   };
 
   const columns = [
+    {
+      name: (
+        <input
+          type="checkbox"
+          checked={selectAll}
+          onChange={handleSelectAll}
+        />
+      ),
+      selector: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedRows.some(
+            (selected) => selected.CN_CN_NO === row.CN_CN_NO
+          )}
+          onChange={() => handleRowSelect(row)}
+        />
+      ),
+      sortable: false,
+      width: "80px",
+    },
     { name: "Row Number", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
@@ -178,7 +300,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
-  const rowPerPageOptions = [50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
+  const rowPerPageOptions = [10, 50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
 
   return (
     <div className={`min-h-screen bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
@@ -236,6 +358,12 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
           className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
         >
           Export to CSV
+        </button>
+        <button
+          onClick={handleSubmitSelected}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+        >
+          Generate Annexure
         </button>
       </div>
 
