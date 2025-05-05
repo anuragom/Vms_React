@@ -154,7 +154,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
   const columns = [
   
-    { name: "Row Number", selector: (row) => row.R_NUM || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Row Number", selector: (row) => row.RNUM || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN No", selector: (row) => row.CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Manual CN No", selector: (row) => row.MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN Date", selector: (row) => (row.CN_DATE ? new Date(row.CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
