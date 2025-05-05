@@ -164,7 +164,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     { name: "Item Description", selector: (row) => row.ITEM_DESCRIPT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Packages", selector: (row) => row.TOTAL_PACKAGES || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Weight", selector: (row) => row.TOTAL_WEIGHT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Challan Vendor Code", selector: (row) => row.CHALLLAN_VENDOR_CODE || "-", sortable: true, wrap: true, width: "190px" },
+    { name: "Challan Vendor Code", selector: (row) => row.CHALLAN_VENDOR_CODE || "-", sortable: true, wrap: true, width: "190px" },
     { name: "Challan No", selector: (row) => row.CHALLAN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Challan Date", selector: (row) => (row.CHALLAN_DATE ? new Date(row.CHLN_CHLN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "170px" },
     { name: "Lorry No", selector: (row) => row.LORRY_NO || "-", sortable: true, wrap: true, width: "150px" },
