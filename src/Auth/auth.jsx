@@ -1,6 +1,3 @@
-
-
-
 // Store user data, token, role, and user ID in memory for faster access
 let user = null;
 let token = null;

@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
 import { Eye } from 'lucide-react';
+import { CustomTable } from "../Ui/CustomTable";
 
 const LrDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
@@ -19,7 +20,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
+  const [limit, setLimit] = useState(20);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [totalRows, setTotalRows] = useState(0);
@@ -56,7 +57,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "KILOMETER",
       "RATE",
       "LATITUDE",
-      "LONGITUDE",
+      "LONGITUDE"
+    ];
+
+    requiredFields.forEach((field) => {
+      if (!row[field] && row[field] !== 0) {
+        errors[field] = `${field.replace(/_/g, ' ')} is required`;
+      } else if (isNaN(parseFloat(row[field]))) {
+        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+      }
+    });
+
+    // For non-required numeric fields, still validate they're numbers if provided
+    const optionalNumericFields = [
       "UNION_KM",
       "EXTRA_POINT",
       "DT_EXPENSE",
@@ -69,15 +82,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "HEADLOAD_EXPENSE",
       "CHAIN_PULLEY_EXPENSE",
       "TOLL_TAX",
-      "PACKING_EXPENSE",
-      "REMARKS",
+      "PACKING_EXPENSE"
     ];
 
-    requiredFields.forEach((field) => {
-      if (!row[field] && row[field] !== 0) {
-        errors[field] = `${field.replace(/_/g, ' ')} is required`;
-      } else if (field !== "REMARKS" && isNaN(parseFloat(row[field]))) {
-        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+    optionalNumericFields.forEach((field) => {
+      if (row[field] !== "" && row[field] !== undefined && row[field] !== null) {
+        if (isNaN(parseFloat(row[field]))) {
+          errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+        }
       }
     });
 
@@ -208,13 +220,31 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     // Validate the field on change
     setFormErrors((prev) => {
       const errors = { ...prev };
-      if (!value && value !== 0) {
-        errors[field] = `${field.replace(/_/g, ' ')} is required`;
-      } else if (field !== "REMARKS" && isNaN(parseFloat(value))) {
-        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
-      } else {
-        delete errors[field];
+      const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE"];
+      
+      // For required fields
+      if (requiredFields.includes(field)) {
+        if (!value && value !== 0) {
+          errors[field] = `${field.replace(/_/g, ' ')} is required`;
+        } else if (isNaN(parseFloat(value))) {
+          errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+        } else {
+          delete errors[field];
+        }
+      } 
+      // For optional numeric fields
+      else if (field !== "REMARKS") {
+        if (value !== "" && value !== undefined && value !== null) {
+          if (isNaN(parseFloat(value))) {
+            errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+          } else {
+            delete errors[field];
+          }
+        } else {
+          delete errors[field];
+        }
       }
+      
       return errors;
     });
   };
@@ -256,7 +286,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       setData(response.data.data);
       setFilteredData(response.data.data);
-      setTotalRows(response.data.total || response.data.data.length);
+      setTotalRows(response.data.totalRecords || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(true);
@@ -267,7 +297,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   useEffect(() => {
     fetchLrDetailsData();
-  }, [page, limit, fromDate, toDate, search]);
+  }, [page, limit, search]);
 
   const handleSearch = () => {
     setPage(1);
@@ -348,8 +378,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const errors = validateForm(selectedRow);
     setFormErrors(errors);
 
-    if (Object.keys(errors).length > 0) {
-      toast.error("Please fill in all required fields correctly", {
+    // Check if there are any errors in required fields
+    const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE"];
+    const hasRequiredFieldErrors = Object.keys(errors).some(key => 
+      requiredFields.includes(key)
+    );
+
+    if (hasRequiredFieldErrors) {
+      toast.error("Please fill all required fields correctly", {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -370,21 +406,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         LATITUDE: parseFloat(selectedRow.LATITUDE),
         LONGITUDE: parseFloat(selectedRow.LONGITUDE),
         FREIGHT: parseFloat(selectedRow.FREIGHT),
-        UNION_KM: parseFloat(selectedRow.UNION_KM),
-        EXTRA_POINT: parseFloat(selectedRow.EXTRA_POINT),
-        DT_EXPENSE: parseFloat(selectedRow.DT_EXPENSE),
-        ESCORT_EXPENSE: parseFloat(selectedRow.ESCORT_EXPENSE),
-        LOADING_EXPENSE: parseFloat(selectedRow.LOADING_EXPENSE),
-        UNLOADING_EXPENSE: parseFloat(selectedRow.UNLOADING_EXPENSE),
-        LABOUR_EXPENSE: parseFloat(selectedRow.LABOUR_EXPENSE),
-        OTHER_EXPENSE: parseFloat(selectedRow.OTHER_EXPENSE),
-        CRANE_HYDRA_EXPENSE: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE),
-        HEADLOAD_EXPENSE: parseFloat(selectedRow.HEADLOAD_EXPENSE),
-        CHAIN_PULLEY_EXPENSE: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE),
-        TOLL_TAX: parseFloat(selectedRow.TOLL_TAX),
-        PACKING_EXPENSE: parseFloat(selectedRow.PACKING_EXPENSE),
+        UNION_KM: parseFloat(selectedRow.UNION_KM) || 0,
+        EXTRA_POINT: parseFloat(selectedRow.EXTRA_POINT) || 0,
+        DT_EXPENSE: parseFloat(selectedRow.DT_EXPENSE) || 0,
+        ESCORT_EXPENSE: parseFloat(selectedRow.ESCORT_EXPENSE) || 0,
+        LOADING_EXPENSE: parseFloat(selectedRow.LOADING_EXPENSE) || 0,
+        UNLOADING_EXPENSE: parseFloat(selectedRow.UNLOADING_EXPENSE) || 0,
+        LABOUR_EXPENSE: parseFloat(selectedRow.LABOUR_EXPENSE) || 0,
+        OTHER_EXPENSE: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
+        CRANE_HYDRA_EXPENSE: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
+        HEADLOAD_EXPENSE: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
+        CHAIN_PULLEY_EXPENSE: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
+        TOLL_TAX: parseFloat(selectedRow.TOLL_TAX) || 0,
+        PACKING_EXPENSE: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
         TOTAL_AMOUNT: parseFloat(selectedRow.TOTAL_AMOUNT),
-        REMARKS: selectedRow.REMARKS,
+        REMARKS: selectedRow.REMARKS || "",
         ENTERED_BY: "admin",
         MODIFIED_BY: "admin",
       };
@@ -396,21 +432,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         latitude: parseFloat(selectedRow.LATITUDE),
         longitude: parseFloat(selectedRow.LONGITUDE),
         freight: parseFloat(selectedRow.FREIGHT),
-        union_km: parseFloat(selectedRow.UNION_KM),
-        extra_point: parseFloat(selectedRow.EXTRA_POINT),
-        dt_expense: parseFloat(selectedRow.DT_EXPENSE),
-        escort_expense: parseFloat(selectedRow.ESCORT_EXPENSE),
-        loading_expense: parseFloat(selectedRow.LOADING_EXPENSE),
-        unloading_expense: parseFloat(selectedRow.UNLOADING_EXPENSE),
-        labour_expense: parseFloat(selectedRow.LABOUR_EXPENSE),
-        other_expense: parseFloat(selectedRow.OTHER_EXPENSE),
-        crane_hydra_expense: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE),
-        headload_expense: parseFloat(selectedRow.HEADLOAD_EXPENSE),
-        chain_pulley_expense: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE),
-        toll_tax: parseFloat(selectedRow.TOLL_TAX),
-        packing_expense: parseFloat(selectedRow.PACKING_EXPENSE),
+        union_km: parseFloat(selectedRow.UNION_KM) || 0,
+        extra_point: parseFloat(selectedRow.EXTRA_POINT) || 0,
+        dt_expense: parseFloat(selectedRow.DT_EXPENSE) || 0,
+        escort_expense: parseFloat(selectedRow.ESCORT_EXPENSE) || 0,
+        loading_expense: parseFloat(selectedRow.LOADING_EXPENSE) || 0,
+        unloading_expense: parseFloat(selectedRow.UNLOADING_EXPENSE) || 0,
+        labour_expense: parseFloat(selectedRow.LABOUR_EXPENSE) || 0,
+        other_expense: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
+        crane_hydra_expense: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
+        headload_expense: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
+        chain_pulley_expense: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
+        toll_tax: parseFloat(selectedRow.TOLL_TAX) || 0,
+        packing_expense: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
         total_amount: parseFloat(selectedRow.TOTAL_AMOUNT),
-        remarks: selectedRow.REMARKS,
+        remarks: selectedRow.REMARKS || "",
         modified_by: "admin",
       };
     }
@@ -859,7 +895,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       fetchLrDetailsData();
     } catch (error) {
       console.error("Error processing file:", error);
-      toast.error(`Error processing file: ${error.message || 'All column should be available'  }`, {
+      toast.error(`Error processing file: ${error.message || 'All column should be available'}`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -898,8 +934,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   // Unchanged columns definition
   const columns = [
-    { name: "Row Number", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "" },
-    { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     {
       name: "Action",
       cell: (row) => (
@@ -935,6 +969,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       ),
       width: "100px",
     },
+    { name: "Row No", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "" },
+    { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN Date", selector: (row) => (row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
@@ -970,13 +1006,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
-  const rowPerPageOptions = [10, 50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
+  const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
 
   return (
     <div className={` bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300 `}>
       <ToastContainer />
 
-      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto ">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto ">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
@@ -1046,46 +1082,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto max-w-6xl mx-auto rounded-lg shadow-xl">
-          <DataTable
-            columns={columns}
-            data={filteredData}
-            pagination
-            paginationServer
-            paginationTotalRows={totalRows}
-            paginationPerPage={limit}
-            paginationRowsPerPageOptions={rowPerPageOptions}
-            onChangePage={handlePageChange}
-            onChangeRowsPerPage={handleRowsPerPageChange}
-            highlightOnHover
-            responsive
-            customStyles={{
-              headRow: { style: { backgroundColor: "#01588E", color: "white", fontWeight: "bold" } },
-              cells: { style: { fontSize: "14px", color: "#374151" } },
-              rows: {
-                style: {
-                  "&:nth-child(even)": { backgroundColor: "#f9fafb" },
-                  "&:hover": { backgroundColor: "#f3f4f6" },
-                },
-              },
-              table: {
-                style: {
-                  overflowX: 'hidden',
-                },
-              },
-              tableWrapper: {
-                style: {
-                  '::-webkit-scrollbar': {
-                    display: 'none',
-                  },
-                  'scrollbarWidth': 'none',
-                  '-ms-overflow-style': 'none',
-                },
-              },
-            }}
-            fixedHeader
-            fixedHeaderScrollHeight="70vh"
-          />
+        <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
+          <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
         </div>
       )}
 
@@ -1186,7 +1184,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Union/Km <span className="text-red-500">*</span>
+                    Union/Km
                   </label>
                   <input
                     type="text"
@@ -1201,7 +1199,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Extra Point <span className="text-red-500">*</span>
+                    Extra Point
                   </label>
                   <input
                     type="text"
@@ -1216,7 +1214,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Dt Expense <span className="text-red-500">*</span>
+                    Dt Expense
                   </label>
                   <input
                     type="text"
@@ -1235,7 +1233,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               <div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Escort Expense <span className="text-red-500">*</span>
+                    Escort Expense
                   </label>
                   <input
                     type="text"
@@ -1250,7 +1248,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Loading Expense <span className="text-red-500">*</span>
+                    Loading Expense
                   </label>
                   <input
                     type="text"
@@ -1265,7 +1263,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Unloading Expense <span className="text-red-500">*</span>
+                    Unloading Expense
                   </label>
                   <input
                     type="text"
@@ -1280,7 +1278,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Labour Expense <span className="text-red-500">*</span>
+                    Labour Expense
                   </label>
                   <input
                     type="text"
@@ -1295,7 +1293,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Other Expense <span className="text-red-500">*</span>
+                    Other Expense
                   </label>
                   <input
                     type="text"
@@ -1310,7 +1308,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Crane/Hydra Expense <span className="text-red-500">*</span>
+                    Crane/Hydra Expense
                   </label>
                   <input
                     type="text"
@@ -1325,7 +1323,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Headload Expense <span className="text-red-500">*</span>
+                    Headload Expense
                   </label>
                   <input
                     type="text"
@@ -1340,7 +1338,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Chain Pulley Expense <span className="text-red-500">*</span>
+                    Chain Pulley Expense
                   </label>
                   <input
                     type="text"
@@ -1355,7 +1353,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Toll Tax <span className="text-red-500">*</span>
+                    Toll Tax
                   </label>
                   <input
                     type="text"
@@ -1370,7 +1368,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Packing Expense <span className="text-red-500">*</span>
+                    Packing Expense
                   </label>
                   <input
                     type="text"
@@ -1396,7 +1394,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Remarks <span className="text-red-500">*</span>
+                    Remarks
                   </label>
                   <textarea
                     value={selectedRow.REMARKS || ""}

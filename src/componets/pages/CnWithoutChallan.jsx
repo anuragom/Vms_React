@@ -307,30 +307,52 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver"; // For exporting to CSV
+import { CustomTable } from "../Ui/CustomTable";
 
-const CnWithoutChallan = () => {
+const CnWithoutChallan = ({ isNavbarCollapsed }) => {
+  const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
+  
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1); // Current page
-  const [limit, setLimit] = useState(50); // Rows per page
+  const [limit, setLimit] = useState(20); // Rows per page
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [cnNo, setCnNo] = useState("");
   const [totalRows, setTotalRows] = useState(0); // Total rows for pagination
+  const [lastSearchParams, setLastSearchParams] = useState({});
   const token = getToken();
 
-  // Fetch data when component mounts or when page/limit changes
+  // Fetch data only on initial load
   useEffect(() => {
-    fetchCNWithoutChallanData();
-  }, [page, limit, fromDate, toDate, cnNo]); // Fetch data when page, limit, or filters change
+      fetchCNWithoutChallanData();
+  }, [limit,page]);
 
-  const fetchCNWithoutChallanData = async () => {
+  const fetchCNWithoutChallanData = async (e) => {
+    // Prevent form submission if called from an event
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    // Create current search params object
+    const currentParams = {
+      page,
+      limit,
+      fromDate,
+      toDate,
+      cnNo
+    };
+    
+    // Check if parameters are the same as the last search
+    if (JSON.stringify(currentParams) === JSON.stringify(lastSearchParams)) {
+      return; // Skip API call if params haven't changed
+    }
+
     setLoading(true);
     setError(false);
 
@@ -361,6 +383,9 @@ const CnWithoutChallan = () => {
         setFilteredData(response.data.data);
         setTotalRows(response.data.totalRecords || 0); // Ensure this matches the API response
       }
+      
+      // Save the current search parameters
+      setLastSearchParams(currentParams);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(true);
@@ -380,12 +405,16 @@ const CnWithoutChallan = () => {
   // Handle page change
   const handlePageChange = (newPage) => {
     setPage(newPage);
+    // Create a new search with updated page
+    fetchCNWithoutChallanData();
   };
 
   // Handle rows per page change
   const handleRowsPerPageChange = (newLimit, newPage) => {
     setLimit(newLimit);
     setPage(newPage);
+    // Create a new search with updated limit and page
+    fetchCNWithoutChallanData();
   };
 
   // Export to CSV
@@ -439,53 +468,61 @@ const CnWithoutChallan = () => {
       name: "CN No",
       selector: (row) => row.CN_CN_NO,
       sortable: true,
+      width: "140px",
     },
     {
       name: "Manual CN No",
       selector: (row) => row.CN_MANUAL_CN_NO,
       sortable: true,
+      width: "160px",
     },
     {
       name: "CN Date",
       selector: (row) => new Date(row.CN_CN_DATE).toLocaleDateString(),
       sortable: true,
+      width: "140px",
     },
     {
       name: "Source Branch",
       selector: (row) => row.CN_SOURCE_BRANCH_CODE,
       sortable: true,
+      width: "180px",
     },
     {
       name: "Destination Branch",
       selector: (row) => row.CN_DESTINATION_BRANCH_CODE,
       sortable: true,
+      width: "180px",
     },
     {
       name: "Item Description",
       selector: (row) => row.CN_ITEM_DESCRIPT,
       sortable: true,
+      width: "170px",
     },
     {
       name: "Total Packages",
       selector: (row) => row.TOTAL_CN_PKG,
       sortable: true,
+      width: "160px",
     },
     {
       name: "Total Weight",
       selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT,
       sortable: true,
+      width: "160px",
     },
   ];
 
-  // Pagination options
-  const rowPerPageOptions = [50, 100, 200, 500, 1000];
+  // Pagination options 
+  const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
 
   return (
-    <div className="p-4">
+    <div className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}>
       {/* Input Fields for CNWithoutChallan API */}
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
-          <label htmlFor="fromDate" className="block font-medium mb-1">
+          <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
           </label>
           <input
@@ -498,7 +535,7 @@ const CnWithoutChallan = () => {
         </div>
 
         <div>
-          <label htmlFor="toDate" className="block font-medium mb-1">
+          <label htmlFor="toDate" className="block text-xs font-medium text-gray-700 mb-1">
             To Date
           </label>
           <input
@@ -511,7 +548,7 @@ const CnWithoutChallan = () => {
         </div>
 
         <div>
-          <label htmlFor="cnNo" className="block font-medium mb-1">
+          <label htmlFor="cnNo" className="block text-xs font-medium text-gray-700 mb-1">
             CN No
           </label>
           <input
@@ -523,53 +560,48 @@ const CnWithoutChallan = () => {
             onChange={(e) => setCnNo(e.target.value)}
           />
         </div>
-      </div>
 
-      {/* Search, Export to CSV, and Search by CN No */}
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={fetchCNWithoutChallanData}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Search
-        </button>
-
-        <input
-          type="text"
-          placeholder="Search CN No"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-
-        <button
-          onClick={exportToCSV}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Export to CSV
-        </button>
+        <div className="col-span-2 space-y-2 md:flex items-end pb-1 gap-2">
+          <div className="w-full">
+            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1">
+              Search by CN No
+            </label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Search by CN No"
+              className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={(e) => fetchCNWithoutChallanData(e)}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
+            >
+              Search
+            </button>
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={exportToCSV}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            >
+              Export to CSV
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Loading and Error Messages */}
-      {loading && <p>Loading...</p>}
-      {error && <p>No data found</p>}
+      {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
+      {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {/* DataTable */}
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        pagination
-        paginationServer
-        paginationTotalRows={totalRows}
-        paginationPerPage={limit}
-        paginationRowsPerPageOptions={rowPerPageOptions}
-        onChangePage={handlePageChange}
-        onChangeRowsPerPage={handleRowsPerPageChange}
-        progressPending={loading} // Show loader when loading is true
-        progressComponent={<div>Loading...</div>} // Custom loader component
-        highlightOnHover
-        striped
-      />
+      {!loading && !error && data.length > 0 && (
+        <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+      )}
     </div>
   );
 };
@@ -1062,4 +1094,5 @@ export default CnWithoutChallan;
 // };
 
 // export default CnWithoutChallan;
+
 

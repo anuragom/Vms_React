@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearUser, getUser } from "../Auth/auth"; // Import clearUser and getUser
@@ -34,7 +31,7 @@ const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
   };
 
   return (
-    <header className="bg-[#01588E] p-3 z-50 shadow-sm w-full">
+    <header className=" bg-gradient-to-r from-[#014A73] to-[#0e70ad] p-3 z-50 shadow-sm w-full">
       <div className="w-full mx-auto flex items-center justify-between">
         {/* Left Side: Logo + Sidebar Toggle Button */}
         <div className="flex items-center gap-3">
@@ -117,9 +114,10 @@ const Header = ({ onToggleNavbar, isNavbarCollapsed, menuItems = [] }) => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="bg-white hover:bg-black hover:text-white font-semibold text-black px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm rounded-md"
+            className="bg-white  font-semibold hover:scale-110 transition-all duration-300  text-black px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm rounded-md"
+            title="Logout"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 " />
           </button>
         </div>
       </div>

@@ -71,7 +71,7 @@ const Navbar = ({ items, isCollapsed }) => {
 
   return (
     <nav
-      className={`bg-[#01588E] transition-all duration-300 ease-in-out
+      className={`bg-[#014A73] transition-all duration-300 ease-in-out
       ${isCollapsed ? "w-16" : "w-72"} h-[calc(100vh-3rem)] overflow-y-auto custom-scrollbar`}
     >
       <div className="flex flex-col gap-1 p-2">
