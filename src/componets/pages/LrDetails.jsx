@@ -364,6 +364,29 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setFormErrors({});
   };
 
+  // Event handler for ESC key press to close form
+  const handleEscKeyPress = (event) => {
+    if (event.key === "Escape") {
+      if (isFormOpen) {
+        closeForm();
+      } else if (isBulkUploadOpen) {
+        closeBulkUpload();
+      }
+    }
+  };
+
+  // Add event listener for ESC key when form or bulk upload is open, remove when closed
+  useEffect(() => {
+    if (isFormOpen || isBulkUploadOpen) {
+      document.addEventListener("keydown", handleEscKeyPress);
+    }
+    
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener("keydown", handleEscKeyPress);
+    };
+  }, [isFormOpen, isBulkUploadOpen]); // Re-run effect when either isFormOpen or isBulkUploadOpen changes
+
   const closeBulkUpload = () => {
     setIsBulkUploadOpen(false);
     setUploadFile(null);
