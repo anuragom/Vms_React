@@ -7,6 +7,7 @@ import {
   FileText,
   Settings,
   ClipboardCheck,
+
 } from "lucide-react";
 
 const roleBasedMenuItems = {
@@ -16,7 +17,8 @@ const roleBasedMenuItems = {
   ],
   VENDOR: [
     "dashboard", "lr-details", "bill-generate-using-exel-upload", "bill-status", "bill-noc",
-    "pending-bill-generation", "reports","process-billing"
+    "pending-bill-generation", "reports","process-billing","posted-bill","completed-bill","bill-status"
+
   ],
   BRANCH: [
     "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill",
@@ -53,6 +55,18 @@ const lrBillingSubItems = [
     label: "Posted Bill",
     path: "/posted-bill",
     icon: ClipboardCheck,
+  },
+  {
+    id: "completed-bill",
+    label: "Completed Bills",
+    path: "/completed-bills",
+    icon: ClipboardCheck
+  },
+  {
+    id: "bill-status",
+    label: "Bill Status",
+    path: "/bill-status",
+    icon: FileText,
   },
 ];
 

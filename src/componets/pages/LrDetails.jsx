@@ -451,7 +451,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         });
       }
     } catch (error) {
-      console.error("API Error:", error.response?.data || error.message);
       toast.error(`Failed to ${formMode === "add" ? "add" : "update"} expenses: ${error.response?.data?.msg || error.message}`, {
         position: "top-right",
         autoClose: 3000,
@@ -858,7 +857,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       fetchLrDetailsData();
     } catch (error) {
-      console.error("Error processing file:", error);
       toast.error(`Error processing file: ${error.message || 'All column should be available'  }`, {
         position: "top-right",
         autoClose: 3000,

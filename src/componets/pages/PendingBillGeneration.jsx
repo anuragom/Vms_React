@@ -114,8 +114,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
       return;
     }
 
-    // Log selected rows to console
-    console.log("Selected Rows:", selectedRows);
+
 
     // Make API call with selected rows
     try {
@@ -173,7 +172,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
       ); 
 
       toast.success("Selected rows processed successfully!");
-      console.log("API Response:", response.data);
+      setLoading(true);
     } catch (error) {
       console.error("Error processing selected rows:", error);
       toast.error(error.response?.data?.msg || "Error processing selected rows");

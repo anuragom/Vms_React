@@ -309,6 +309,7 @@ import Reports from "./componets/pages/Reports";
 import BillNoc from "./componets/pages/BillNoc";
 import AssignedVendor from "./componets/pages/AssignedVendor";
 import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
+import PostedBill from "./componets/pages/PostedBill";
 import { ToastContainer } from "react-toastify";
 
 // Layout Component
@@ -378,6 +379,12 @@ function App() {
           <Route path="/user-management" element={<ProtectedRoute element={<UserManageement />} />} />
           <Route path="/user-log" element={<ProtectedRoute element={<UserLog />} />} />
           <Route path="/lr-details" element={<ProtectedRoute element={<LrDetails />} />} />
+          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
+          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
+
+          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
+
+
           <Route
             path="/bill-generate-using-exel-upload"
             element={<ProtectedRoute element={<BillGenerateUsingExlUpload />} />}
