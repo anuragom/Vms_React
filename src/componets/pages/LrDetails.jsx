@@ -893,12 +893,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       fetchLrDetailsData();
     } catch (error) {
-<<<<<<< HEAD
-      console.error("Error processing file:", error);
-      toast.error(`Error processing file: ${error.message || 'All column should be available'}`, {
-=======
       toast.error(`Error processing file: ${error.message || 'All column should be available'  }`, {
->>>>>>> 8a8a1b3b50f482ba4e14fc4d248555ce2bfdc618
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
