@@ -238,7 +238,7 @@ const CnWithChallan = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-           <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+           <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
         </div>
       )}
     </div>

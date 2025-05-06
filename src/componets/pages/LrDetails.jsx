@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
-import { Eye } from 'lucide-react';
+import { CloudCog, Eye } from 'lucide-react';
 import { CustomTable } from "../Ui/CustomTable";
 
 const LrDetails = ({ isNavbarCollapsed }) => {
@@ -260,6 +260,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setError(false);
 
     try {
+      console.log("Payload", page)
       const payload = {
         page,
         limit,
@@ -305,6 +306,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   };
 
   const handlePageChange = (page) => {
+    console.log(page)
     setPage(page);
   };
 
@@ -375,13 +377,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     }
   };
 
-  // Add event listener for ESC key when form or bulk upload is open, remove when closed
   useEffect(() => {
     if (isFormOpen || isBulkUploadOpen) {
       document.addEventListener("keydown", handleEscKeyPress);
     }
-    
-    // Cleanup function to remove event listener
+
     return () => {
       document.removeEventListener("keydown", handleEscKeyPress);
     };
@@ -1104,7 +1104,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-          <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+          <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
         </div>
       )}
 

@@ -600,7 +600,7 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
 
       {/* DataTable */}
       {!loading && !error && data.length > 0 && (
-        <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
       )}
     </div>
   );
