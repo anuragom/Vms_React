@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
@@ -7,9 +6,7 @@ import { saveAs } from "file-saver";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
-
+import { CustomTable } from "../Ui/CustomTable";
 
 const PostedBill = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "" : "";
@@ -85,12 +82,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   useEffect(() => {
     fetchLrDetailsData();
   }, [page, limit, fromDate, toDate, search]);
-
-
-
-
- 
-    
 
   const handleSearch = () => {
     setPage(1);
@@ -191,15 +182,15 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
-  const rowPerPageOptions = [10, 50, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000, 10000];
+  const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 
   return (
     <div className={`min-h-screen bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
       <ToastContainer />
 
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto ">
         <div>
-          <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
           </label>
           <input
@@ -211,7 +202,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           />
         </div>
         <div>
-          <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="toDate" className="block text-xs font-medium text-gray-700 mb-1">
             To Date
           </label>
           <input
@@ -222,35 +213,37 @@ const PostedBill = ({ isNavbarCollapsed }) => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
-        <div>
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-            Search by CN No
-          </label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Enter CN No"
-            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
+          <div className="w-full">
+            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1 ">
+              Search by CN No
+            </label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Enter CN No"
+              className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={handleSearch}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
+            >
+              Search
+            </button>
+          </div>
+          <div className="w-full md:w-auto">
+            <button
+              onClick={exportToCSV}
+              className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            >
+              Export to CSV
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 max-w-6xl mx-auto">
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
-        >
-          Search
-        </button>
-        <button
-          onClick={exportToCSV}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
-        >
-          Export to CSV
-        </button>
-
       </div>
 
       {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
@@ -258,29 +251,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <div className="overflow-x-auto max-w-6xl mx-auto">
-          <DataTable
-            columns={columns}
-            data={filteredData}
-            pagination
-            paginationServer
-            paginationTotalRows={totalRows}
-            paginationPerPage={limit}
-            paginationRowsPerPageOptions={rowPerPageOptions}
-            onChangePage={handlePageChange}
-            onChangeRowsPerPage={handleRowsPerPageChange}
-            highlightOnHover
-            responsive
-            customStyles={{
-              headRow: { style: { backgroundColor: "#01588E", color: "white", fontWeight: "bold" } },
-              cells: { style: { fontSize: "14px", color: "#374151" } },
-              rows: {
-                style: {
-                  "&:nth-child(even)": { backgroundColor: "#f9fafb" },
-                  "&:hover": { backgroundColor: "#f3f4f6" },
-                },
-              },
-            }}
-          />
+          <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
         </div>
       )}
     </div>
