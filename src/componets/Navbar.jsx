@@ -17,8 +17,7 @@ const roleBasedMenuItems = {
   ],
   VENDOR: [
     "dashboard", "lr-details", "bill-generate-using-exel-upload", "bill-status", "bill-noc",
-    "pending-bill-generation", "reports","process-billing","posted-bill","completed-bill","bill-status"
-
+    "pending-bill-generation", "reports", "process-billing", "posted-bill", "completed-bill", "bill-status"
   ],
   BRANCH: [
     "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill",

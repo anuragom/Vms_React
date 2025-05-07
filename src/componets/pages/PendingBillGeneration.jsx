@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
@@ -36,9 +36,52 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  const firstUpdate = useRef(true);
+  const [updateLoading, setUpdateLoading] = useState(false);
+
   const token = getToken();
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
+
+  const fetchLrDetailsDataOnPageChange = async () => {
+    setUpdateLoading(true);
+    setError(false);
+
+    try {
+      const payload = {
+        page,
+        limit,
+        FROMDATE: fromDate || "",
+        TODATE: toDate || "",
+        CNNO: search || "",
+        USER_ID,
+      };
+
+      const response = await axios.post(
+        "https://vmsnode.omlogistics.co.in/api/PendingBillGeneration",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.data.length === 0) {
+        setError(true);
+      }
+
+      setData(response.data.data);
+      setFilteredData(response.data.data);
+      setTotalRows(response.data.totalRecords || response.data.data.length);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+    }
+
+    setUpdateLoading(false);
+  };
 
   const fetchLrDetailsData = async () => {
     setLoading(true);
@@ -82,7 +125,23 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
 
   useEffect(() => {
     fetchLrDetailsData();
-  }, [page, limit, search]);
+  }, []);
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    fetchLrDetailsDataOnPageChange();
+  }, [limit, page]);
+
+
+  useEffect(() => {
+    const result = data.filter((item) =>
+      item.CN_CN_NO.toString().includes(search)
+    );
+    setFilteredData(result);
+  }, [search, data]);
 
   // Handle individual row checkbox
   const handleRowSelect = (row) => {
@@ -377,9 +436,10 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-          <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
-        </div>
+        <>
+          {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
+          <CustomTable updateLoading={updateLoading} page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        </>
       )}
     </div>
   );

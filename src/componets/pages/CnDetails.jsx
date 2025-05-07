@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
@@ -21,10 +21,72 @@ const CnWithChallan = ({ isNavbarCollapsed }) => {
   const [totalRows, setTotalRows] = useState(0);
   const [lastSearchParams, setLastSearchParams] = useState({});
   const token = getToken();
+  const firstUpdate = useRef(true);
+  const [updateLoading, setUpdateLoading] = useState(false);
+
 
   useEffect(() => {
     fetchCnWithChallanData();
+  }, []);
+
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    fetchCnWithChallanDataOnPageChange();
   }, [limit, page]);
+
+  const fetchCnWithChallanDataOnPageChange = async () => {
+    const currentParams = {
+      page,
+      limit,
+      fromDate,
+      toDate,
+      chlnVendorCode
+    };
+
+    if (JSON.stringify(currentParams) === JSON.stringify(lastSearchParams)) {
+      return;
+    }
+
+    setUpdateLoading(true);
+    setError(false);
+
+    try {
+      const response = await axios.post(
+        "https://vmsnode.omlogistics.co.in/api/cnwithChallan",
+        {
+          page: page,
+          limit: limit,
+          FROMDATE: fromDate,
+          TODATE: toDate,
+          CHLN_VENDOR_CODE: chlnVendorCode,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.data.length === 0) {
+        setError(true);
+      } else {
+        setData(response.data.data);
+        setFilteredData(response.data.data);
+      }
+
+      setLastSearchParams(currentParams);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+    }
+
+    setUpdateLoading(false);
+  };
 
   const fetchCnWithChallanData = async () => {
     const currentParams = {
@@ -237,9 +299,10 @@ const CnWithChallan = ({ isNavbarCollapsed }) => {
       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-           <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
-        </div>
+        <>
+          {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
+          <CustomTable updateLoading={updateLoading} page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        </>
       )}
     </div>
   );
