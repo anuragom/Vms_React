@@ -20,7 +20,7 @@ const roleBasedMenuItems = {
     "pending-bill-generation", "reports", "process-billing", "posted-bill", "completed-bill", "bill-status"
   ],
   BRANCH: [
-    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill",
+    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details"
   ],
   CORDINATOR: [
     "dashboard", "assigned-vendor", "verify-expaness-of-cn", "bill-status", "cn-reports",
@@ -65,6 +65,12 @@ const lrBillingSubItems = [
     id: "bill-status",
     label: "Bill Status",
     path: "/bill-status",
+    icon: FileText,
+  },
+  {
+    id: "annexure-details",
+    label: "Annexure Details",
+    path: "/annexure-details",
     icon: FileText,
   },
 ];

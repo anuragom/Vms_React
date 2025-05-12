@@ -444,5 +444,5 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
     </div>
   );
 };
-
+  
 export default PendingBillGenerationrDetails;

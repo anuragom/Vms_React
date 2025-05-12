@@ -103,6 +103,6 @@ export const menuItems = [
   { id: 'reports', label: 'Reports', icon: FileSpreadsheet, path: '/reports', roles: ['VENDOR'] },
   { id: 'upload-lr-detail', label: 'Upload Lr Detail', icon: FileSpreadsheet, path: '/upload-lr-details', roles: ['BRANCH'] },
   { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
-
+  { id: 'annexure-details', label: 'Annexure Details', icon: FileSpreadsheet, path: '/annexure-details', roles: ['BRANCH'] },
 
 ];
