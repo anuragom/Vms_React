@@ -46,13 +46,13 @@ const lrBillingSubItems = [
   },
   {
     id: "process-billing",
-    label: "Process Billing",
+    label: "Generate Annexure",
     path: "/pending-bill-generation",
     icon: Settings,
   },
   {
     id: "posted-bill",
-    label: "Posted Bill",
+    label: "Process Billing",
     path: "/posted-bill",
     icon: ClipboardCheck,
   },

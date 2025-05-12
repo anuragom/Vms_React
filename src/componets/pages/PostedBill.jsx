@@ -111,6 +111,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const exportToCSV = () => {
     const csvData = filteredData.map((row) => ({
       CN_CN_NO: row.CN_CN_NO,
+      ANNEXURE_NO: row.ANNEXURE_NO,
       CN_MANUAL_CN_NO: row.CN_MANUAL_CN_NO,
       CN_CN_DATE: new Date(row.CN_CN_DATE).toLocaleDateString(),
       CN_SOURCE_BRANCH_CODE: row.CN_SOURCE_BRANCH_CODE,
@@ -126,6 +127,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
     const csvHeaders = [
       "CN No",
+      "ANNEXURE_NO",
       "Manual CN No",
       "CN Date",
       "Source Branch Code",
@@ -156,6 +158,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   
     { name: "Row Number", selector: (row) => row.RNUM || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN No", selector: (row) => row.CN_NO || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "ANNEXURE_NO", selector: (row) => row.ANNEXURE_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Manual CN No", selector: (row) => row.MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN Date", selector: (row) => (row.CN_DATE ? new Date(row.CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },

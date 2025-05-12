@@ -1,12 +1,49 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CustomTable } from "../Ui/CustomTable";
+
+const Modal = ({ isOpen, onClose, title, message, confirmButton, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+        <h2 className="text-lg font-semibold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          {confirmButton ? (
+            <>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+              >
+                Confirm
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+            >
+              OK
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
@@ -35,6 +72,9 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   const [totalRows, setTotalRows] = useState(0);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [annexureNumber, setAnnexureNumber] = useState("");
 
   const token = getToken();
   const decodedToken = jwtDecode(token);
@@ -115,12 +155,15 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
       return;
     }
 
+    setShowConfirmModal(true);
+  };
 
+  const confirmSubmit = async () => {
+    setShowConfirmModal(false);
+    setLoading(true);
 
-    // Make API call with selected rows
     try {
       const payload = {
-
         selectedRows: selectedRows.map((row) => ({
           CN_NO: row.CN_CN_NO,
           MANUAL_CN_NO: row.CN_MANUAL_CN_NO,
@@ -149,7 +192,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
           OTHER_EXPENSE: row.OTHER_EXPENSE,
           CRANE_HYDRA_EXPENSE: row.CRANE_HYDRA_EXPENSE,
           HEADLOAD_EXPENSE: row.HEADLOAD_EXPENSE,
-          CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE, // Add this field in your row if not present
+          CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE,
           TOLL_TAX: row.TOLL_TAX,
           PACKING_EXPENSE: row.PACKING_EXPENSE,
           TOTAL_AMOUNT: row.TOTAL_AMOUNT,
@@ -163,7 +206,7 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
       };
 
       const response = await axios.post(
-        "https://vmsnode.omlogistics.co.in/api/AddbillProcessing", // Placeholder endpoint
+        "https://vmsnode.omlogistics.co.in/api/AddbillProcessing",
         payload,
         {
           headers: {
@@ -173,11 +216,21 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
         }
       );
 
-      toast.success("Selected rows processed successfully!");
-      setLoading(true);
+      if (response.data.error === false) {
+        setAnnexureNumber(response.data.ANEXURE_NO);
+        setShowSuccessModal(true);
+        toast.success(response.data.msg);
+        setSelectedRows([]);
+        setSelectAll(false);
+        fetchLrDetailsData();
+      } else {
+        toast.error(response.data.msg || "Error processing selected rows");
+      }
     } catch (error) {
       console.error("Error processing selected rows:", error);
       toast.error(error.response?.data?.msg || "Error processing selected rows");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -307,6 +360,23 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
     <div className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}>
       <ToastContainer />
 
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Annexure Generation"
+        message={`Are you sure you want to generate annexure for ${selectedRows.length} selected row(s)?`}
+        confirmButton={true}
+        onConfirm={confirmSubmit}
+      />
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Annexure Generated"
+        message={`Annexure generated successfully with number: ${annexureNumber}`}
+        confirmButton={false}
+      />
+
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
@@ -378,7 +448,16 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-          <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+          <CustomTable
+            columns={columns}
+            data={filteredData}
+            totalRows={totalRows}
+            limit={limit}
+            rowPerPageOptions={rowPerPageOptions}
+            handlePageChange={handlePageChange}
+            handleRowsPerPageChange={handleRowsPerPageChange}
+            filteredData={filteredData}
+          />
         </div>
       )}
     </div>
