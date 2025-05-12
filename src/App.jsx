@@ -285,7 +285,7 @@
 
 // export default App;
 
-import  { useState } from "react";
+import  { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { menuItems } from "./data/menuItems";
 import Dashboard from "./componets/pages/Dashboard";
@@ -310,6 +310,7 @@ import BillNoc from "./componets/pages/BillNoc";
 import AssignedVendor from "./componets/pages/AssignedVendor";
 import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
 import PostedBill from "./componets/pages/PostedBill";
+import AnnexureDetails from "./componets/pages/AnnexureDetails";
 import { ToastContainer } from "react-toastify";
 
 // Layout Component
@@ -352,6 +353,19 @@ const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
 function App() {
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsNavbarCollapsed(true);
+      } else {
+        setIsNavbarCollapsed(false);
+      }
+    };
+    handleResize(); // Set initial state
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Router>
       <Layout
@@ -369,6 +383,8 @@ function App() {
           />
           <Route path="/cn-details" element={<ProtectedRoute element={<CnDetails />} />} />
           <Route path="/bill-status" element={<ProtectedRoute element={<BillStatus />} />} />
+          
+          <Route path="/annexure-details" element={<ProtectedRoute element={<AnnexureDetails />} />} />
           <Route
             path="/pending-bill-generation"
             element={<ProtectedRoute element={<PendingBillGeneration />} />}
