@@ -57,7 +57,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
         try {
             const response = await axios.post(
-                "https://vmsnode.omlogistics.co.in/api/cnwithChallan",
+                "https://vmsnode.omlogistics.co.in/api/PostedBill",
                 {
                     page: page,
                     limit: limit,
@@ -107,7 +107,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
         try {
             const response = await axios.post(
-                "https://vmsnode.omlogistics.co.in/api/cnwithChallan",
+                "https://vmsnode.omlogistics.co.in/api/PostedBill",
                 {
                     page: page,
                     limit: limit,
@@ -144,7 +144,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
     useEffect(() => {
         const result = data.filter((item) =>
-            item.CN_CN_NO.toString().includes(search)
+            item.CN_NO.toString().includes(search)
         );
         setFilteredData(result);
     }, [search, data]);
@@ -158,20 +158,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         setPage(page);
     };
 
+
+
     const columns = [
-        { name: "Row No", selector: (row) => row.ROW_NUM, sortable: true, wrap: true, width: "100px" },
-        { name: "Annexure No.", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true, width: "" },
-        { name: "Vendor Name", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true, width: "" },
-        { name: "Total Amount", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true, width: "" },
-        { name: "NOC", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true, width: "" },
+        { name: "Row No", selector: (row) =>  row.RNUM, sortable: true, wrap: true, width: "100px" },
+        { name: "Annexure No.", selector: (row) => row.ANNEXURE_NO, sortable: true, wrap: true, width: "" },
+        { name: "Vendor Code", selector: (row) => row.CHALLAN_VENDOR_CODE, sortable: true, wrap: true, width: "" },
+        { name: "Total Amount", selector: (row) => row.TOTAL_AMOUNT, sortable: true, wrap: true, width: "" },
+        { name: "NOC", selector: (row) => row.ITEM_DESCRIPT, sortable: true, wrap: true, width: "" },
         { name: "NOC Date", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true, width: "" }
-    ]; 
+    ];  
     const modalColumns = [
         { name: "LR No.", selector: (row) => row.ROW_NUM, sortable: true, wrap: true, width: "100px" },
-        { name: "LR Date", selector: (row) => row.CN_CN_NO, sortable: true, wrap: true, width: "" },
-        { name: "Mode", selector: (row) => row.CN_MANUAL_CN_NO, sortable: true, wrap: true, width: "" },
-        { name: "VAT", selector: (row) => row.CN_SOURCE_BRANCH_CODE, sortable: true, wrap: true, width: "" },
-        { name: "Packet Count", selector: (row) => row.CN_ITEM_DESCRIPT, sortable: true, wrap: true, width: "" },
+        { name: "LR Date", selector: (row) => row.CN_NO, sortable: true, wrap: true, width: "" },
+        { name: "Mode", selector: (row) => row.MANUAL_CN_NO, sortable: true, wrap: true, width: "" },
+        { name: "VAT", selector: (row) => row.SOURCE_BRANCH_CODE, sortable: true, wrap: true, width: "" },
+        { name: "Packet Count", selector: (row) => row.ITEM_DESCRIPTION, sortable: true, wrap: true, width: "" },
         { name: "Weight", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true, width: "" },
         { name: "Item", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true, width: "" },
         { name: "Description", selector: (row) => row.TOTAL_CN_PKG, sortable: true, wrap: true, width: "" },

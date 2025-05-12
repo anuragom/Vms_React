@@ -150,7 +150,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     { name: "Row No", selector: (row) => row.RNUM || "-", sortable: true, wrap: true, width: "100px" },
     { name: "Annexure No", selector: (row) => row.ANNEXURE_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN No", selector: (row) => row.CN_NO || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "ANNEXURE_NO", selector: (row) => row.ANNEXURE_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Manual CN No", selector: (row) => row.MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "CN Date", selector: (row) => (row.CN_DATE ? new Date(row.CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
