@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
-import { Eye } from 'lucide-react';
+import { CloudCog, Eye } from 'lucide-react';
 import { CustomTable } from "../Ui/CustomTable";
 
 const LrDetails = ({ isNavbarCollapsed }) => {
@@ -34,6 +34,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [formReadOnly, setFormReadOnly] = useState(false);
   // New state for form errors
   const [formErrors, setFormErrors] = useState({});
+  const firstUpdate = useRef(true);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const CNMODEVATMap = {
     "1": "NRGP",
@@ -254,12 +256,55 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     handleInputChange(field, filteredValue);
   };
 
-  // Unchanged functions: fetchLrDetailsData, useEffect, handleSearch, handlePageChange, handleRowsPerPageChange, exportToCSV, closeForm, closeBulkUpload
+ 
+  const fetchLrDetailsDataOnPageChange = async () => {
+    setUpdateLoading(true);
+    setError(false);
+
+    try {
+      console.log("Payload", page)
+      const payload = {
+        page,
+        limit,
+        FROMDATE: fromDate || "",
+        TODATE: toDate || "",
+        CNNO: search || "",
+        USER_ID,
+      };
+
+      const response = await axios.post(
+        "https://vmsnode.omlogistics.co.in/api/lrDetails",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.data.length === 0) {
+        setError(true);
+      }
+
+      setData(response.data.data);
+      setFilteredData(response.data.data);
+      setTotalRows(response.data.totalRecords || response.data.data.length);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+    }
+
+    setUpdateLoading(false);
+  };
+
+
   const fetchLrDetailsData = async () => {
     setLoading(true);
     setError(false);
 
     try {
+      console.log("Payload", page)
       const payload = {
         page,
         limit,
@@ -297,7 +342,22 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   useEffect(() => {
     fetchLrDetailsData();
-  }, [page, limit, search]);
+  }, []);
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    fetchLrDetailsDataOnPageChange();
+  }, [limit, page]);
+
+  useEffect(() => {
+    const result = data.filter((item) =>
+      item.CN_CN_NO.toString().includes(search)
+    );
+    setFilteredData(result);
+  }, [search, data]);
 
   const handleSearch = () => {
     setPage(1);
@@ -305,6 +365,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   };
 
   const handlePageChange = (page) => {
+    console.log(page)
     setPage(page);
   };
 
@@ -375,13 +436,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     }
   };
 
-  // Add event listener for ESC key when form or bulk upload is open, remove when closed
   useEffect(() => {
     if (isFormOpen || isBulkUploadOpen) {
       document.addEventListener("keydown", handleEscKeyPress);
     }
-    
-    // Cleanup function to remove event listener
+
     return () => {
       document.removeEventListener("keydown", handleEscKeyPress);
     };
@@ -1103,9 +1162,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       {error && <div className="text-center text-red-600 text-lg">No data found</div>}
 
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto max-w-8xl mx-auto rounded-lg shadow-xl">
-          <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
-        </div>
+        <>
+          {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
+          <CustomTable updateLoading={updateLoading} page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        </>
       )}
 
       {isFormOpen && selectedRow && (

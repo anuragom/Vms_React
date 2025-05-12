@@ -305,7 +305,7 @@
 // export default CnWithoutChallan;
 
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver"; // For exporting to CSV
@@ -313,7 +313,7 @@ import { CustomTable } from "../Ui/CustomTable";
 
 const CnWithoutChallan = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
-  
+
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -327,19 +327,29 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
   const [totalRows, setTotalRows] = useState(0); // Total rows for pagination
   const [lastSearchParams, setLastSearchParams] = useState({});
   const token = getToken();
+  const firstUpdate = useRef(true);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
-  // Fetch data only on initial load
   useEffect(() => {
-      fetchCNWithoutChallanData();
-  }, [limit,page]);
+    fetchCNWithoutChallanData();
+  }, []);
 
-  const fetchCNWithoutChallanData = async (e) => {
-    // Prevent form submission if called from an event
+
+  //This useEffect will run only when the dependancy changes and will not run on initial load
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    fetchCNWithoutChallanDataOnPageChange();
+  }, [limit, page]);
+
+
+  const fetchCNWithoutChallanDataOnPageChange = async (e) => {
     if (e && e.preventDefault) {
       e.preventDefault();
     }
 
-    // Create current search params object
     const currentParams = {
       page,
       limit,
@@ -347,10 +357,65 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
       toDate,
       cnNo
     };
-    
-    // Check if parameters are the same as the last search
+
     if (JSON.stringify(currentParams) === JSON.stringify(lastSearchParams)) {
-      return; // Skip API call if params haven't changed
+      return;
+    }
+
+    setUpdateLoading(true);
+
+    setError(false);
+
+    try {
+      const response = await axios.post(
+        "https://vmsnode.omlogistics.co.in/api/CNWithoutChallan",
+        {
+          page: page,
+          limit: limit,
+          FROMDATE: fromDate,
+          TODATE: toDate,
+          CNNO: cnNo,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.data.length === 0) {
+        setError(true);
+      } else {
+        setData(response.data.data);
+        setFilteredData(response.data.data);
+      }
+
+      setLastSearchParams(currentParams);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+    }
+
+    setUpdateLoading(false);
+  };
+
+
+  const fetchCNWithoutChallanData = async (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    const currentParams = {
+      page,
+      limit,
+      fromDate,
+      toDate,
+      cnNo
+    };
+
+    if (JSON.stringify(currentParams) === JSON.stringify(lastSearchParams)) {
+      return;
     }
 
     setLoading(true);
@@ -383,8 +448,7 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
         setFilteredData(response.data.data);
         setTotalRows(response.data.totalRecords || 0); // Ensure this matches the API response
       }
-      
-      // Save the current search parameters
+
       setLastSearchParams(currentParams);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -394,7 +458,7 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
     setLoading(false);
   };
 
-  // Handle search by CN No
+
   useEffect(() => {
     const result = data.filter((item) =>
       item.CN_CN_NO.toString().includes(search)
@@ -600,7 +664,10 @@ const CnWithoutChallan = ({ isNavbarCollapsed }) => {
 
       {/* DataTable */}
       {!loading && !error && data.length > 0 && (
-        <CustomTable columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        <>
+          {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
+          <CustomTable page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+        </>
       )}
     </div>
   );
