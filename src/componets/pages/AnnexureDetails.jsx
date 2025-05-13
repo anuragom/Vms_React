@@ -7,9 +7,7 @@ import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const token = getToken();
-const decodedToken = jwtDecode(token);
-const USER_ID = decodedToken.id;
+
 
 const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
@@ -30,6 +28,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const [rawData, setRawData] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const token = getToken();
+  const decodedToken = jwtDecode(token);
+  const USER_ID = decodedToken;
   const [editFormData, setEditFormData] = useState({
     CN_NO: "",
     Updated_Weight: "",
@@ -40,6 +41,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     UPDATEDREMARKS: "",
     MODIFIED_BY: USER_ID,
   });
+
 
   const groupDataByAnnexure = (rawData) => {
     const grouped = rawData.reduce((acc, item) => {
@@ -370,7 +372,37 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     >
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-8xl mx-auto">
+        <div>
+          <label
+            htmlFor="fromDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            From Date
+          </label>
+          <input
+            id="fromDate"
+            type="date"
+            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </div>
 
+        <div>
+          <label
+            htmlFor="toDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            To Date
+          </label>
+          <input
+            id="toDate"
+            type="date"
+            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </div>
 
         <div className="col-span-1 space-y-2 md:flex items-end pb-1 gap-2 w-full">
           <div className="w-[70%]">
