@@ -30,7 +30,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const [selectedRow, setSelectedRow] = useState(null);
   const token = getToken();
   const decodedToken = jwtDecode(token);
-  const USER_ID = decodedToken;
+  const USER_ID = decodedToken.id;
   const [editFormData, setEditFormData] = useState({
     CN_NO: "",
     Updated_Weight: "",
@@ -478,6 +478,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 data={filteredData}
                 pagination
                 paginationServer
+                
                 paginationTotalRows={filteredData.length}
                 paginationPerPage={limit}
                 paginationDefaultPage={page}
