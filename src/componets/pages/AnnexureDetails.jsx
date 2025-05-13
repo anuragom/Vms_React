@@ -355,6 +355,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         await fetchAnnexureDetails();
         setEditModalOpen(false);
         toast.success("Data updated successfully!");
+        window.location.reload();
       } else {
         const errorMessage = response.data.msg || "Unknown error occurred";
         toast.error(`Failed to update data: ${errorMessage}`);
@@ -478,7 +479,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 data={filteredData}
                 pagination
                 paginationServer
-                
+
                 paginationTotalRows={filteredData.length}
                 paginationPerPage={limit}
                 paginationDefaultPage={page}
