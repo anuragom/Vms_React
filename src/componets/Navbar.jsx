@@ -69,7 +69,7 @@ const lrBillingSubItems = [
   },
   {
     id: "annexure-details",
-    label: "Annexure Details",
+    label: "Processed Bills",
     path: "/annexure-details",
     icon: FileText,
   },
