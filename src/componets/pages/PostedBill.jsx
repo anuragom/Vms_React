@@ -185,24 +185,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
   ];
 
-  const modalColumns = [
-    { name: "LR No", selector: (row) => row.LR_NO, sortable: true, wrap: true, width: "100px" },
-    { name: "LR Date", selector: (row) => row.LR_DATE, sortable: true, wrap: true, width: "" },
-    { name: "Mode", selector: (row) => row.MODE, sortable: true, wrap: true, width: "" },
-    { name: "VAT", selector: (row) => row.VAT, sortable: true, wrap: true, width: "" },
-    { name: "Packet Count", selector: (row) => row.PACKET_COUNT, sortable: true, wrap: true, width: "" },
-    { name: "Weight", selector: (row) => row.WEIGHT, sortable: true, wrap: true, width: "" },
-    { name: "Item", selector: (row) => row.ITEM, sortable: true, wrap: true, width: "" },
-    { name: "Description", selector: (row) => row.DESCRIPTION, sortable: true, wrap: true, width: "" },
-    { name: "KM", selector: (row) => row.KM, sortable: true, wrap: true, width: "" },
-    { name: "Latitude", selector: (row) => row.LATITUDE, sortable: true, wrap: true, width: "" },
-    { name: "Longitude", selector: (row) => row.LONGITUDE, sortable: true, wrap: true, width: "" },
-    { name: "Floor (GPT, RRT)", selector: (row) => row.FLOOR, sortable: true, wrap: true, width: "" }
-  ];
 
-  const handleRowClick = (row) => {
-    setModalOpen(true);
-  }
 
   const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 
@@ -273,7 +256,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <>
-          <CustomTable handleRowClick={handleRowClick} page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+          <CustomTable  page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
         </>
       )}
       {modalOpen && (
@@ -287,7 +270,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           >
             <div className=" overflow-x-auto max-w-8xl mx-auto shadow-xl">
               <DataTable
-                columns={modalColumns}
+          
                 data={filteredData}
                 pagination
                 paginationServer
