@@ -312,6 +312,7 @@ import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
 import PostedBill from "./componets/pages/PostedBill";
 import AnnexureDetails from "./componets/pages/AnnexureDetails";
 import { ToastContainer } from "react-toastify";
+import CompletedBills from "./componets/pages/CompletedBills";
 
 // Layout Component
 const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
@@ -399,6 +400,8 @@ function App() {
           <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
 
           <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
+          <Route path="/completed-bill" element={<ProtectedRoute element={<CompletedBills />} />} />
+
 
 
           <Route

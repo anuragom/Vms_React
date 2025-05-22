@@ -56,9 +56,9 @@ const lrBillingSubItems = [
     icon: ClipboardCheck,
   },
   {
-    id: "completed-bill",
+    id: "completed-bill", 
     label: "Completed Bills",
-    path: "/completed-bills",
+    path: "/completed-bill",
     icon: ClipboardCheck
   },
   {
