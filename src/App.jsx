@@ -1,4 +1,3 @@
-
 // import React, { useState } from "react";
 // import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
@@ -34,10 +33,10 @@
 //   const isLoginPage = location.pathname === "/login"; // Check if login page
 
 //   return (
-//     <div className={`min-h-screen bg-gray-50 ${isLoginPage ? "" : "mt-20"}`}> 
-//       {!isLoginPage && <Header onToggleNavbar={toggleNavbar} menuItems={menuItems} />}  
+//     <div className={`min-h-screen bg-gray-50 ${isLoginPage ? "" : "mt-20"}`}>
+//       {!isLoginPage && <Header onToggleNavbar={toggleNavbar} menuItems={menuItems} />}
 //       <div className="flex">
-//         {!isLoginPage && <Navbar items={menuItems} isCollapsed={isNavbarCollapsed} />}  
+//         {!isLoginPage && <Navbar items={menuItems} isCollapsed={isNavbarCollapsed} />}
 //         <main className="flex-1">{children}</main>
 //       </div>
 //     </div>
@@ -49,8 +48,8 @@
 
 //   return (
 //     <Router>
-//       <Layout 
-//         isNavbarCollapsed={isNavbarCollapsed} 
+//       <Layout
+//         isNavbarCollapsed={isNavbarCollapsed}
 //         toggleNavbar={() => setIsNavbarCollapsed(!isNavbarCollapsed)}
 //       >
 //         <Routes>
@@ -77,7 +76,6 @@
 //           {/* <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill/>} />} />
 //           <Route path="/posting-bill" element={<ProtectedRoute element={<PostingBill />} />} /> */}
 //           <Route path="/verify-expance-of-cn" element={<ProtectedRoute element={<VerifyExpansesofCN />} />} />
-          
 
 //           {/* Redirect unknown routes to login */}
 //           <Route path="*" element={<Navigate to="/login" />} />
@@ -285,8 +283,14 @@
 
 // export default App;
 
-import  { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { menuItems } from "./data/menuItems";
 import Dashboard from "./componets/pages/Dashboard";
 import Login from "./Auth/Login";
@@ -342,8 +346,7 @@ const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
         <main
           className={`flex-1 overflow-x-auto ${
             !isLoginPage ? (isNavbarCollapsed ? "ml-16" : "ml-72") : ""
-          }`}
-        >
+          }`}>
           {children}
         </main>
       </div>
@@ -376,42 +379,96 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-          <Route path="/vendor-details" element={<ProtectedRoute element={<VendorDetails />} />} />
+          <Route
+            path="/dashboard"
+            element={<ProtectedRoute element={<Dashboard />} />}
+          />
+          <Route
+            path="/vendor-details"
+            element={<ProtectedRoute element={<VendorDetails />} />}
+          />
           <Route
             path="/cn-without-challan"
             element={<ProtectedRoute element={<CnWithoutChallan />} />}
           />
-          <Route path="/cn-details" element={<ProtectedRoute element={<CnDetails />} />} />
-          <Route path="/bill-status" element={<ProtectedRoute element={<BillStatus />} />} />
-          
-          <Route path="/annexure-details" element={<ProtectedRoute element={<AnnexureDetails />} />} />
+          <Route
+            path="/cn-details"
+            element={<ProtectedRoute element={<CnDetails />} />}
+          />
+          <Route
+            path="/bill-status"
+            element={<ProtectedRoute element={<BillStatus />} />}
+          />
+
+          <Route
+            path="/annexure-details"
+            element={<ProtectedRoute element={<AnnexureDetails />} />}
+          />
           <Route
             path="/pending-bill-generation"
             element={<ProtectedRoute element={<PendingBillGeneration />} />}
           />
-          <Route path="/bill-delete" element={<ProtectedRoute element={<BillDelete />} />} />
-          <Route path="/pod-report" element={<ProtectedRoute element={<PodReport />} />} />
-          <Route path="/cn-reports" element={<ProtectedRoute element={<CnReports />} />} />
-          <Route path="/user-management" element={<ProtectedRoute element={<UserManageement />} />} />
-          <Route path="/user-log" element={<ProtectedRoute element={<UserLog />} />} />
-          <Route path="/lr-details" element={<ProtectedRoute element={<LrDetails />} />} />
-          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
-          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
+          <Route
+            path="/bill-delete"
+            element={<ProtectedRoute element={<BillDelete />} />}
+          />
+          <Route
+            path="/pod-report"
+            element={<ProtectedRoute element={<PodReport />} />}
+          />
+          <Route
+            path="/cn-reports"
+            element={<ProtectedRoute element={<CnReports />} />}
+          />
+          <Route
+            path="/user-management"
+            element={<ProtectedRoute element={<UserManageement />} />}
+          />
+          <Route
+            path="/user-log"
+            element={<ProtectedRoute element={<UserLog />} />}
+          />
+          <Route
+            path="/lr-details"
+            element={<ProtectedRoute element={<LrDetails />} />}
+          />
+          <Route
+            path="/posted-bill"
+            element={<ProtectedRoute element={<PostedBill />} />}
+          />
+          <Route
+            path="/posted-bill"
+            element={<ProtectedRoute element={<PostedBill />} />}
+          />
 
-          <Route path="/posted-bill" element={<ProtectedRoute element={<PostedBill />} />} />
-          <Route path="/completed-bill" element={<ProtectedRoute element={<CompletedBills />} />} />
-
-
+          <Route
+            path="/posted-bill"
+            element={<ProtectedRoute element={<PostedBill />} />}
+          />
+          <Route
+            path="/completed-bill"
+            element={<ProtectedRoute element={<CompletedBills />} />}
+          />
 
           <Route
             path="/bill-generate-using-exel-upload"
-            element={<ProtectedRoute element={<BillGenerateUsingExlUpload />} />}
+            element={
+              <ProtectedRoute element={<BillGenerateUsingExlUpload />} />
+            }
           />
-          <Route path="/reports" element={<ProtectedRoute element={<Reports />} />} />
-          <Route path="/bill-noc" element={<ProtectedRoute element={<BillNoc />} />} />
+          <Route
+            path="/reports"
+            element={<ProtectedRoute element={<Reports />} />}
+          />
+          <Route
+            path="/bill-noc"
+            element={<ProtectedRoute element={<BillNoc />} />}
+          />
 
-          <Route path="/assigned-vendor" element={<ProtectedRoute element={<AssignedVendor />} />} />
+          <Route
+            path="/assigned-vendor"
+            element={<ProtectedRoute element={<AssignedVendor />} />}
+          />
 
           <Route
             path="/verify-expance-of-cn"

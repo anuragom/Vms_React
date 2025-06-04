@@ -1,19 +1,17 @@
-import React, { useEffect, useState,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import "react-toastify/dist/ReactToastify.css";
-import { CloudCog, Eye } from 'lucide-react';
 import { CustomTable } from "../Ui/CustomTable";
 
 const LrDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
 
-  // State variables (unchanged)
+  // State variables
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -32,8 +30,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResults, setUploadResults] = useState(null);
   const [formReadOnly, setFormReadOnly] = useState(false);
-  // New state for form errors
   const [formErrors, setFormErrors] = useState({});
+  const [showLocation, setShowLocation] = useState(false); // New state for checkbox toggle
   const firstUpdate = useRef(true);
   const [updateLoading, setUpdateLoading] = useState(false);
 
@@ -55,12 +53,16 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   // Validation function for form fields
   const validateForm = (row) => {
     const errors = {};
-    const requiredFields = [
-      "KILOMETER",
-      "RATE",
-      "LATITUDE",
-      "LONGITUDE"
-    ];
+    const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
+    
+    // Validate Location if checkbox is checked
+    if (showLocation) {
+      if (!row.LOCATIONS && row.LOCATIONS !== 0) {
+        errors.LOCATIONS = "Location is required";
+      } else if (isNaN(parseFloat(row.LOCATIONS))) {
+        errors.LOCATIONS = "Location must be a valid number";
+      }
+    }
 
     requiredFields.forEach((field) => {
       if (!row[field] && row[field] !== 0) {
@@ -70,7 +72,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       }
     });
 
-    // For non-required numeric fields, still validate they're numbers if provided
     const optionalNumericFields = [
       "UNION_KM",
       "EXTRA_POINT",
@@ -82,9 +83,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "OTHER_EXPENSE",
       "CRANE_HYDRA_EXPENSE",
       "HEADLOAD_EXPENSE",
+      "HEADLOAD_KM",
       "CHAIN_PULLEY_EXPENSE",
       "TOLL_TAX",
-      "PACKING_EXPENSE"
+      "PACKING_EXPENSE",
     ];
 
     optionalNumericFields.forEach((field) => {
@@ -98,12 +100,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     return errors;
   };
 
-  // Unchanged functions: openFormInAddMode, openFormInUpdateMode, openFormInReadMode
   const openFormInAddMode = (row) => {
     setFormMode("add");
+    setShowLocation(false); // Default to unchecked
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: "",
+      LOCATIONS: "",
       RATE: "",
       LATITUDE: "",
       LONGITUDE: "",
@@ -118,6 +121,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       OTHER_EXPENSE: "",
       CRANE_HYDRA_EXPENSE: "",
       HEADLOAD_EXPENSE: "",
+      HEADLOAD_KM: "",
       CHAIN_PULLEY_EXPENSE: "",
       TOLL_TAX: "",
       PACKING_EXPENSE: "",
@@ -131,9 +135,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const openFormInUpdateMode = (row) => {
     setFormMode("update");
     setFormReadOnly(false);
+    setShowLocation(!!row.LOCATIONS); // Show Location if it has a value
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
+      LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
       LONGITUDE: row.LONGITUDE || "",
@@ -148,6 +154,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       OTHER_EXPENSE: row.OTHER_EXPENSE || "",
       CRANE_HYDRA_EXPENSE: row.CRANE_HYDRA_EXPENSE || "",
       HEADLOAD_EXPENSE: row.HEADLOAD_EXPENSE || "",
+      HEADLOAD_KM: row.HEADLOAD_KM || "",
       CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE || "",
       TOLL_TAX: row.TOLL_TAX || "",
       PACKING_EXPENSE: row.PACKING_EXPENSE || "",
@@ -161,9 +168,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const openFormInReadMode = (row) => {
     setFormMode("read");
     setFormReadOnly(true);
+    setShowLocation(!!row.LOCATIONS);
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
+      LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
       LONGITUDE: row.LONGITUDE || "",
@@ -178,6 +187,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       OTHER_EXPENSE: row.OTHER_EXPENSE || "",
       CRANE_HYDRA_EXPENSE: row.CRANE_HYDRA_EXPENSE || "",
       HEADLOAD_EXPENSE: row.HEADLOAD_EXPENSE || "",
+      HEADLOAD_KM: row.HEADLOAD_KM || "",
       CHAIN_PULLEY_EXPENSE: row.CHAIN_PULLEY_EXPENSE || "",
       TOLL_TAX: row.TOLL_TAX || "",
       PACKING_EXPENSE: row.PACKING_EXPENSE || "",
@@ -197,7 +207,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       const rate = parseFloat(updatedRow.RATE) || 0;
       updatedRow.FREIGHT = (kilometer * rate).toFixed(2);
 
-      // Auto-calculate Total Amount (sum of all expenses)
+      // Auto-calculate Total Amount
       const expenses = [
         parseFloat(updatedRow.FREIGHT) || 0,
         parseFloat(updatedRow.UNION_KM) || 0,
@@ -222,9 +232,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     // Validate the field on change
     setFormErrors((prev) => {
       const errors = { ...prev };
-      const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE"];
+      const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
       
-      // For required fields
       if (requiredFields.includes(field)) {
         if (!value && value !== 0) {
           errors[field] = `${field.replace(/_/g, ' ')} is required`;
@@ -233,9 +242,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         } else {
           delete errors[field];
         }
-      } 
-      // For optional numeric fields
-      else if (field !== "REMARKS") {
+      } else if (field === "LOCATIONS" && showLocation) {
+        if (!value && value !== 0) {
+          errors.LOCATIONS = "Location is required";
+        } else if (isNaN(parseFloat(value))) {
+          errors.LOCATIONS = "Location must be a valid number";
+        } else {
+          delete errors.LOCATIONS;
+        }
+      } else if (field !== "REMARKS") {
         if (value !== "" && value !== undefined && value !== null) {
           if (isNaN(parseFloat(value))) {
             errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
@@ -256,13 +271,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     handleInputChange(field, filteredValue);
   };
 
- 
   const fetchLrDetailsDataOnPageChange = async () => {
     setUpdateLoading(true);
     setError(false);
 
     try {
-      console.log("Payload", page)
       const payload = {
         page,
         limit,
@@ -298,13 +311,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setUpdateLoading(false);
   };
 
-
   const fetchLrDetailsData = async () => {
     setLoading(true);
     setError(false);
 
     try {
-      console.log("Payload", page)
       const payload = {
         page,
         limit,
@@ -365,7 +376,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   };
 
   const handlePageChange = (page) => {
-    console.log(page)
     setPage(page);
   };
 
@@ -423,9 +433,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setSelectedRow(null);
     setFormReadOnly(false);
     setFormErrors({});
+    setShowLocation(false);
   };
 
-  // Event handler for ESC key press to close form
   const handleEscKeyPress = (event) => {
     if (event.key === "Escape") {
       if (isFormOpen) {
@@ -444,7 +454,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     return () => {
       document.removeEventListener("keydown", handleEscKeyPress);
     };
-  }, [isFormOpen, isBulkUploadOpen]); // Re-run effect when either isFormOpen or isBulkUploadOpen changes
+  }, [isFormOpen, isBulkUploadOpen]);
 
   const closeBulkUpload = () => {
     setIsBulkUploadOpen(false);
@@ -456,13 +466,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const handleSaveExpenses = async () => {
     if (!selectedRow) return;
 
-    // Validate form before saving
     const errors = validateForm(selectedRow);
     setFormErrors(errors);
 
-    // Check if there are any errors in required fields
     const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE"];
-    const hasRequiredFieldErrors = Object.keys(errors).some(key => 
+    if (showLocation) {
+      requiredFields.push("LOCATIONS");
+    }
+    const hasRequiredFieldErrors = Object.keys(errors).some((key) =>
       requiredFields.includes(key)
     );
 
@@ -483,7 +494,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     if (formMode === "add") {
       payload = {
         CN_CN_NO: selectedRow.CN_CN_NO,
-        KILOMETER: parseFloat(selectedRow.KILOMETER),
+        KILOMETER: parseFloat(selectedRow.KILOMETER) || 0,
+        LOCATIONS: showLocation ? parseFloat(selectedRow.LOCATIONS) || 0 : 0,
         RATE: parseFloat(selectedRow.RATE),
         LATITUDE: parseFloat(selectedRow.LATITUDE),
         LONGITUDE: parseFloat(selectedRow.LONGITUDE),
@@ -498,18 +510,20 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         OTHER_EXPENSE: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
         CRANE_HYDRA_EXPENSE: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
         HEADLOAD_EXPENSE: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
+        HEADLOAD_KM: parseFloat(selectedRow.HEADLOAD_KM) || 0,
         CHAIN_PULLEY_EXPENSE: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
         TOLL_TAX: parseFloat(selectedRow.TOLL_TAX) || 0,
         PACKING_EXPENSE: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
         TOTAL_AMOUNT: parseFloat(selectedRow.TOTAL_AMOUNT),
         REMARKS: selectedRow.REMARKS || "",
-        ENTERED_BY: "admin",
-        MODIFIED_BY: "admin",
+        ENTERED_BY: USER_ID,
+        MODIFIED_BY: USER_ID,
       };
     } else {
       payload = {
         cn_cn_no: selectedRow.CN_CN_NO,
-        kilometer: parseFloat(selectedRow.KILOMETER),
+        kilometer: parseFloat(selectedRow.KILOMETER) || 0,
+        locations: showLocation ? parseFloat(selectedRow.LOCATIONS) || 0 : 0,
         rate: parseFloat(selectedRow.RATE),
         latitude: parseFloat(selectedRow.LATITUDE),
         longitude: parseFloat(selectedRow.LONGITUDE),
@@ -524,12 +538,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         other_expense: parseFloat(selectedRow.OTHER_EXPENSE) || 0,
         crane_hydra_expense: parseFloat(selectedRow.CRANE_HYDRA_EXPENSE) || 0,
         headload_expense: parseFloat(selectedRow.HEADLOAD_EXPENSE) || 0,
+        headload_km: parseFloat(selectedRow.HEADLOAD_KM) || 0,
         chain_pulley_expense: parseFloat(selectedRow.CHAIN_PULLEY_EXPENSE) || 0,
         toll_tax: parseFloat(selectedRow.TOLL_TAX) || 0,
         packing_expense: parseFloat(selectedRow.PACKING_EXPENSE) || 0,
         total_amount: parseFloat(selectedRow.TOTAL_AMOUNT),
         remarks: selectedRow.REMARKS || "",
-        modified_by: "admin",
+        modified_by: USER_ID,
       };
     }
 
@@ -586,6 +601,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       {
         "CN No": "",
         "Kilometer": "",
+        "Locations": "",
         "Rate (per Km)": "",
         "Latitude": "",
         "Longitude": "",
@@ -594,6 +610,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Dt Expense": "",
         "Escort Expense": "",
         "Headload Expense": "",
+        "Headload Km": "",
         "Loading Expense": "",
         "Unloading Expense": "",
         "Labour Expense": "",
@@ -658,7 +675,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         throw new Error("No valid data found in the file");
       }
 
-      // Process each row
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
         const rate = parseFloat(row["Rate (per Km)"]) || 0;
@@ -685,6 +701,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         return {
           CN_CN_NO: row["CN No"],
           KILOMETER: kilometer,
+          LOCATIONS: parseFloat(row["Locations"]) || 0,
           RATE: rate,
           LATITUDE: parseFloat(row["Latitude"]) || 0,
           LONGITUDE: parseFloat(row["Longitude"]) || 0,
@@ -699,55 +716,58 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           OTHER_EXPENSE: parseFloat(row["Other Expense"]) || 0,
           CRANE_HYDRA_EXPENSE: parseFloat(row["Crane/Hydra Expense"]) || 0,
           HEADLOAD_EXPENSE: parseFloat(row["Headload Expense"]) || 0,
+          HEADLOAD_KM: parseFloat(row["Headload Km"]) || 0,
           CHAIN_PULLEY_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
           TOLL_TAX: parseFloat(row["Toll Tax"]) || 0,
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
           TOTAL_AMOUNT: totalAmount,
           REMARKS: row["Remarks"] || "",
-          ENTERED_BY: "admin",
-          MODIFIED_BY: "admin",
+          ENTERED_BY: USER_ID,
+          MODIFIED_BY: USER_ID,
         };
       });
 
-      // Validate data
-      const validationResults = processedData.map((item, index) => {
+      const validationResults = data.map((row, index) => {
         const errors = [];
-        if (!item.CN_CN_NO) errors.push("CN No is required");
-        if (!item.KILOMETER && item.KILOMETER !== 0) errors.push("Kilometer is required");
-        if (!item.RATE && item.RATE !== 0) errors.push("Rate is required");
-        if (!item.LATITUDE && item.LATITUDE !== 0) errors.push("Latitude is required");
-        if (!item.LONGITUDE && item.LONGITUDE !== 0) errors.push("Longitude is required");
+        if (!row["CN No"]) errors.push("CN No is required");
+        if (!row["Kilometer"] && row["Kilometer"] !== 0) errors.push("Kilometer is required");
+        if (row["Locations"] && !isNaN(parseFloat(row["Locations"]))) {
+          if (!row["Locations"] && row["Locations"] !== 0) errors.push("Location is required");
+        }
+        if (!row["Rate (per Km)"] && row["Rate (per Km)"] !== 0) errors.push("Rate is required");
+        if (!row["Latitude"] && row["Latitude"] !== 0) errors.push("Latitude is required");
+        if (!row["Longitude"] && row["Longitude"] !== 0) errors.push("Longitude is required");
 
-
-        // Numeric validation
         const numericFields = [
-          "KILOMETER",
-          "RATE",
-          "LATITUDE",
-          "LONGITUDE",
-          "UNION_KM",
-          "EXTRA_POINT",
-          "DT_EXPENSE",
-          "ESCORT_EXPENSE",
-          "LOADING_EXPENSE",
-          "UNLOADING_EXPENSE",
-          "LABOUR_EXPENSE",
-          "OTHER_EXPENSE",
-          "CRANE_HYDRA_EXPENSE",
-          "HEADLOAD_EXPENSE",
-          "CHAIN_PULLEY_EXPENSE",
-          "TOLL_TAX",
-          "PACKING_EXPENSE",
+          "Kilometer",
+          "Locations",
+          "Rate (per Km)",
+          "Latitude",
+          "Longitude",
+          "Union/Km",
+          "Extra Point",
+          "Dt Expense",
+          "Escort Expense",
+          "Loading Expense",
+          "Unloading Expense",
+          "Labour Expense",
+          "Other Expense",
+          "Crane/Hydra Expense",
+          "Headload Expense",
+          "Headload Km",
+          "Chain Pulley Expense",
+          "Toll Tax",
+          "Packing Expense",
         ];
         numericFields.forEach((field) => {
-          if (item[field] && isNaN(parseFloat(item[field]))) {
+          if (row[field] && isNaN(parseFloat(row[field]))) {
             errors.push(`${field.replace(/_/g, ' ')} must be a valid number`);
           }
         });
 
         return {
           row: index + 2,
-          cnNo: item.CN_CN_NO,
+          cnNo: row["CN No"],
           isValid: errors.length === 0,
           errors: errors.length > 0 ? errors.join(", ") : null,
         };
@@ -767,7 +787,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         return;
       }
 
-      // Rest of the bulk upload logic remains unchanged
       const results = {
         added: 0,
         updated: 0,
@@ -797,6 +816,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             const updatePayload = processedData.map((item) => ({
               cn_cn_no: item.CN_CN_NO,
               kilometer: item.KILOMETER,
+              locations: item.LOCATIONS,
               rate: item.RATE,
               latitude: item.LATITUDE,
               longitude: item.LONGITUDE,
@@ -811,6 +831,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               other_expense: item.OTHER_EXPENSE,
               crane_hydra_expense: item.CRANE_HYDRA_EXPENSE,
               headload_expense: item.HEADLOAD_EXPENSE,
+              headload_km: item.HEADLOAD_KM,
               chain_pulley_expense: item.CHAIN_PULLEY_EXPENSE,
               toll_tax: item.TOLL_TAX,
               packing_expense: item.PACKING_EXPENSE,
@@ -866,6 +887,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           const updatePayload = processedData.map((item) => ({
             cn_cn_no: item.CN_CN_NO,
             kilometer: item.KILOMETER,
+            locations: item.LOCATIONS,
             rate: item.RATE,
             latitude: item.LATITUDE,
             longitude: item.LONGITUDE,
@@ -880,6 +902,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             other_expense: item.OTHER_EXPENSE,
             crane_hydra_expense: item.CRANE_HYDRA_EXPENSE,
             headload_expense: item.HEADLOAD_EXPENSE,
+            headload_km: item.HEADLOAD_KM,
             chain_pulley_expense: item.CHAIN_PULLEY_EXPENSE,
             toll_tax: item.TOLL_TAX,
             packing_expense: item.PACKING_EXPENSE,
@@ -975,7 +998,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       fetchLrDetailsData();
     } catch (error) {
-      toast.error(`Error processing file: ${error.message || 'All column should be available'  }`, {
+      toast.error(`Error processing file: ${error.message || 'All columns should be available'}`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -1012,7 +1035,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     });
   };
 
-  // Unchanged columns definition
   const columns = [
     {
       name: "Action",
@@ -1065,6 +1087,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Site ID", selector: (row) => row.SITE_ID || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Kilometer", selector: (row) => row.KILOMETER || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Locations", selector: (row) => row.LOCATIONS || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Rate", selector: (row) => row.RATE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Freight", selector: (row) => row.FREIGHT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Union KM", selector: (row) => row.UNION_KM || "-", sortable: true, wrap: true, width: "150px" },
@@ -1076,6 +1099,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     { name: "Labour Expense", selector: (row) => row.LABOUR_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Other Expense", selector: (row) => row.OTHER_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Crane Hydra Expense", selector: (row) => row.CRANE_HYDRA_EXPENSE || "-", sortable: true, wrap: true, width: "170px" },
+    { name: "Headload Km", selector: (row) => row.HEADLOAD_KM || "-", sortable: true, wrap: true, width: "170px" },
     { name: "Headload Expense", selector: (row) => row.HEADLOAD_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Chain Pulley Expense", selector: (row) => row.CHAIN_PULLEY_EXPENSE || "-", sortable: true, wrap: true, width: "170px" },
     { name: "Toll Tax", selector: (row) => row.TOLL_TAX || "-", sortable: true, wrap: true, width: "150px" },
@@ -1089,10 +1113,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
 
   return (
-    <div className={` bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300 `}>
+    <div className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}>
       <ToastContainer />
 
-      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto ">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
             From Date
@@ -1119,7 +1143,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         </div>
         <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
           <div className="w-full">
-            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1 ">
+            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1">
               Search by CN No
             </label>
             <input
@@ -1164,7 +1188,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       {!loading && !error && data.length > 0 && (
         <>
           {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
-          <CustomTable updateLoading={updateLoading} page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
+          <CustomTable
+            updateLoading={updateLoading}
+            page={page}
+            columns={columns}
+            data={filteredData}
+            totalRows={totalRows}
+            limit={limit}
+            rowPerPageOptions={rowPerPageOptions}
+            handlePageChange={handlePageChange}
+            handleRowsPerPageChange={handleRowsPerPageChange}
+            filteredData={filteredData}
+          />
         </>
       )}
 
@@ -1175,8 +1210,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               {formMode === "add"
                 ? "Add Expenses"
                 : formMode === "update"
-                  ? "Update Expenses"
-                  : "View Expenses"} for CN No: {selectedRow.CN_CN_NO}
+                ? "Update Expenses"
+                : "View Expenses"} for CN No: {selectedRow.CN_CN_NO}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Left Column */}
@@ -1192,6 +1227,22 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                     readOnly
                   />
                 </div>
+                {!formReadOnly && (
+                  <div className="mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={showLocation}
+                        onChange={(e) => setShowLocation(e.target.checked)}
+                        disabled={formReadOnly}
+                        className="mr-2"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Include Location <span className="text-red-500">*</span>
+                      </span>
+                    </label>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Kilometer <span className="text-red-500">*</span>
@@ -1207,6 +1258,23 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                     <p className="text-red-500 text-xs mt-1">{formErrors.KILOMETER}</p>
                   )}
                 </div>
+                {showLocation && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Location <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedRow.LOCATIONS || ""}
+                      onChange={(e) => handleNumericInputChange("LOCATIONS", e.target.value)}
+                      readOnly={formReadOnly}
+                      className={`w-full border rounded-lg p-2 ${formErrors.LOCATIONS ? 'border-red-500' : ''}`}
+                    />
+                    {formErrors.LOCATIONS && (
+                      <p className="text-red-500 text-xs mt-1">{formErrors.LOCATIONS}</p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Rate (per Km) <span className="text-red-500">*</span>
@@ -1415,6 +1483,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                   {formErrors.HEADLOAD_EXPENSE && (
                     <p className="text-red-500 text-xs mt-1">{formErrors.HEADLOAD_EXPENSE}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Headload Km
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedRow.HEADLOAD_KM || ""}
+                    onChange={(e) => handleNumericInputChange("HEADLOAD_KM", e.target.value)}
+                    readOnly={formReadOnly}
+                    className={`w-full border rounded-lg p-2 ${formErrors.HEADLOAD_KM ? 'border-red-500' : ''}`}
+                  />
+                  {formErrors.HEADLOAD_KM && (
+                    <p className="text-red-500 text-xs mt-1">{formErrors.HEADLOAD_KM}</p>
                   )}
                 </div>
                 <div>
