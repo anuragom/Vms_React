@@ -36,14 +36,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const CNMODEVATMap = {
-    "1": "NRGP",
-    "2": "SRN",
-    "3": "CAM",
-    "4": "IUT",
-    "5": "RMO",
-    "6": "MGMT GR",
-    "7": "FIX NRGP",
-    "8": "FIX SRN",
+    1: "NRGP",
+    2: "SRN",
+    3: "CAM",
+    4: "IUT",
+    5: "RMO",
+    6: "MGMT GR",
+    7: "FIX NRGP",
+    8: "FIX SRN",
   };
 
   const token = getToken();
@@ -54,21 +54,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const validateForm = (row) => {
     const errors = {};
     const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
-    
+
     // Validate Location if checkbox is checked
     if (showLocation) {
       if (!row.LOCATIONS && row.LOCATIONS !== 0) {
         errors.LOCATIONS = "Location is required";
-      } else if (isNaN(parseFloat(row.LOCATIONS))) {
-        errors.LOCATIONS = "Location must be a valid number";
-      }
+      } 
     }
 
     requiredFields.forEach((field) => {
       if (!row[field] && row[field] !== 0) {
-        errors[field] = `${field.replace(/_/g, ' ')} is required`;
+        errors[field] = `${field.replace(/_/g, " ")} is required`;
       } else if (isNaN(parseFloat(row[field]))) {
-        errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+        errors[field] = `${field.replace(/_/g, " ")} must be a valid number`;
       }
     });
 
@@ -90,9 +88,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     ];
 
     optionalNumericFields.forEach((field) => {
-      if (row[field] !== "" && row[field] !== undefined && row[field] !== null) {
+      if (
+        row[field] !== "" &&
+        row[field] !== undefined &&
+        row[field] !== null
+      ) {
         if (isNaN(parseFloat(row[field]))) {
-          errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+          errors[field] = `${field.replace(/_/g, " ")} must be a valid number`;
         }
       }
     });
@@ -224,7 +226,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         parseFloat(updatedRow.TOLL_TAX) || 0,
         parseFloat(updatedRow.PACKING_EXPENSE) || 0,
       ];
-      updatedRow.TOTAL_AMOUNT = expenses.reduce((sum, val) => sum + val, 0).toFixed(2);
+      updatedRow.TOTAL_AMOUNT = expenses
+        .reduce((sum, val) => sum + val, 0)
+        .toFixed(2);
 
       return updatedRow;
     });
@@ -233,12 +237,12 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setFormErrors((prev) => {
       const errors = { ...prev };
       const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
-      
+
       if (requiredFields.includes(field)) {
         if (!value && value !== 0) {
-          errors[field] = `${field.replace(/_/g, ' ')} is required`;
+          errors[field] = `${field.replace(/_/g, " ")} is required`;
         } else if (isNaN(parseFloat(value))) {
-          errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+          errors[field] = `${field.replace(/_/g, " ")} must be a valid number`;
         } else {
           delete errors[field];
         }
@@ -253,7 +257,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       } else if (field !== "REMARKS") {
         if (value !== "" && value !== undefined && value !== null) {
           if (isNaN(parseFloat(value))) {
-            errors[field] = `${field.replace(/_/g, ' ')} must be a valid number`;
+            errors[field] = `${field.replace(
+              /_/g,
+              " "
+            )} must be a valid number`;
           } else {
             delete errors[field];
           }
@@ -261,13 +268,15 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           delete errors[field];
         }
       }
-      
+
       return errors;
     });
   };
 
   const handleNumericInputChange = (field, value) => {
-    const filteredValue = value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1');
+    const filteredValue = value
+      .replace(/[^\d.]/g, "")
+      .replace(/(\..*)\./g, "$1");
     handleInputChange(field, filteredValue);
   };
 
@@ -548,9 +557,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       };
     }
 
-    const apiUrl = formMode === "add"
-      ? "https://vmsnode.omlogistics.co.in/api/addExpenses"
-      : "https://vmsnode.omlogistics.co.in/api/updateExpenses";
+    const apiUrl =
+      formMode === "add"
+        ? "https://vmsnode.omlogistics.co.in/api/addExpenses"
+        : "https://vmsnode.omlogistics.co.in/api/updateExpenses";
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -561,15 +571,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       });
 
       if (response.data.error === false) {
-        toast.success(response.data.msg || `${formMode === "add" ? "Added" : "Updated"} successfully!`, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "colored",
-        });
+        toast.success(
+          response.data.msg ||
+            `${formMode === "add" ? "Added" : "Updated"} successfully!`,
+          {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          }
+        );
         closeForm();
         fetchLrDetailsData();
       } else {
@@ -584,15 +598,20 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         });
       }
     } catch (error) {
-      toast.error(`Failed to ${formMode === "add" ? "add" : "update"} expenses: ${error.response?.data?.msg || error.message}`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      });
+      toast.error(
+        `Failed to ${formMode === "add" ? "add" : "update"} expenses: ${
+          error.response?.data?.msg || error.message
+        }`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        }
+      );
     }
   };
 
@@ -600,11 +619,11 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const templateData = [
       {
         "CN No": "",
-        "Kilometer": "",
-        "Locations": "",
+        Kilometer: "",
+        Locations: "",
         "Rate (per Km)": "",
-        "Latitude": "",
-        "Longitude": "",
+        Latitude: "",
+        Longitude: "",
         "Union/Km": "",
         "Extra Point": "",
         "Dt Expense": "",
@@ -619,7 +638,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Chain Pulley Expense": "",
         "Toll Tax": "",
         "Packing Expense": "",
-        "Remarks": "",
+        Remarks: "",
       },
     ];
 
@@ -634,7 +653,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     if (!file) return;
 
     const validExtensions = [".xlsx", ".xls", ".csv"];
-    const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    const fileExtension = file.name
+      .substring(file.name.lastIndexOf("."))
+      .toLowerCase();
 
     if (!validExtensions.includes(fileExtension)) {
       toast.error("Please upload a valid Excel file (.xlsx, .xls, .csv)", {
@@ -730,13 +751,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       const validationResults = data.map((row, index) => {
         const errors = [];
         if (!row["CN No"]) errors.push("CN No is required");
-        if (!row["Kilometer"] && row["Kilometer"] !== 0) errors.push("Kilometer is required");
+        if (!row["Kilometer"] && row["Kilometer"] !== 0)
+          errors.push("Kilometer is required");
         if (row["Locations"] && !isNaN(parseFloat(row["Locations"]))) {
-          if (!row["Locations"] && row["Locations"] !== 0) errors.push("Location is required");
+          if (!row["Locations"] && row["Locations"] !== 0)
+            errors.push("Location is required");
         }
-        if (!row["Rate (per Km)"] && row["Rate (per Km)"] !== 0) errors.push("Rate is required");
-        if (!row["Latitude"] && row["Latitude"] !== 0) errors.push("Latitude is required");
-        if (!row["Longitude"] && row["Longitude"] !== 0) errors.push("Longitude is required");
+        if (!row["Rate (per Km)"] && row["Rate (per Km)"] !== 0)
+          errors.push("Rate is required");
+        if (!row["Latitude"] && row["Latitude"] !== 0)
+          errors.push("Latitude is required");
+        if (!row["Longitude"] && row["Longitude"] !== 0)
+          errors.push("Longitude is required");
 
         const numericFields = [
           "Kilometer",
@@ -760,7 +786,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         ];
         numericFields.forEach((field) => {
           if (row[field] && isNaN(parseFloat(row[field]))) {
-            errors.push(`${field.replace(/_/g, ' ')} must be a valid number`);
+            errors.push(`${field.replace(/_/g, " ")} must be a valid number`);
           }
         });
 
@@ -857,7 +883,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 results.failed += processedData.length;
                 results.errors.push({
                   cnNo: "Multiple",
-                  message: updateResponse.data.msg || "Failed to update expenses",
+                  message:
+                    updateResponse.data.msg || "Failed to update expenses",
                   operation: "update",
                 });
               }
@@ -865,7 +892,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               results.failed += processedData.length;
               results.errors.push({
                 cnNo: "Multiple",
-                message: updateError.response?.data?.msg || updateError.message || "Unknown error during update",
+                message:
+                  updateError.response?.data?.msg ||
+                  updateError.message ||
+                  "Unknown error during update",
                 operation: "update",
               });
             }
@@ -881,7 +911,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       } catch (addError) {
         if (
           addError.response?.data?.error &&
-          addError.response?.data?.msg?.trim() === "Expenses already added in this CN no"
+          addError.response?.data?.msg?.trim() ===
+            "Expenses already added in this CN no"
         ) {
           const updatePayload = processedData.map((item) => ({
             cn_cn_no: item.CN_CN_NO,
@@ -936,7 +967,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             results.failed += processedData.length;
             results.errors.push({
               cnNo: "Multiple",
-              message: updateError.response?.data?.msg || updateError.message || "Unknown error during update",
+              message:
+                updateError.response?.data?.msg ||
+                updateError.message ||
+                "Unknown error during update",
               operation: "update",
             });
           }
@@ -944,7 +978,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           results.failed += processedData.length;
           results.errors.push({
             cnNo: "Multiple",
-            message: addError.response?.data?.msg || addError.message || "Unknown error during add",
+            message:
+              addError.response?.data?.msg ||
+              addError.message ||
+              "Unknown error during add",
             operation: "add",
           });
         }
@@ -997,15 +1034,20 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       fetchLrDetailsData();
     } catch (error) {
-      toast.error(`Error processing file: ${error.message || 'All columns should be available'}`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      });
+      toast.error(
+        `Error processing file: ${
+          error.message || "All columns should be available"
+        }`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        }
+      );
     }
   };
 
@@ -1036,18 +1078,36 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   const columns = [
     {
-      name: "Action",  
+      name: "Action",
       cell: (row) => (
-        <div className="flex gap-3 sticky-action-col" >
+        <div className="flex gap-3 sticky-action-col">
           {row.KILOMETER || row.RATE || row.FREIGHT || row.TOTAL_AMOUNT ? (
             <button
               onClick={() => openFormInReadMode(row)}
               className="text-blue-500 text-xs"
               title="View Expenses"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 12C3 7 8 4 12 4C16 4 21 7 23 12C21 17 16 20 12 20C8 20 3 17 1 12Z" stroke="blue" stroke-width="2" fill="none" />
-                <circle cx="12" cy="12" r="3" stroke="black" stroke-width="2" fill="none" />
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 12C3 7 8 4 12 4C16 4 21 7 23 12C21 17 16 20 12 20C8 20 3 17 1 12Z"
+                  stroke="blue"
+                  stroke-width="2"
+                  fill="none"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                  stroke="black"
+                  stroke-width="2"
+                  fill="none"
+                />
               </svg>
             </button>
           ) : (
@@ -1070,54 +1130,285 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       ),
       width: "100px",
     },
-    { name: "Row No", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "" },
-    { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Manual CN No", selector: (row) => row.CN_MANUAL_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "CN Date", selector: (row) => (row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
-    { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
-    { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE || "-", sortable: true, wrap: true, width: "190px" },
-    { name: "Mode VAT", selector: (row) => CNMODEVATMap[row.CN_MODE_VAT] || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Item Description", selector: (row) => row.CN_ITEM_DESCRIPT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Total Packages", selector: (row) => row.TOTAL_CN_PKG || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Total Weight", selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Challan Vendor Code", selector: (row) => row.CHLN_VENDOR_CODE || "-", sortable: true, wrap: true, width: "190px" },
-    { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Challan Date", selector: (row) => (row.CHLN_CHLN_DATE ? new Date(row.CHLN_CHLN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "170px" },
-    { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Site ID", selector: (row) => row.SITE_ID || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Kilometer", selector: (row) => row.KILOMETER || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Locations", selector: (row) => row.LOCATIONS || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Rate", selector: (row) => row.RATE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Freight", selector: (row) => row.FREIGHT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Union KM", selector: (row) => row.UNION_KM || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Extra Point", selector: (row) => row.EXTRA_POINT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "DT Expense", selector: (row) => row.DT_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Escort Expense", selector: (row) => row.ESCORT_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Loading Expense", selector: (row) => row.LOADING_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Unloading Expense", selector: (row) => row.UNLOADING_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Labour Expense", selector: (row) => row.LABOUR_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Other Expense", selector: (row) => row.OTHER_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Crane Hydra Expense", selector: (row) => row.CRANE_HYDRA_EXPENSE || "-", sortable: true, wrap: true, width: "170px" },
-    { name: "Headload Km", selector: (row) => row.HEADLOAD_KM || "-", sortable: true, wrap: true, width: "170px" },
-    { name: "Headload Expense", selector: (row) => row.HEADLOAD_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Chain Pulley Expense", selector: (row) => row.CHAIN_PULLEY_EXPENSE || "-", sortable: true, wrap: true, width: "170px" },
-    { name: "Toll Tax", selector: (row) => row.TOLL_TAX || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Packing Expense", selector: (row) => row.PACKING_EXPENSE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Total Amount", selector: (row) => row.TOTAL_AMOUNT || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Latitude", selector: (row) => row.LATITUDE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Longitude", selector: (row) => row.LONGITUDE || "-", sortable: true, wrap: true, width: "150px" },
-    { name: "Remarks", selector: (row) => row.REMARKS || "-", sortable: true, wrap: true, width: "200px" },
+    {
+      name: "Row No",
+      selector: (row) => row.ROW_NUM || "-",
+      sortable: true,
+      wrap: true,
+      width: "",
+    },
+    {
+      name: "CN No",
+      selector: (row) => row.CN_CN_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Manual CN No",
+      selector: (row) => row.CN_MANUAL_CN_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "CN Date",
+      selector: (row) =>
+        row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Source Branch Code",
+      selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-",
+      sortable: true,
+      wrap: true,
+      width: "170px",
+    },
+    {
+      name: "Destination Branch Code",
+      selector: (row) => row.CN_DESTINATION_BRANCH_CODE || "-",
+      sortable: true,
+      wrap: true,
+      width: "190px",
+    },
+    {
+      name: "Mode VAT",
+      selector: (row) => CNMODEVATMap[row.CN_MODE_VAT] || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Item Description",
+      selector: (row) => row.CN_ITEM_DESCRIPT || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Total Packages",
+      selector: (row) => row.TOTAL_CN_PKG || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Total Weight",
+      selector: (row) => row.TOTAL_CN_ACTUAL_WEIGHT || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Challan Vendor Code",
+      selector: (row) => row.CHLN_VENDOR_CODE || "-",
+      sortable: true,
+      wrap: true,
+      width: "190px",
+    },
+    {
+      name: "Challan No",
+      selector: (row) => row.CHLN_CHLN_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Challan Date",
+      selector: (row) =>
+        row.CHLN_CHLN_DATE
+          ? new Date(row.CHLN_CHLN_DATE).toLocaleDateString()
+          : "-",
+      sortable: true,
+      wrap: true,
+      width: "170px",
+    },
+    {
+      name: "Lorry No",
+      selector: (row) => row.CHLN_LORRY_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Site ID",
+      selector: (row) => row.SITE_ID || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Kilometer",
+      selector: (row) => row.KILOMETER || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Locations",
+      selector: (row) => row.LOCATIONS || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Rate",
+      selector: (row) => row.RATE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Freight",
+      selector: (row) => row.FREIGHT || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Union KM",
+      selector: (row) => row.UNION_KM || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Extra Point",
+      selector: (row) => row.EXTRA_POINT || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "DT Expense",
+      selector: (row) => row.DT_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Escort Expense",
+      selector: (row) => row.ESCORT_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Loading Expense",
+      selector: (row) => row.LOADING_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Unloading Expense",
+      selector: (row) => row.UNLOADING_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Labour Expense",
+      selector: (row) => row.LABOUR_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Other Expense",
+      selector: (row) => row.OTHER_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Crane Hydra Expense",
+      selector: (row) => row.CRANE_HYDRA_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "170px",
+    },
+    {
+      name: "Headload Km",
+      selector: (row) => row.HEADLOAD_KM || "-",
+      sortable: true,
+      wrap: true,
+      width: "170px",
+    },
+    {
+      name: "Headload Expense",
+      selector: (row) => row.HEADLOAD_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Chain Pulley Expense",
+      selector: (row) => row.CHAIN_PULLEY_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "170px",
+    },
+    {
+      name: "Toll Tax",
+      selector: (row) => row.TOLL_TAX || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Packing Expense",
+      selector: (row) => row.PACKING_EXPENSE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Total Amount",
+      selector: (row) => row.TOTAL_AMOUNT || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Latitude",
+      selector: (row) => row.LATITUDE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Longitude",
+      selector: (row) => row.LONGITUDE || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Remarks",
+      selector: (row) => row.REMARKS || "-",
+      sortable: true,
+      wrap: true,
+      width: "200px",
+    },
   ];
 
   const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
 
   return (
-    <div className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}>
+    <div
+      className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}
+    >
       <ToastContainer />
 
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
-          <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="fromDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             From Date
           </label>
           <input
@@ -1129,7 +1420,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           />
         </div>
         <div>
-          <label htmlFor="toDate" className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="toDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             To Date
           </label>
           <input
@@ -1142,7 +1436,10 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         </div>
         <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
           <div className="w-full">
-            <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="search"
+              className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1"
+            >
               Search by CN No
             </label>
             <input
@@ -1181,12 +1478,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         </div>
       </div>
 
-      {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
-      {error && <div className="text-center text-red-600 text-lg">No data found</div>}
+      {loading && (
+        <div className="text-center text-blue-600 text-lg">Loading...</div>
+      )}
+      {error && (
+        <div className="text-center text-red-600 text-lg">No data found</div>
+      )}
 
       {!loading && !error && data.length > 0 && (
         <>
-          {updateLoading && <div className="text-center text-blue-600 text-sm">Updating...</div>}
+          {updateLoading && (
+            <div className="text-center text-blue-600 text-sm">Updating...</div>
+          )}
           <CustomTable
             updateLoading={updateLoading}
             page={page}
@@ -1210,7 +1513,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 ? "Add Expenses"
                 : formMode === "update"
                 ? "Update Expenses"
-                : "View Expenses"} for CN No: {selectedRow.CN_CN_NO}
+                : "View Expenses"}{" "}
+              for CN No: {selectedRow.CN_CN_NO}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Left Column */}
@@ -1249,12 +1553,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.KILOMETER || ""}
-                    onChange={(e) => handleNumericInputChange("KILOMETER", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("KILOMETER", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.KILOMETER ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.KILOMETER ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.KILOMETER && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.KILOMETER}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.KILOMETER}
+                    </p>
                   )}
                 </div>
                 {showLocation && (
@@ -1265,12 +1575,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                     <input
                       type="text"
                       value={selectedRow.LOCATIONS || ""}
-                      onChange={(e) => handleNumericInputChange("LOCATIONS", e.target.value)}
+                      onChange={(e) =>
+                        handleNumericInputChange("LOCATIONS", e.target.value)
+                      }
                       readOnly={formReadOnly}
-                      className={`w-full border rounded-lg p-2 ${formErrors.LOCATIONS ? 'border-red-500' : ''}`}
+                      className={`w-full border rounded-lg p-2 ${
+                        formErrors.LOCATIONS ? "border-red-500" : ""
+                      }`}
                     />
                     {formErrors.LOCATIONS && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.LOCATIONS}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.LOCATIONS}
+                      </p>
                     )}
                   </div>
                 )}
@@ -1281,12 +1597,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.RATE || ""}
-                    onChange={(e) => handleNumericInputChange("RATE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("RATE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.RATE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.RATE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.RATE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.RATE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.RATE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1296,12 +1618,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.LATITUDE || ""}
-                    onChange={(e) => handleNumericInputChange("LATITUDE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("LATITUDE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.LATITUDE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.LATITUDE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.LATITUDE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.LATITUDE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.LATITUDE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1311,12 +1639,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.LONGITUDE || ""}
-                    onChange={(e) => handleNumericInputChange("LONGITUDE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("LONGITUDE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.LONGITUDE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.LONGITUDE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.LONGITUDE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.LONGITUDE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.LONGITUDE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1337,12 +1671,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.UNION_KM || ""}
-                    onChange={(e) => handleNumericInputChange("UNION_KM", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("UNION_KM", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.UNION_KM ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.UNION_KM ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.UNION_KM && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.UNION_KM}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.UNION_KM}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1352,12 +1692,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.EXTRA_POINT || ""}
-                    onChange={(e) => handleNumericInputChange("EXTRA_POINT", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("EXTRA_POINT", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.EXTRA_POINT ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.EXTRA_POINT ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.EXTRA_POINT && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.EXTRA_POINT}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.EXTRA_POINT}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1367,12 +1713,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.DT_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("DT_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("DT_EXPENSE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.DT_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.DT_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.DT_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.DT_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.DT_EXPENSE}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1386,12 +1738,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.ESCORT_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("ESCORT_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("ESCORT_EXPENSE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.ESCORT_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.ESCORT_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.ESCORT_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.ESCORT_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.ESCORT_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1401,12 +1759,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.LOADING_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("LOADING_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "LOADING_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.LOADING_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.LOADING_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.LOADING_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.LOADING_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.LOADING_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1416,12 +1783,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.UNLOADING_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("UNLOADING_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "UNLOADING_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.UNLOADING_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.UNLOADING_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.UNLOADING_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.UNLOADING_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.UNLOADING_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1431,12 +1807,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.LABOUR_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("LABOUR_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("LABOUR_EXPENSE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.LABOUR_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.LABOUR_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.LABOUR_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.LABOUR_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.LABOUR_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1446,12 +1828,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.OTHER_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("OTHER_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("OTHER_EXPENSE", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.OTHER_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.OTHER_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.OTHER_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.OTHER_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.OTHER_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1461,12 +1849,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.CRANE_HYDRA_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("CRANE_HYDRA_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "CRANE_HYDRA_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.CRANE_HYDRA_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.CRANE_HYDRA_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.CRANE_HYDRA_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.CRANE_HYDRA_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.CRANE_HYDRA_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1476,12 +1873,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.HEADLOAD_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("HEADLOAD_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "HEADLOAD_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.HEADLOAD_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.HEADLOAD_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.HEADLOAD_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.HEADLOAD_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.HEADLOAD_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1491,12 +1897,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.HEADLOAD_KM || ""}
-                    onChange={(e) => handleNumericInputChange("HEADLOAD_KM", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("HEADLOAD_KM", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.HEADLOAD_KM ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.HEADLOAD_KM ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.HEADLOAD_KM && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.HEADLOAD_KM}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.HEADLOAD_KM}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1506,12 +1918,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.CHAIN_PULLEY_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("CHAIN_PULLEY_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "CHAIN_PULLEY_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.CHAIN_PULLEY_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.CHAIN_PULLEY_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.CHAIN_PULLEY_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.CHAIN_PULLEY_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.CHAIN_PULLEY_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1521,12 +1942,18 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.TOLL_TAX || ""}
-                    onChange={(e) => handleNumericInputChange("TOLL_TAX", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange("TOLL_TAX", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.TOLL_TAX ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.TOLL_TAX ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.TOLL_TAX && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.TOLL_TAX}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.TOLL_TAX}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1536,12 +1963,21 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     value={selectedRow.PACKING_EXPENSE || ""}
-                    onChange={(e) => handleNumericInputChange("PACKING_EXPENSE", e.target.value)}
+                    onChange={(e) =>
+                      handleNumericInputChange(
+                        "PACKING_EXPENSE",
+                        e.target.value
+                      )
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.PACKING_EXPENSE ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.PACKING_EXPENSE ? "border-red-500" : ""
+                    }`}
                   />
                   {formErrors.PACKING_EXPENSE && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.PACKING_EXPENSE}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.PACKING_EXPENSE}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1561,13 +1997,19 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <textarea
                     value={selectedRow.REMARKS || ""}
-                    onChange={(e) => handleInputChange("REMARKS", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("REMARKS", e.target.value)
+                    }
                     readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${formErrors.REMARKS ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.REMARKS ? "border-red-500" : ""
+                    }`}
                     rows="3"
                   />
                   {formErrors.REMARKS && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.REMARKS}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.REMARKS}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1649,23 +2091,36 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 {uploadResults.invalid.length > 0 ? (
                   <>
                     <p className="text-red-600">
-                      {uploadResults.invalid.length} invalid rows found (out of {uploadResults.total})
+                      {uploadResults.invalid.length} invalid rows found (out of{" "}
+                      {uploadResults.total})
                     </p>
                     <div className="mt-2 max-h-40 overflow-y-auto">
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Row</th>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
-                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Row
+                            </th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              CN No
+                            </th>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Errors
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {uploadResults.invalid.map((row, index) => (
                             <tr key={index}>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.row}</td>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.cnNo || "-"}</td>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{row.errors}</td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
+                                {row.row}
+                              </td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
+                                {row.cnNo || "-"}
+                              </td>
+                              <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">
+                                {row.errors}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -1678,7 +2133,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 ) : (
                   <>
                     <p className="text-green-600">
-                      Successfully added {uploadResults.added} and updated {uploadResults.updated} records
+                      Successfully added {uploadResults.added} and updated{" "}
+                      {uploadResults.updated} records
                     </p>
                     {uploadResults.failed > 0 && (
                       <p className="text-red-600">
@@ -1690,15 +2146,23 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CN No</th>
-                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                CN No
+                              </th>
+                              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Error
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {uploadResults.errors.map((error, index) => (
                               <tr key={index}>
-                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{error.cnNo}</td>
-                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">{error.message}</td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
+                                  {error.cnNo}
+                                </td>
+                                <td className="px-2 py-1 whitespace-nowrap text-sm text-red-600">
+                                  {error.message}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
