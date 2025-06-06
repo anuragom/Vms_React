@@ -740,7 +740,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
         const numericFields = [
           "Kilometer",
-          "Locations",
           "Rate (per Km)",
           "Latitude",
           "Longitude",
@@ -1037,9 +1036,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
   const columns = [
     {
-      name: "Action",
+      name: "Action",  
       cell: (row) => (
-        <div className="flex gap-3">
+        <div className="flex gap-3 sticky-action-col" >
           {row.KILOMETER || row.RATE || row.FREIGHT || row.TOTAL_AMOUNT ? (
             <button
               onClick={() => openFormInReadMode(row)}
