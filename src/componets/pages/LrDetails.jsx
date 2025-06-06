@@ -654,7 +654,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Dt Expense": "",
         "Escort Expense": "",
         "Headload Expense": "",
-        "Headload Km": "",
+        "H.K.M( Headload meter) ": "",
         "Loading Expense": "",
         "Unloading Expense": "",
         "Labour Expense": "",
@@ -765,7 +765,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           OTHER_EXPENSE: parseFloat(row["Other Expense"]) || 0,
           CRANE_HYDRA_EXPENSE: parseFloat(row["Crane/Hydra Expense"]) || 0,
           HEADLOAD_EXPENSE: parseFloat(row["Headload Expense"]) || 0,
-          HEADLOAD_KM: parseFloat(row["Headload Km"]) || 0,
+          HEADLOAD_KM: parseFloat(row["H.K.M( Headload meter) "]) || 0,
           CHAIN_PULLEY_EXPENSE: parseFloat(row["Chain Pulley Expense"]) || 0,
           TOLL_TAX: parseFloat(row["Toll Tax"]) || 0,
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
@@ -808,7 +808,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           "Other Expense",
           "Crane/Hydra Expense",
           "Headload Expense",
-          "Headload Km",
+          "H.K.M( Headload meter) ",
           "Chain Pulley Expense",
           "Toll Tax",
           "Packing Expense",
@@ -1990,7 +1990,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Headload Km
+                  H.K.M( Headload meter) 
                   </label>
                   <input
                     type="text"
