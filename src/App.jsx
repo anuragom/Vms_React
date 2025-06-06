@@ -300,7 +300,7 @@ import VendorDetails from "./componets/pages/VendorDetails";
 import CnWithoutChallan from "./componets/pages/CnWithoutChallan";
 import CnDetails from "./componets/pages/CnDetails";
 import BillStatus from "./componets/pages/BillStatus";
-import PendingBillGeneration from "./componets/pages/PendingBillGeneration";
+import GenerateAnnexure from "./componets/pages/GenerateAnnexure";
 import BillDelete from "./componets/pages/BillDelete";
 import PodReport from "./componets/pages/PodReport";
 import CnReports from "./componets/pages/CnReports";
@@ -316,7 +316,7 @@ import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
 import PostedBill from "./componets/pages/PostedBill";
 import AnnexureDetails from "./componets/pages/AnnexureDetails";
 import { ToastContainer } from "react-toastify";
-import CompletedBills from "./componets/pages/CompletedBills";
+import AllLr from "./componets/pages/AllLrdetails";
 
 // Layout Component
 const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
@@ -405,8 +405,8 @@ function App() {
             element={<ProtectedRoute element={<AnnexureDetails />} />}
           />
           <Route
-            path="/pending-bill-generation"
-            element={<ProtectedRoute element={<PendingBillGeneration />} />}
+            path="/Generate-annexure"
+            element={<ProtectedRoute element={<GenerateAnnexure />} />}
           />
           <Route
             path="/bill-delete"
@@ -446,8 +446,8 @@ function App() {
             element={<ProtectedRoute element={<PostedBill />} />}
           />
           <Route
-            path="/completed-bill"
-            element={<ProtectedRoute element={<CompletedBills />} />}
+            path="/all-Lr"
+            element={<ProtectedRoute element={<AllLr />} />}
           />
 
           <Route

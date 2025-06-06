@@ -13,11 +13,11 @@ import {
 const roleBasedMenuItems = {
   ADMIN: [
     "dashboard", "vendor-details", "cn-without-challan", "cn-details", "bill-status",
-    "pending-bill-generation", "bill-delete", "pod-report", "cn-reports", "user-management", "user-log",
+    "Generate-Annexure", "bill-delete", "pod-report", "cn-reports", "user-management", "user-log",
   ],
   VENDOR: [
     "dashboard", "lr-details", "bill-generate-using-exel-upload", "bill-status", "bill-noc",
-    "pending-bill-generation", "reports", "process-billing", "posted-bill", "completed-bill", "bill-status"
+     "reports", "process-billing", "posted-bill", "all-Lr", "bill-status"
   ],
   BRANCH: [
     "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details"
@@ -38,6 +38,12 @@ const roleBasedMenuItems = {
 
 const lrBillingSubItems = [
   {
+    id: "all-Lr", 
+    label: "All LR",
+    path: "/all-Lr",
+    icon: ClipboardCheck
+  },
+  {
     id: "lr-details",
     label: "Complete LR",
     path: "/lr-details",
@@ -46,7 +52,7 @@ const lrBillingSubItems = [
   {
     id: "process-billing",
     label: "Generate Annexure",
-    path: "/pending-bill-generation",
+    path: "/Generate-Annexure",
     icon: Settings,
   },
   {
@@ -55,12 +61,7 @@ const lrBillingSubItems = [
     path: "/posted-bill",
     icon: ClipboardCheck,
   },
-  {
-    id: "completed-bill", 
-    label: "Completed Bills",
-    path: "/completed-bill",
-    icon: ClipboardCheck
-  },
+
   {
     id: "bill-status",
     label: "Bill Status",

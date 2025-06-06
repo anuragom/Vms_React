@@ -45,7 +45,7 @@ const Modal = ({ isOpen, onClose, title, message, confirmButton, onConfirm }) =>
   );
 };
 
-const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
+const GenerateAnnexure = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
 
   const CNMODEVATMap = {
@@ -515,4 +515,4 @@ const PendingBillGenerationrDetails = ({ isNavbarCollapsed }) => {
   );
 };
   
-export default PendingBillGenerationrDetails;
+export default GenerateAnnexure;
