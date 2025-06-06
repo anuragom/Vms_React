@@ -73,6 +73,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const optionalNumericFields = [
       "UNION_KM",
       "EXTRA_POINT",
+      "FLOOR",
       "DT_EXPENSE",
       "ESCORT_EXPENSE",
       "LOADING_EXPENSE",
@@ -107,6 +108,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setShowLocation(false); // Default to unchecked
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
+      SITE_ID: row.SITE_ID || "",
+      FLOOR: row.FLOOR || "",
+      MOMENT_TYPE: row.MOMENT_TYPE || "",
       KILOMETER: "",
       LOCATIONS: "",
       RATE: "",
@@ -141,6 +145,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
+      SITE_ID: row.SITE_ID || "",
+      FLOOR: row.FLOOR || "",
+      MOMENT_TYPE: row.MOMENT_TYPE || "",
       LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
@@ -174,6 +181,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
+      SITE_ID: row.SITE_ID || "",
+      FLOOR: row.FLOOR || "",
+      MOMENT_TYPE: row.MOMENT_TYPE || "",
       LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
@@ -398,6 +408,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       CN_CN_NO: row.CN_CN_NO,
       CN_MANUAL_CN_NO: row.CN_MANUAL_CN_NO,
       CN_CN_DATE: new Date(row.CN_CN_DATE).toLocaleDateString(),
+      SITE_ID: row.SITE_ID, 
+      FLOOR: row.FLOOR ,
+      MOMENT_TYPE: row.MOMENT_TYPE ,
       CN_SOURCE_BRANCH_CODE: row.CN_SOURCE_BRANCH_CODE,
       CN_DESTINATION_BRANCH_CODE: row.CN_DESTINATION_BRANCH_CODE,
       CN_ITEM_DESCRIPT: row.CN_ITEM_DESCRIPT,
@@ -422,6 +435,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "Challan No",
       "Challan Date",
       "Lorry No",
+      "Site ID",
+      "Floor",
+      "Moment Type",
     ];
 
     const csv = [
@@ -504,6 +520,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       payload = {
         CN_CN_NO: selectedRow.CN_CN_NO,
         KILOMETER: parseFloat(selectedRow.KILOMETER) || 0,
+        SITE_ID: selectedRow.SITE_ID || "",
+        MOMENT_TYPE: selectedRow.MOMENT_TYPE || "",
+        FLOOR: selectedRow.FLOOR || "",
         LOCATIONS: showLocation ? parseFloat(selectedRow.LOCATIONS) || 0 : 0,
         RATE: parseFloat(selectedRow.RATE),
         LATITUDE: parseFloat(selectedRow.LATITUDE),
@@ -532,6 +551,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       payload = {
         cn_cn_no: selectedRow.CN_CN_NO,
         kilometer: parseFloat(selectedRow.KILOMETER) || 0,
+        site_id: parseFloat(selectedRow.SITE_ID )|| "",
+        moment_type: parseFloat(selectedRow.MOMENT_TYPE) || "",
+        floor: parseFloat(selectedRow.FLOOR) || "",
         locations: showLocation ? parseFloat(selectedRow.LOCATIONS) || 0 : 0,
         rate: parseFloat(selectedRow.RATE),
         latitude: parseFloat(selectedRow.LATITUDE),
@@ -619,11 +641,14 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const templateData = [
       {
         "CN No": "",
-        Kilometer: "",
-        Locations: "",
+        "Kilometer": "",
+        "Site ID": "",
+        "Floor": "",
+        "Moment Type": "",
+        "Locations": "",
         "Rate (per Km)": "",
-        Latitude: "",
-        Longitude: "",
+        "Latitude": "",
+        "Longitude": "",
         "Union/Km": "",
         "Extra Point": "",
         "Dt Expense": "",
@@ -638,7 +663,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Chain Pulley Expense": "",
         "Toll Tax": "",
         "Packing Expense": "",
-        Remarks: "",
+        "Remarks": "",
       },
     ];
 
@@ -721,6 +746,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
         return {
           CN_CN_NO: row["CN No"],
+          SITE_ID: row["Site ID"] || "",
+          FLOOR: row["Floor"] || "",
+          MOMENT_TYPE: row["Moment Type"] || "",
           KILOMETER: kilometer,
           LOCATIONS: parseFloat(row["Locations"]) || 0,
           RATE: rate,
@@ -767,6 +795,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         const numericFields = [
           "Kilometer",
           "Rate (per Km)",
+          "Floor",
           "Latitude",
           "Longitude",
           "Union/Km",
@@ -841,6 +870,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             const updatePayload = processedData.map((item) => ({
               cn_cn_no: item.CN_CN_NO,
               kilometer: item.KILOMETER,
+              site_id: item.SITE_ID,
+              moment_type: item.MOMENT_TYPE,
+              floor: item.FLOOR,
               locations: item.LOCATIONS,
               rate: item.RATE,
               latitude: item.LATITUDE,
@@ -917,6 +949,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           const updatePayload = processedData.map((item) => ({
             cn_cn_no: item.CN_CN_NO,
             kilometer: item.KILOMETER,
+            site_id: item.SITE_ID,
+            moment_type: item.MOMENT_TYPE,
+            floor: item.FLOOR,
             locations: item.LOCATIONS,
             rate: item.RATE,
             latitude: item.LATITUDE,
@@ -1663,6 +1698,69 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                     className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
                     readOnly
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Site Id 
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedRow.SITE_ID || ""}
+                    onChange={(e) =>
+                      handleNumericInputChange("SITE_ID", e.target.value)
+                    }
+                    readOnly={formReadOnly}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.RATE ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.SITE_ID && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.SITE_ID}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Moment Type 
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedRow.MOMENT_TYPE || ""}
+                    onChange={(e) =>
+                      handleNumericInputChange("MOMENT_TYPE", e.target.value)
+                    }
+                    readOnly={formReadOnly}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.MOMENT_TYPE ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.MOMENT_TYPE && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.MOMENT_TYPE}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Floor 
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedRow.FLOOR || ""}
+                    onChange={(e) =>
+                      handleNumericInputChange("FLOOR", e.target.value)
+                    }
+                    readOnly={formReadOnly}
+                    className={`w-full border rounded-lg p-2 ${
+                      formErrors.FLOOR ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors.FLOOR && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {formErrors.FLOOR}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
