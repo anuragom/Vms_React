@@ -580,8 +580,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
     const apiUrl =
       formMode === "add"
-        ? "http://localhost:3001/api/addExpenses"
-        : "http://localhost:3001/api/updateExpenses";
+        ? "https://vmsnode.omlogistics.co.in/api/addExpenses"
+        : "https://vmsnode.omlogistics.co.in/api/updateExpenses";
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -921,7 +921,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       try {
         const addResponse = await axios.post(
-          "http://localhost:3001/api/addExpenses",
+          "https://vmsnode.omlogistics.co.in/api/addExpenses",
           processedData,
           {
             headers: {
@@ -970,7 +970,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
             try {
               const updateResponse = await axios.post(
-                "http://localhost:3001/api/updateExpenses",
+                "https://vmsnode.omlogistics.co.in/api/updateExpenses",
                 updatePayload,
                 {
                   headers: {
@@ -1049,7 +1049,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
           try {
             const updateResponse = await axios.post(
-              "http://localhost:3001/api/updateExpenses",
+              "https://vmsnode.omlogistics.co.in/api/updateExpenses",
               updatePayload,
               {
                 headers: {
