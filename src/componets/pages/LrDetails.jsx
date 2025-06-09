@@ -259,9 +259,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       } else if (field === "LOCATIONS" && showLocation) {
         if (!value && value !== 0) {
           errors.LOCATIONS = "Location is required";
-        } else if (isNaN(parseFloat(value))) {
-          errors.LOCATIONS = "Location must be a valid number";
-        } else {
+        }
+      else {
           delete errors.LOCATIONS;
         }
       } else if (field !== "REMARKS") {
@@ -581,8 +580,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
     const apiUrl =
       formMode === "add"
-        ? "https://vmsnode.omlogistics.co.in/api/addExpenses"
-        : "https://vmsnode.omlogistics.co.in/api/updateExpenses";
+        ? "http://localhost:3001/api/addExpenses"
+        : "http://localhost:3001/api/updateExpenses";
 
     try {
       const response = await axios.post(apiUrl, payload, {
@@ -720,6 +719,78 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       if (!data || data.length === 0) {
         throw new Error("No valid data found in the file");
       }
+      // DATE VALIDATION ===================================================
+    let dateValidationFailed = false;
+    const dateValidationResults = [];
+
+    if (fromDate && toDate) {
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999); // Include entire end day
+
+      data.forEach((row, index) => {
+        const cnDateStr = row["CN Date"];
+        console.log("CN Date:", cnDateStr);
+        if (!cnDateStr) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo: row["CN No"],
+            error: "CN Date is missing"
+          });
+          dateValidationFailed = true;
+          return;
+        }
+
+        const cnDate = new Date(cnDateStr);
+        if (isNaN(cnDate.getTime())) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo: row["CN No"],
+            error: "Invalid CN Date format"
+          });
+          dateValidationFailed = true;
+          return;
+        }
+
+        if (cnDate < from || cnDate > to) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo: row["CN No"],
+            error: `CN Date (${cnDateStr}) is not between ${fromDate} and ${toDate}`
+          });
+          dateValidationFailed = true;
+        }
+      });
+    }
+
+    if (dateValidationFailed) {
+      setUploadResults({
+        total: data.length,
+        invalid: dateValidationResults,
+        valid: 0,
+        added: 0,
+        updated: 0,
+        failed: data.length,
+        errors: [{
+          cnNo: "Multiple",
+          message: "Date validation failed",
+          operation: "validation"
+        }]
+      });
+      
+      toast.error("CN Date validation failed. Please check dates in your file.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+    // END DATE VALIDATION ===============================================
+
 
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
@@ -850,7 +921,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
       try {
         const addResponse = await axios.post(
-          "https://vmsnode.omlogistics.co.in/api/addExpenses",
+          "http://localhost:3001/api/addExpenses",
           processedData,
           {
             headers: {
@@ -899,7 +970,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
             try {
               const updateResponse = await axios.post(
-                "https://vmsnode.omlogistics.co.in/api/updateExpenses",
+                "http://localhost:3001/api/updateExpenses",
                 updatePayload,
                 {
                   headers: {
@@ -978,7 +1049,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
           try {
             const updateResponse = await axios.post(
-              "https://vmsnode.omlogistics.co.in/api/updateExpenses",
+              "http://localhost:3001/api/updateExpenses",
               updatePayload,
               {
                 headers: {
@@ -1611,7 +1682,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                       type="text"
                       value={selectedRow.LOCATIONS || ""}
                       onChange={(e) =>
-                        handleNumericInputChange("LOCATIONS", e.target.value)
+                        handleInputChange("LOCATIONS", e.target.value)
                       }
                       readOnly={formReadOnly}
                       className={`w-full border rounded-lg p-2 ${
@@ -2138,6 +2209,32 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
 
+            <div className="mb-4 flex flex-col md:flex-row gap-4">
+  <div className="flex-1">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      From Date
+    </label>
+    <input
+      type="date"
+      value={fromDate}
+      onChange={(e) => setFromDate(e.target.value)}
+      className="w-full border border-gray-300 rounded-md p-2 text-sm"
+    />
+  </div>
+  <div className="flex-1">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      To Date
+    </label>
+    <input
+      type="date"
+      value={toDate}
+      onChange={(e) => setToDate(e.target.value)}
+      className="w-full border border-gray-300 rounded-md p-2 text-sm"
+    />
+  </div>
+</div>
+
+<p className="text-red-700 ">We recommend uploading expenses for more than 7 days at once.</p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)
