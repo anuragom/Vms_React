@@ -59,7 +59,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     if (showLocation) {
       if (!row.LOCATIONS && row.LOCATIONS !== 0) {
         errors.LOCATIONS = "Location is required";
-      } 
+      }
     }
 
     requiredFields.forEach((field) => {
@@ -108,9 +108,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setShowLocation(false); // Default to unchecked
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
-      SITE_ID: row.SITE_ID || "",
+      SITE_ID: row.OTPL_SITE_ID || "",
       FLOOR: row.FLOOR || "",
-      MOMENT_TYPE: row.MOMENT_TYPE || "",
+      MOMENT_TYPE: row.CN_MODE_VAT || "",
       KILOMETER: "",
       LOCATIONS: "",
       RATE: "",
@@ -145,9 +145,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
-      SITE_ID: row.SITE_ID || "",
+      SITE_ID: row.OTPL_SITE_ID || "",
       FLOOR: row.FLOOR || "",
-      MOMENT_TYPE: row.MOMENT_TYPE || "",
+      MOMENT_TYPE: row.CN_MODE_VAT || "",
       LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
@@ -181,9 +181,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     setSelectedRow({
       CN_CN_NO: row.CN_CN_NO,
       KILOMETER: row.KILOMETER || "",
-      SITE_ID: row.SITE_ID || "",
+      SITE_ID: row.OTPL_SITE_ID || "",
       FLOOR: row.FLOOR || "",
-      MOMENT_TYPE: row.MOMENT_TYPE || "",
+      MOMENT_TYPE: row.CN_MODE_VAT || "",
       LOCATIONS: row.LOCATIONS || "",
       RATE: row.RATE || "",
       LATITUDE: row.LATITUDE || "",
@@ -259,8 +259,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       } else if (field === "LOCATIONS" && showLocation) {
         if (!value && value !== 0) {
           errors.LOCATIONS = "Location is required";
-        }
-      else {
+        } else {
           delete errors.LOCATIONS;
         }
       } else if (field !== "REMARKS") {
@@ -407,9 +406,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       CN_CN_NO: row.CN_CN_NO,
       CN_MANUAL_CN_NO: row.CN_MANUAL_CN_NO,
       CN_CN_DATE: new Date(row.CN_CN_DATE).toLocaleDateString(),
-      SITE_ID: row.SITE_ID, 
-      FLOOR: row.FLOOR ,
-      MOMENT_TYPE: row.MOMENT_TYPE ,
+      SITE_ID: row.OTPL_SITE_ID,
+      FLOOR: row.FLOOR,
+      MOMENT_TYPE: row.CN_MODE_VAT,
       CN_SOURCE_BRANCH_CODE: row.CN_SOURCE_BRANCH_CODE,
       CN_DESTINATION_BRANCH_CODE: row.CN_DESTINATION_BRANCH_CODE,
       CN_ITEM_DESCRIPT: row.CN_ITEM_DESCRIPT,
@@ -425,6 +424,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "CN No",
       "Manual CN No",
       "CN Date",
+      "Site ID",
       "Source Branch Code",
       "Destination Branch Code",
       "Item Description",
@@ -434,7 +434,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       "Challan No",
       "Challan Date",
       "Lorry No",
-      "Site ID",
       "Floor",
       "Moment Type",
     ];
@@ -519,7 +518,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       payload = {
         CN_CN_NO: selectedRow.CN_CN_NO,
         KILOMETER: parseFloat(selectedRow.KILOMETER) || 0,
-        SITE_ID: selectedRow.SITE_ID || "",
         MOMENT_TYPE: selectedRow.MOMENT_TYPE || "",
         FLOOR: selectedRow.FLOOR || "",
         LOCATIONS: showLocation ? selectedRow.LOCATIONS || 0 : 0,
@@ -550,7 +548,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       payload = {
         cn_cn_no: selectedRow.CN_CN_NO,
         kilometer: parseFloat(selectedRow.KILOMETER) || 0,
-        site_id: parseFloat(selectedRow.SITE_ID )|| "",
         moment_type: parseFloat(selectedRow.MOMENT_TYPE) || "",
         floor: parseFloat(selectedRow.FLOOR) || "",
         locations: showLocation ? selectedRow.LOCATIONS || 0 : 0,
@@ -640,14 +637,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const templateData = [
       {
         "CN No": "",
-        "Kilometer": "",
-        "Site ID": "",
-        "Floor": "",
+        Kilometer: "",
+        Floor: "",
         "Moment Type": "",
-        "Locations": "",
+        Locations: "",
         "Rate (per Km)": "",
-        "Latitude": "",
-        "Longitude": "",
+        Latitude: "",
+        Longitude: "",
         "Union/Km": "",
         "Extra Point": "",
         "Dt Expense": "",
@@ -662,7 +658,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Chain Pulley Expense": "",
         "Toll Tax": "",
         "Packing Expense": "",
-        "Remarks": "",
+        Remarks: "",
       },
     ];
 
@@ -720,77 +716,81 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         throw new Error("No valid data found in the file");
       }
       // DATE VALIDATION ===================================================
-    let dateValidationFailed = false;
-    const dateValidationResults = [];
+      let dateValidationFailed = false;
+      const dateValidationResults = [];
 
-    if (fromDate && toDate) {
-      const from = new Date(fromDate);
-      const to = new Date(toDate);
-      to.setHours(23, 59, 59, 999); // Include entire end day
+      if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        to.setHours(23, 59, 59, 999); // Include entire end day
 
-      data.forEach((row, index) => {
-        const cnDateStr = row["CN Date"];
-        console.log("CN Date:", cnDateStr);
-        if (!cnDateStr) {
-          dateValidationResults.push({
-            row: index + 2,
-            cnNo: row["CN No"],
-            error: "CN Date is missing"
-          });
-          dateValidationFailed = true;
-          return;
-        }
+        data.forEach((row, index) => {
+          const cnDateStr = row["CN Date"];
+          console.log("CN Date:", cnDateStr);
+          if (!cnDateStr) {
+            dateValidationResults.push({
+              row: index + 2,
+              cnNo: row["CN No"],
+              error: "CN Date is missing",
+            });
+            dateValidationFailed = true;
+            return;
+          }
 
-        const cnDate = new Date(cnDateStr);
-        if (isNaN(cnDate.getTime())) {
-          dateValidationResults.push({
-            row: index + 2,
-            cnNo: row["CN No"],
-            error: "Invalid CN Date format"
-          });
-          dateValidationFailed = true;
-          return;
-        }
+          const cnDate = new Date(cnDateStr);
+          if (isNaN(cnDate.getTime())) {
+            dateValidationResults.push({
+              row: index + 2,
+              cnNo: row["CN No"],
+              error: "Invalid CN Date format",
+            });
+            dateValidationFailed = true;
+            return;
+          }
 
-        if (cnDate < from || cnDate > to) {
-          dateValidationResults.push({
-            row: index + 2,
-            cnNo: row["CN No"],
-            error: `CN Date (${cnDateStr}) is not between ${fromDate} and ${toDate}`
-          });
-          dateValidationFailed = true;
-        }
-      });
-    }
+          if (cnDate < from || cnDate > to) {
+            dateValidationResults.push({
+              row: index + 2,
+              cnNo: row["CN No"],
+              error: `CN Date (${cnDateStr}) is not between ${fromDate} and ${toDate}`,
+            });
+            dateValidationFailed = true;
+          }
+        });
+      }
 
-    if (dateValidationFailed) {
-      setUploadResults({
-        total: data.length,
-        invalid: dateValidationResults,
-        valid: 0,
-        added: 0,
-        updated: 0,
-        failed: data.length,
-        errors: [{
-          cnNo: "Multiple",
-          message: "Date validation failed",
-          operation: "validation"
-        }]
-      });
-      
-      toast.error("CN Date validation failed. Please check dates in your file.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      });
-      return;
-    }
-    // END DATE VALIDATION ===============================================
+      if (dateValidationFailed) {
+        setUploadResults({
+          total: data.length,
+          invalid: dateValidationResults,
+          valid: 0,
+          added: 0,
+          updated: 0,
+          failed: data.length,
+          errors: [
+            {
+              cnNo: "Multiple",
+              message: "Date validation failed",
+              operation: "validation",
+            },
+          ],
+        });
 
+        toast.error(
+          "CN Date validation failed. Please check dates in your file.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          }
+        );
+        return;
+      }
+      // END DATE VALIDATION ===============================================
 
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
@@ -817,7 +817,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
 
         return {
           CN_CN_NO: row["CN No"],
-          SITE_ID: row["Site ID"] || "",
           FLOOR: row["Floor"] || "",
           MOMENT_TYPE: row["Moment Type"] || "",
           KILOMETER: kilometer,
@@ -941,8 +940,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             const updatePayload = processedData.map((item) => ({
               cn_cn_no: item.CN_CN_NO,
               kilometer: item.KILOMETER,
-              site_id: item.SITE_ID,
-              moment_type: item.MOMENT_TYPE,
+              moment_type: item.CN_MODE_VAT,
               floor: item.FLOOR,
               locations: item.LOCATIONS,
               rate: item.RATE,
@@ -1020,8 +1018,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           const updatePayload = processedData.map((item) => ({
             cn_cn_no: item.CN_CN_NO,
             kilometer: item.KILOMETER,
-            site_id: item.SITE_ID,
-            moment_type: item.MOMENT_TYPE,
+            moment_type: item.CN_MODE_VAT,
             floor: item.FLOOR,
             locations: item.LOCATIONS,
             rate: item.RATE,
@@ -1266,6 +1263,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       width: "150px",
     },
     {
+      name: "Challan No",
+      selector: (row) => row.CHLN_CHLN_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
       name: "Source Branch Code",
       selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-",
       sortable: true,
@@ -1314,13 +1318,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       wrap: true,
       width: "190px",
     },
-    {
-      name: "Challan No",
-      selector: (row) => row.CHLN_CHLN_NO || "-",
-      sortable: true,
-      wrap: true,
-      width: "150px",
-    },
+    
     {
       name: "Challan Date",
       selector: (row) =>
@@ -1340,7 +1338,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     },
     {
       name: "Site ID",
-      selector: (row) => row.SITE_ID || "-",
+      selector: (row) => row.OTPL_SITE_ID || "-",
       sortable: true,
       wrap: true,
       width: "150px",
@@ -1772,35 +1770,29 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Site Id 
+                    Site Id
                   </label>
                   <input
                     type="text"
-                    value={selectedRow.SITE_ID || ""}
-                    onChange={(e) =>
-                      handleNumericInputChange("SITE_ID", e.target.value)
-                    }
-                    readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${
-                      formErrors.RATE ? "border-red-500" : ""
-                    }`}
+                    value={selectedRow.OTPL_SITE_ID || ""}
+                    readOnly
+                    className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
                   />
-                  {formErrors.SITE_ID && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.SITE_ID}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Moment Type 
+                    Moment Type
                   </label>
                   <input
                     type="text"
-                    value={selectedRow.MOMENT_TYPE || ""}
-                    onChange={(e) =>
-                      handleNumericInputChange("MOMENT_TYPE", e.target.value)
+                    value={
+                      CNMODEVATMap[selectedRow.MOMENT_TYPE] ||
+                      selectedRow.MOMENT_TYPE ||
+                      ""
                     }
+                    onChange={(e) =>
+                      handleInputChange("MOMENT_TYPE", e.target.value)
+                    } // Use handleInputChange, not handleNumericInputChange
                     readOnly={formReadOnly}
                     className={`w-full border rounded-lg p-2 ${
                       formErrors.MOMENT_TYPE ? "border-red-500" : ""
@@ -1814,7 +1806,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Floor 
+                    Floor
                   </label>
                   <input
                     type="text"
@@ -2061,7 +2053,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                  H.K.M( Headload meter) 
+                    H.K.M( Headload meter)
                   </label>
                   <input
                     type="text"
@@ -2210,31 +2202,33 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             <h2 className="text-xl font-bold mb-4">Bulk Upload Expenses</h2>
 
             <div className="mb-4 flex flex-col md:flex-row gap-4">
-  <div className="flex-1">
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      From Date
-    </label>
-    <input
-      type="date"
-      value={fromDate}
-      onChange={(e) => setFromDate(e.target.value)}
-      className="w-full border border-gray-300 rounded-md p-2 text-sm"
-    />
-  </div>
-  <div className="flex-1">
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      To Date
-    </label>
-    <input
-      type="date"
-      value={toDate}
-      onChange={(e) => setToDate(e.target.value)}
-      className="w-full border border-gray-300 rounded-md p-2 text-sm"
-    />
-  </div>
-</div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                />
+              </div>
+            </div>
 
-<p className="text-red-700 ">We recommend uploading expenses for more than 7 days at once.</p>
+            <p className="text-red-700 ">
+              We recommend uploading expenses for more than 7 days at once.
+            </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)
@@ -2389,6 +2383,6 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       )}
     </div>
   );
-};
+};  
 
 export default LrDetails;
