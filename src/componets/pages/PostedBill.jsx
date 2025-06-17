@@ -45,6 +45,34 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
 
+  // Function to process data and add disabled property
+  const processDataForDisabling = (rawData) => {
+    // Group by CHALLAN_NO
+    const challanGroups = rawData.reduce((acc, record) => {
+      const { CHALLAN_NO, UPDATEDFLAG } = record;
+      if (!acc[CHALLAN_NO]) {
+        acc[CHALLAN_NO] = { records: [], hasUpdatedFlag: false };
+      }
+      acc[CHALLAN_NO].records.push({ ...record, disabled: false });
+      if (UPDATEDFLAG === "Y") {
+        acc[CHALLAN_NO].hasUpdatedFlag = true;
+      }
+      return acc;
+    }, {});
+
+    // Mark records as disabled if any CN_NO in the group has UPDATEDFLAG = "Y"
+    Object.values(challanGroups).forEach(group => {
+      if (group.hasUpdatedFlag) {
+        group.records.forEach(record => {
+          record.disabled = true;
+        });
+      }
+    });
+
+    // Flatten records back into an array
+    return Object.values(challanGroups).flatMap(group => group.records);
+  };
+
   const fetchPostedBillData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -78,8 +106,10 @@ const PostedBill = ({ isNavbarCollapsed }) => {
         return;
       }
 
-      setData(response.data.data);
-      setFilteredData(response.data.data);
+      // Process data to add disabled property
+      const processedData = processDataForDisabling(response.data.data);
+      setData(processedData);
+      setFilteredData(processedData);
       setTotalRows(response.data.total || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -137,6 +167,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       CHALLAN_NO: row.CHALLAN_NO,
       CHALLAN_DATE: new Date(row.CHALLAN_DATE).toLocaleDateString(),
       LORRY_NO: row.LORRY_NO,
+      DISABLED: row.disabled ? "Yes" : "No", // Add disabled status to CSV
     }));
 
     const csvHeaders = [
@@ -153,6 +184,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       "Challan No",
       "Challan Date",
       "Lorry No",
+      "Disabled",
     ];
 
     const csv = [
@@ -235,7 +267,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       floor: row.FLOOR || "",
       moment_type: Object.keys(CNMODEVATMap).find(
         (key) => CNMODEVATMap[key] === row.MODE_VAT
-      ) || "", // Store numeric key
+      ) || "",
       locations: row.LOCATIONS || "",
       rate: parseFloat(row.RATE) || 0,
       latitude: parseFloat(row.LATITUDE) || 0,
@@ -267,8 +299,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const handleNumericInputChange = (field, value) => {
     const filteredValue =
       field === "moment_type"
-        ? value.replace(/[^\d]/g, "") // Allow only digits for moment_type
-        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"); // Allow digits and one decimal point for others
+        ? value.replace(/[^\d]/g, "")
+        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
     handleInputChange({ target: { name: field, value: filteredValue } });
   };
 
@@ -301,11 +333,10 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           ].includes(name)
         ? parseFloat(value) || 0
         : name === "moment_type"
-        ? value // Store numeric value for moment_type
+        ? value
         : value,
     }));
 
-    // Validation logic
     setFormErrors((prev) => {
       const errors = { ...prev };
       const requiredFields = ["rate", "latitude", "longitude", "kilometer"];
@@ -327,7 +358,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       } else if (name === "moment_type") {
         if (!value) {
           errors.moment_type = "Moment Type is required";
-        }  else {
+        } else {
           delete errors.moment_type;
         }
       } else if (name !== "remarks" && name !== "floor") {
@@ -482,8 +513,14 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       name: "Action",
       cell: (row) => (
         <button
-          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-          onClick={() => handleEdit(row)}
+          className={`px-3 py-1 text-white rounded text-sm ${
+            row.disabled
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-600"
+          }`}
+          onClick={() => !row.disabled && handleEdit(row)}
+          disabled={row.disabled}
+          title={row.disabled ? "Editing disabled due to updated record in this challan" : "Edit"}
         >
           Edit
         </button>
@@ -500,7 +537,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   return (
     <div className={`bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
       <ToastContainer />
-
+      {/* Rest of your JSX remains unchanged */}
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
@@ -673,12 +710,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                 { name: "kilometer", label: "Kilometer", type: "number", required: true },
                 { name: "site_id", label: "Site ID", type: "number", readOnly: true },
                 { name: "floor", label: "Floor", type: "text" },
-                {
-                  name: "moment_type",
-                  label: "Moment Type",
-                  type: "number",
-                 
-                },
+                { name: "moment_type", label: "Moment Type", type: "number" },
                 { name: "rate", label: "Rate", type: "number", required: true },
                 { name: "latitude", label: "Latitude", type: "number", required: true },
                 { name: "longitude", label: "Longitude", type: "number", required: true },
@@ -718,7 +750,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                       formErrors[field.name] ? "border-red-500" : "border-gray-300"
                     } ${field.readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   />
-                  {field.name === "moment_type" && editRowData.moment_type && CNMODEVATMap[editRowData.moment_type] }
+                  {field.name === "moment_type" && editRowData.moment_type && CNMODEVATMap[editRowData.moment_type]}
                   {formErrors[field.name] && (
                     <p className="text-red-500 text-xs mt-1">{formErrors[field.name]}</p>
                   )}
