@@ -271,7 +271,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
               BRANCH_Labour_expenses: "",
               BRANCH_Other_expenses: "",
               BRANCH_Special_Vehicle: "",
-              MODIFIED_BY: USER_ID,
+              BRANCH_ENTERED_BY: USER_ID,
             });
             setEditModalOpen(true);
           }}
@@ -322,7 +322,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
           BRANCH_Labour_expenses: editFormData.BRANCH_Labour_expenses,
           BRANCH_Other_expenses: editFormData.BRANCH_Other_expenses,
           BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle,
-          MODIFIED_BY: USER_ID,
+          BRANCH_ENTERED_BY: USER_ID,
         },
         {
           headers: {

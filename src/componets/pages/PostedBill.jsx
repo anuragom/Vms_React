@@ -256,17 +256,11 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   ];
 
   const handleEdit = (row) => {
-    // Debugging: Log the MODE_VAT value to inspect it
-    // console.log("row.MODE_VAT:", row.MODE_VAT);
-
-    // Determine moment_type: Check if MODE_VAT is a key or value in CNMODEVATMap
     let momentType = "";
     if (row.MODE_VAT) {
-      // Check if MODE_VAT is already a key (e.g., "1", "2")
       if (CNMODEVATMap[row.MODE_VAT]) {
         momentType = row.MODE_VAT;
       } else {
-        // Check if MODE_VAT is a value (e.g., "NRGP") and find the corresponding key
         momentType =
           Object.keys(CNMODEVATMap).find(
             (key) =>
@@ -274,9 +268,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           ) || "";
       }
     }
-
-    // Debugging: Log the determined moment_type
-    // console.log("Determined moment_type:", momentType);
 
     setEditRowData({
       cn_cn_no: parseInt(row.CN_NO) || 0,
@@ -320,6 +311,26 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     handleInputChange({ target: { name: field, value: filteredValue } });
   };
 
+  const calculateTotalAmount = (data) => {
+    const expenses = [
+      parseFloat(data.freight) || 0,
+      parseFloat(data.union_km) || 0,
+      parseFloat(data.extra_point) || 0,
+      parseFloat(data.dt_expense) || 0,
+      parseFloat(data.escort_expense) || 0,
+      parseFloat(data.loading_expense) || 0,
+      parseFloat(data.unloading_expense) || 0,
+      parseFloat(data.labour_expense) || 0,
+      parseFloat(data.other_expense) || 0,
+      parseFloat(data.crane_hydra_expense) || 0,
+      parseFloat(data.headload_expense) || 0,
+      parseFloat(data.chain_pulley_expense) || 0,
+      parseFloat(data.toll_tax) || 0,
+      parseFloat(data.packing_expense) || 0,
+    ];
+    return expenses.reduce((sum, val) => sum + val, 0).toFixed(2);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditRowData((prev) => {
@@ -354,10 +365,34 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           : value,
       };
 
+      // Auto-calculate freight as rate * kilometer
       if (name === "rate" || name === "kilometer") {
         const rate = name === "rate" ? parseFloat(value) || 0 : updatedData.rate;
         const kilometer = name === "kilometer" ? parseFloat(value) || 0 : updatedData.kilometer;
         updatedData.freight = (rate * kilometer).toFixed(2);
+      }
+
+      // Auto-calculate total_amount
+      if (
+        [
+          "rate",
+          "kilometer",
+          "union_km",
+          "extra_point",
+          "dt_expense",
+          "escort_expense",
+          "loading_expense",
+          "unloading_expense",
+          "labour_expense",
+          "other_expense",
+          "crane_hydra_expense",
+          "headload_expense",
+          "chain_pulley_expense",
+          "toll_tax",
+          "packing_expense",
+        ].includes(name)
+      ) {
+        updatedData.total_amount = calculateTotalAmount(updatedData);
       }
 
       return updatedData;
@@ -453,6 +488,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
         field !== "moment_type" &&
         field !== "locations" &&
         field !== "freight" &&
+        field !== "total_amount" &&
         editRowData[field] !== "" &&
         editRowData[field] !== undefined &&
         editRowData[field] !== null
