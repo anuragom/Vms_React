@@ -48,12 +48,12 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   // Function to process data and add disabled property
   const processDataForDisabling = (rawData) => {
     const challanGroups = rawData.reduce((acc, record) => {
-      const { CHALLAN_NO, UPDATED_FLAG } = record;
+      const { CHALLAN_NO, BRANCH_Flag } = record;
       if (!acc[CHALLAN_NO]) {
         acc[CHALLAN_NO] = { records: [], hasUpdatedFlag: false };
       }
       acc[CHALLAN_NO].records.push({ ...record, disabled: false });
-      if (UPDATED_FLAG === "Y") {
+      if (BRANCH_Flag === "Y") {
         acc[CHALLAN_NO].hasUpdatedFlag = true;
       }
       return acc;
