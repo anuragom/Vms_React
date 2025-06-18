@@ -205,8 +205,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     if (!acc[annexureNo]) {
       acc[annexureNo] = {
         annexureNo,
-        enteredDate: row.CN_DATE
-          ? new Date(row.CN_DATE).toLocaleDateString()
+        enteredDate: row.ENTERED_DATE
+          ? new Date(row.ENTERED_DATE).toLocaleDateString()
           : "-",
         totalFreight: 0,
         rows: [],
@@ -264,7 +264,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       cn_cn_no: parseInt(row.CN_NO) || 0,
       kilometer: parseFloat(row.KILOMETER) || 0,
       site_id: parseInt(row.OTPL_SITE_ID) || 0,
-      floor: row.FLOOR || "",
+      floor: row.FLOOR !== undefined && row.FLOOR !== null ? parseInt(row.FLOOR) : "",
       moment_type: Object.keys(CNMODEVATMap).find(
         (key) => CNMODEVATMap[key] === row.MODE_VAT
       ) || "",
@@ -298,9 +298,9 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
   const handleNumericInputChange = (field, value) => {
     const filteredValue =
-      field === "moment_type"
-        ? value.replace(/[^\d]/g, "")
-        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
+      field === "moment_type" || field === "floor"
+        ? value.replace(/[^\d]/g, "") // Only allow digits for moment_type and floor
+        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"); // Allow digits and one decimal for others
     handleInputChange({ target: { name: field, value: filteredValue } });
   };
 
@@ -323,7 +323,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
               "labour_expense",
               "other_expense",
               "crane_hydra_expense",
-              "headload_expense",
               "chain_pulley_expense",
               "toll_tax",
               "packing_expense",
@@ -331,6 +330,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
               "longitude",
             ].includes(name)
           ? parseFloat(value) || 0
+          : name === "floor"
+          ? value === "" ? "" : parseInt(value) || 0
           : name === "moment_type"
           ? value
           : value,
@@ -370,7 +371,16 @@ const PostedBill = ({ isNavbarCollapsed }) => {
         } else {
           delete errors.moment_type;
         }
-      } else if (name !== "remarks" && name !== "floor") {
+      } else if (name === "floor" && value !== "") {
+        const floorValue = parseInt(value);
+        if (isNaN(floorValue)) {
+          errors.floor = "Floor must be a valid number";
+        } else if (floorValue < 0 || floorValue > 25) {
+          errors.floor = "Floor must be a number between 0 and 25";
+        } else {
+          delete errors.floor;
+        }
+      } else if (name !== "remarks") {
         if (value !== "" && value !== undefined && value !== null) {
           if (isNaN(parseFloat(value))) {
             errors[name] = `${name.replace(/_/g, " ")} must be a valid number`;
@@ -408,6 +418,15 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       errors.moment_type = "Moment Type is required";
     } else if (!["1", "2", "3", "4", "5", "6", "7", "8"].includes(editRowData.moment_type)) {
       errors.moment_type = "Moment Type must be a number between 1 and 8";
+    }
+
+    if (editRowData.floor !== "" && editRowData.floor !== undefined && editRowData.floor !== null) {
+      const floorValue = parseInt(editRowData.floor);
+      if (isNaN(floorValue)) {
+        errors.floor = "Floor must be a valid number";
+      } else if (floorValue < 0 || floorValue > 25) {
+        errors.floor = "Floor must be a number between 0 and 25";
+      }
     }
 
     Object.keys(editRowData).forEach((field) => {
@@ -718,7 +737,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                 { name: "cn_cn_no", label: "CN No", type: "number", readOnly: true },
                 { name: "kilometer", label: "Kilometer", type: "number", required: true },
                 { name: "site_id", label: "Site ID", type: "number", readOnly: true },
-                { name: "floor", label: "Floor", type: "text" },
+                { name: "floor", label: "Floor", type: "number" },
                 { name: "moment_type", label: "Moment Type", type: "number" },
                 { name: "rate", label: "Rate", type: "number", required: true },
                 { name: "latitude", label: "Latitude", type: "number", required: true },
