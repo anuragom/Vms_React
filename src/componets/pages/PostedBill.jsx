@@ -49,12 +49,12 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const processDataForDisabling = (rawData) => {
     // Group by CHALLAN_NO
     const challanGroups = rawData.reduce((acc, record) => {
-      const { CHALLAN_NO, UPDATEDFLAG } = record;
+      const { CHALLAN_NO, UPDATED_FLAG } = record;
       if (!acc[CHALLAN_NO]) {
         acc[CHALLAN_NO] = { records: [], hasUpdatedFlag: false };
       }
       acc[CHALLAN_NO].records.push({ ...record, disabled: false });
-      if (UPDATEDFLAG === "Y") {
+      if (UPDATED_FLAG === "Y") {
         acc[CHALLAN_NO].hasUpdatedFlag = true;
       }
       return acc;
@@ -167,7 +167,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       CHALLAN_NO: row.CHALLAN_NO,
       CHALLAN_DATE: new Date(row.CHALLAN_DATE).toLocaleDateString(),
       LORRY_NO: row.LORRY_NO,
-      DISABLED: row.disabled ? "Yes" : "No", // Add disabled status to CSV
+      DISABLED: row.disabled ? "Yes" : "No",
     }));
 
     const csvHeaders = [
@@ -306,36 +306,45 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditRowData((prev) => ({
-      ...prev,
-      [name]: ["cn_cn_no", "site_id", "headload_km"].includes(name)
-        ? parseInt(value) || 0
-        : [
-            "kilometer",
-            "rate",
-            "freight",
-            "union_km",
-            "extra_point",
-            "dt_expense",
-            "escort_expense",
-            "loading_expense",
-            "unloading_expense",
-            "labour_expense",
-            "other_expense",
-            "crane_hydra_expense",
-            "headload_expense",
-            "chain_pulley_expense",
-            "toll_tax",
-            "packing_expense",
-            "total_amount",
-            "latitude",
-            "longitude",
-          ].includes(name)
-        ? parseFloat(value) || 0
-        : name === "moment_type"
-        ? value
-        : value,
-    }));
+    setEditRowData((prev) => {
+      const updatedData = {
+        ...prev,
+        [name]: ["cn_cn_no", "site_id", "headload_km"].includes(name)
+          ? parseInt(value) || 0
+          : [
+              "kilometer",
+              "rate",
+              "union_km",
+              "extra_point",
+              "dt_expense",
+              "escort_expense",
+              "loading_expense",
+              "unloading_expense",
+              "labour_expense",
+              "other_expense",
+              "crane_hydra_expense",
+              "headload_expense",
+              "chain_pulley_expense",
+              "toll_tax",
+              "packing_expense",
+              "latitude",
+              "longitude",
+            ].includes(name)
+          ? parseFloat(value) || 0
+          : name === "moment_type"
+          ? value
+          : value,
+      };
+
+      // Auto-calculate freight as rate * kilometer
+      if (name === "rate" || name === "kilometer") {
+        const rate = name === "rate" ? parseFloat(value) || 0 : updatedData.rate;
+        const kilometer = name === "kilometer" ? parseFloat(value) || 0 : updatedData.kilometer;
+        updatedData.freight = (rate * kilometer).toFixed(2);
+      }
+
+      return updatedData;
+    });
 
     setFormErrors((prev) => {
       const errors = { ...prev };
@@ -408,6 +417,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
         field !== "floor" &&
         field !== "moment_type" &&
         field !== "locations" &&
+        field !== "freight" &&
         editRowData[field] !== "" &&
         editRowData[field] !== undefined &&
         editRowData[field] !== null
@@ -537,7 +547,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   return (
     <div className={`bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
       <ToastContainer />
-      {/* Rest of your JSX remains unchanged */}
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto">
         <div>
           <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">

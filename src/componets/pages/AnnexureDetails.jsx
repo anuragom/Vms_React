@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { getToken } from "../../Auth/auth";
@@ -6,8 +6,6 @@ import { CustomTable } from "../Ui/CustomTable";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-
 
 const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
@@ -23,7 +21,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const [toDate, setToDate] = useState("");
   const [chlnVendorCode, setChlnVendorCode] = useState("");
   const [totalRows, setTotalRows] = useState(0);
-  const [updateLoading, setUpdateLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [rawData, setRawData] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -33,15 +30,24 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const USER_ID = decodedToken.id;
   const [editFormData, setEditFormData] = useState({
     CN_NO: "",
-    Updated_Weight: "",
-    Updated_Item_Description: "",
-    Updated_KM: "",
-    Updated_Latitude: "",
-    Updated_Longitude: "",
-    UPDATEDREMARKS: "",
-    MODIFIED_BY: USER_ID,
+    BRANCH_Weight: "",
+    BRANCH_LOCATIONS: "",
+    BRANCH_FLOOR: "",
+    BRANCH_Item_Description: "",
+    BRANCH_KM: "",
+    BRANCH_Latitude: "",
+    BRANCH_Longitude: "",
+    BRANCH_Flag: "Y",
+    BRANCH_REMARKS: "",
+    BRANCH_Crane: "",
+    BRANCH_Hydra: "",
+    BRANCH_Chain_Pulling: "",
+    BRANCH_HKM: "",
+    BRANCH_Labour_expenses: "",
+    BRANCH_Other_expenses: "",
+    BRANCH_Special_Vehicle: "",
+    BRANCH_ENTERED_BY: USER_ID,
   });
-
 
   const groupDataByAnnexure = (rawData) => {
     const grouped = rawData.reduce((acc, item) => {
@@ -192,71 +198,46 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     },
     {
       name: "Weight",
-      selector: (row) => {
-        if (row.UPDATEDFLAG === "Y" && row.UPDATED_WEIGHT != null) {
-          return row.UPDATED_WEIGHT;
-        }
-        return row.TOTAL_WEIGHT || "-";
-      },
+      selector: (row) => row.TOTAL_WEIGHT || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "Item",
-      selector: (row) => {
-        if (row.UPDATEDFLAG === "Y" && row.UPDATED_ITEM_DESCRIPTION != null) {
-          return row.UPDATED_ITEM_DESCRIPTION;
-        }
-        return row.ITEM_DESCRIPTION || "-";
-      },
+      selector: (row) => row.ITEM_DESCRIPTION || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "KM",
-      selector: (row) => {
-        if (row.UPDATEDFLAG === "Y" && row.UPDATED_KM != null) {
-          return row.UPDATED_KM;
-        }
-        return row.KILOMETER || "-";
-      },
+      selector: (row) => row.KILOMETER || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "Latitude",
-      selector: (row) => {
-        if (row.UPDATEDFLAG === "Y" && row.UPDATED_LATITUDE != null) {
-          return row.UPDATED_LATITUDE;
-        }
-        return row.LATITUDE || "-";
-      },
+      selector: (row) => row.LATITUDE || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "Longitude",
-      selector: (row) => {
-        if (row.UPDATEDFLAG === "Y" && row.UPDATED_LONGITUDE != null) {
-          return row.UPDATED_LONGITUDE;
-        }
-        return row.LONGITUDE || "-";
-      },
+      selector: (row) => row.LONGITUDE || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "Floor (GPT, RRT)",
-      selector: (row) => row.TOTAL_CN_PKG || "-",
+      selector: (row) => row.FLOOR || "-",
       sortable: true,
       wrap: true,
     },
     {
       name: "Verify",
       selector: (row) => {
-        if (row.UPDATEDFLAG === "Y") {
+        if (row.BRANCH_FLAG === "Y") {
           return (
-            <span className="text-green-500 font-bold">✔</span> // Green checkmark
+            <span className="text-green-500 font-bold">✔</span>
           );
         }
         return "❌";
@@ -274,30 +255,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             setSelectedRow(row);
             setEditFormData({
               CN_NO: row.CN_NO,
-              Updated_Weight:
-                row.UPDATEDFLAG === "Y" && row.UPDATED_WEIGHT != null
-                  ? row.UPDATED_WEIGHT
-                  : "",
-              Updated_Item_Description:
-                row.UPDATEDFLAG === "Y" && row.UPDATED_ITEM_DESCRIPTION != null
-                  ? row.UPDATED_ITEM_DESCRIPTION
-                  : "",
-              Updated_KM:
-                row.UPDATEDFLAG === "Y" && row.UPDATED_KM != null
-                  ? row.UPDATED_KM
-                  : "",
-              Updated_Latitude:
-                row.UPDATEDFLAG === "Y" && row.UPDATED_LATITUDE != null
-                  ? row.UPDATED_LATITUDE
-                  : "",
-              Updated_Longitude:
-                row.UPDATEDFLAG === "Y" && row.UPDATED_LONGITUDE != null
-                  ? row.UPDATED_LONGITUDE
-                  : "",
-              UPDATEDREMARKS:
-                row.UPDATEDFLAG === "Y" && row.UPDATEDREMARKS != null
-                  ? row.UPDATEDREMARKS
-                  : "",
+              BRANCH_Weight: "",
+              BRANCH_LOCATIONS: "",
+              BRANCH_FLOOR: "",
+              BRANCH_Item_Description: "",
+              BRANCH_KM: "",
+              BRANCH_Latitude: "",
+              BRANCH_Longitude: "",
+              BRANCH_Flag: "Y",
+              BRANCH_REMARKS: "",
+              BRANCH_Crane: "",
+              BRANCH_Hydra: "",
+              BRANCH_Chain_Pulling: "",
+              BRANCH_HKM: "",
+              BRANCH_Labour_expenses: "",
+              BRANCH_Other_expenses: "",
+              BRANCH_Special_Vehicle: "",
               MODIFIED_BY: USER_ID,
             });
             setEditModalOpen(true);
@@ -320,26 +293,36 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setEditFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? (checked ? "Y" : "") : value,
     }));
   };
 
   const handleSave = async () => {
     try {
       const response = await axios.post(
-        "https://vmsnode.omlogistics.co.in/api/updateBillVerification",
+        "https://vmsnode.omlogistics.co.in/api/insertBillVerification",
         {
           CN_NO: editFormData.CN_NO,
-          Updated_Weight: editFormData.Updated_Weight,
-          Updated_Item_Description: editFormData.Updated_Item_Description,
-          Updated_KM: editFormData.Updated_KM,
-          Updated_Latitude: editFormData.Updated_Latitude,
-          Updated_Longitude: editFormData.Updated_Longitude,
-          UPDATEDREMARKS: editFormData.UPDATEDREMARKS,
-          MODIFIED_BY: editFormData.MODIFIED_BY,
+          BRANCH_Weight: editFormData.BRANCH_Weight,
+          BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS,
+          BRANCH_FLOOR: editFormData.BRANCH_FLOOR,
+          BRANCH_Item_Description: editFormData.BRANCH_Item_Description,
+          BRANCH_KM: editFormData.BRANCH_KM,
+          BRANCH_Latitude: editFormData.BRANCH_Latitude,
+          BRANCH_Longitude: editFormData.BRANCH_Longitude,
+          BRANCH_Flag: editFormData.BRANCH_Flag,
+          BRANCH_REMARKS: editFormData.BRANCH_REMARKS,
+          BRANCH_Crane: editFormData.BRANCH_Crane,
+          BRANCH_Hydra: editFormData.BRANCH_Hydra,
+          BRANCH_Chain_Pulling: editFormData.BRANCH_Chain_Pulling,
+          BRANCH_HKM: editFormData.BRANCH_HKM,
+          BRANCH_Labour_expenses: editFormData.BRANCH_Labour_expenses,
+          BRANCH_Other_expenses: editFormData.BRANCH_Other_expenses,
+          BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle,
+          MODIFIED_BY: USER_ID,
         },
         {
           headers: {
@@ -349,21 +332,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         }
       );
 
-      console.log("updateBillVerification response:", response.data);
+      console.log("insertBillVerification response:", response.data);
 
       if (response.data.error === false) {
         await fetchAnnexureDetails();
         setEditModalOpen(false);
-        toast.success("Data updated successfully!");
+        toast.success("Data inserted successfully!");
         window.location.reload();
       } else {
         const errorMessage = response.data.msg || "Unknown error occurred";
-        toast.error(`Failed to update data: ${errorMessage}`);
+        toast.error(`Failed to insert data: ${errorMessage}`);
       }
     } catch (error) {
-      console.error("Error updating data:", error);
-      const errorMessage = error.response?.data?.msg || "Network error occurred";
-      toast.error(`An error occurred while updating data: ${errorMessage}`);
+      console.error("Error inserting data:", error);
+      const errorMessage =
+        error.response?.data?.msg || "Network error occurred";
+      toast.error(`An error occurred while inserting data: ${errorMessage}`);
     }
   };
 
@@ -371,7 +355,13 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     <div
       className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300`}
     >
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} closeOnClick pauseOnHover />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+      />
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-8xl mx-auto">
         <div>
           <label
@@ -442,12 +432,8 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
       {!loading && !error && data.length > 0 && (
         <>
-          {updateLoading && (
-            <div className="text-center text-blue-600 text-sm">Updating...</div>
-          )}
           <CustomTable
             handleRowClick={handleRowClick}
-            updateLoading={updateLoading}
             page={page}
             columns={columns}
             data={filteredData}
@@ -479,7 +465,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 data={filteredData}
                 pagination
                 paginationServer
-
                 paginationTotalRows={filteredData.length}
                 paginationPerPage={limit}
                 paginationDefaultPage={page}
@@ -505,14 +490,14 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
       {editModalOpen && selectedRow && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto mt-100"
           onClick={() => setEditModalOpen(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 w-full max-w-4xl overflow-y-auto"
+            className="bg-white rounded-lg p-6 mt-100 max-w-4xl max-h-[90vh] w-full max-w-4xl overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold mb-4">Edit Details</h2>
+         
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
@@ -537,6 +522,30 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     disabled
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Locations (Original)
+                  </label>
+                  <input
+                    type="text"
+                    className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
+                    value={selectedRow.LOCATIONS || ""}
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                   Floor (Original)
+                  </label>
+                  <input
+                    type="text"
+                    className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
+                    value={selectedRow.FLOOR || ""}
+                    disabled
+                  />
+                </div>
+             
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item Description (Original)
@@ -581,6 +590,92 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     disabled
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Crane
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Crane"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Crane === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Hydra
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Hydra"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Hydra === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Chain Pulling
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Chain_Pulling"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Chain_Pulling === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      HKM
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_HKM"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_HKM === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Labour Expenses
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Labour_expenses"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Labour_expenses === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Other Expenses
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Other_expenses"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Other_expenses === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Special Vehicle
+                    </label>
+                    <input
+                      type="checkbox"
+                      name="BRANCH_Special_Vehicle"
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-200"
+                      checked={editFormData.BRANCH_Special_Vehicle === "Y"}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -601,9 +696,33 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="Updated_Weight"
+                    name="BRANCH_Weight"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.Updated_Weight}
+                    value={editFormData.BRANCH_Weight}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Locations
+                  </label>
+                  <input
+                    type="text"
+                    name="BRANCH_LOCATIONS"
+                    className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
+                    value={editFormData.BRANCH_LOCATIONS}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Floor
+                  </label>
+                  <input
+                    type="text"
+                    name="BRANCH_FLOOR"
+                    className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
+                    value={editFormData.BRANCH_FLOOR}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -613,9 +732,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="Updated_Item_Description"
+                    name="BRANCH_Item_Description"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.Updated_Item_Description}
+                    value={editFormData.BRANCH_Item_Description}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -625,9 +744,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="Updated_KM"
+                    name="BRANCH_KM"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.Updated_KM}
+                    value={editFormData.BRANCH_KM}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -637,9 +756,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="Updated_Latitude"
+                    name="BRANCH_Latitude"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.Updated_Latitude}
+                    value={editFormData.BRANCH_Latitude}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -649,9 +768,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="Updated_Longitude"
+                    name="BRANCH_Longitude"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.Updated_Longitude}
+                    value={editFormData.BRANCH_Longitude}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -660,12 +779,13 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     Remarks
                   </label>
                   <textarea
-                    name="UPDATEDREMARKS"
+                    name="BRANCH_REMARKS"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.UPDATEDREMARKS}
+                    value={editFormData.BRANCH_REMARKS}
                     onChange={handleInputChange}
                   />
                 </div>
+               
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-2">
