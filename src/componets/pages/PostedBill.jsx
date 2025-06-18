@@ -47,7 +47,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
   // Function to process data and add disabled property
   const processDataForDisabling = (rawData) => {
-    // Group by CHALLAN_NO
     const challanGroups = rawData.reduce((acc, record) => {
       const { CHALLAN_NO, UPDATED_FLAG } = record;
       if (!acc[CHALLAN_NO]) {
@@ -60,7 +59,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       return acc;
     }, {});
 
-    // Mark records as disabled if any CN_NO in the group has UPDATEDFLAG = "Y"
     Object.values(challanGroups).forEach(group => {
       if (group.hasUpdatedFlag) {
         group.records.forEach(record => {
@@ -69,7 +67,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
       }
     });
 
-    // Flatten records back into an array
     return Object.values(challanGroups).flatMap(group => group.records);
   };
 
@@ -106,7 +103,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
         return;
       }
 
-      // Process data to add disabled property
       const processedData = processDataForDisabling(response.data.data);
       setData(processedData);
       setFilteredData(processedData);
@@ -205,8 +201,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     if (!acc[annexureNo]) {
       acc[annexureNo] = {
         annexureNo,
-        enteredDate: row.ENTERED_DATE
-          ? new Date(row.ENTERED_DATE).toLocaleDateString()
+        enteredDate: row.CN_DATE
+          ? new Date(row.CN_DATE).toLocaleDateString()
           : "-",
         totalFreight: 0,
         rows: [],
@@ -260,14 +256,34 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   ];
 
   const handleEdit = (row) => {
+    // Debugging: Log the MODE_VAT value to inspect it
+    // console.log("row.MODE_VAT:", row.MODE_VAT);
+
+    // Determine moment_type: Check if MODE_VAT is a key or value in CNMODEVATMap
+    let momentType = "";
+    if (row.MODE_VAT) {
+      // Check if MODE_VAT is already a key (e.g., "1", "2")
+      if (CNMODEVATMap[row.MODE_VAT]) {
+        momentType = row.MODE_VAT;
+      } else {
+        // Check if MODE_VAT is a value (e.g., "NRGP") and find the corresponding key
+        momentType =
+          Object.keys(CNMODEVATMap).find(
+            (key) =>
+              CNMODEVATMap[key].toLowerCase() === row.MODE_VAT.toLowerCase()
+          ) || "";
+      }
+    }
+
+    // Debugging: Log the determined moment_type
+    // console.log("Determined moment_type:", momentType);
+
     setEditRowData({
       cn_cn_no: parseInt(row.CN_NO) || 0,
       kilometer: parseFloat(row.KILOMETER) || 0,
       site_id: parseInt(row.OTPL_SITE_ID) || 0,
       floor: row.FLOOR !== undefined && row.FLOOR !== null ? parseInt(row.FLOOR) : "",
-      moment_type: Object.keys(CNMODEVATMap).find(
-        (key) => CNMODEVATMap[key] === row.MODE_VAT
-      ) || "",
+      moment_type: momentType,
       locations: row.LOCATIONS || "",
       rate: parseFloat(row.RATE) || 0,
       latitude: parseFloat(row.LATITUDE) || 0,
@@ -299,8 +315,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const handleNumericInputChange = (field, value) => {
     const filteredValue =
       field === "moment_type" || field === "floor"
-        ? value.replace(/[^\d]/g, "") // Only allow digits for moment_type and floor
-        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"); // Allow digits and one decimal for others
+        ? value.replace(/[^\d]/g, "")
+        : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
     handleInputChange({ target: { name: field, value: filteredValue } });
   };
 
@@ -323,6 +339,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
               "labour_expense",
               "other_expense",
               "crane_hydra_expense",
+              "headload_expense",
               "chain_pulley_expense",
               "toll_tax",
               "packing_expense",
@@ -337,7 +354,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
           : value,
       };
 
-      // Auto-calculate freight as rate * kilometer
       if (name === "rate" || name === "kilometer") {
         const rate = name === "rate" ? parseFloat(value) || 0 : updatedData.rate;
         const kilometer = name === "kilometer" ? parseFloat(value) || 0 : updatedData.kilometer;
@@ -509,7 +525,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     { name: "CN Date", selector: (row) => (row.CN_DATE ? new Date(row.CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
     { name: "Source Branch Code", selector: (row) => row.SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
     { name: "Destination Branch Code", selector: (row) => row.DESTINATION_BRANCH_CODE || "-", sortable: true, wrap: true, width: "190px" },
-    { name: "Mode VAT", selector: (row) => CNMODEVATMap[row.MODE_VAT] || "-", sortable: true, wrap: true, width: "150px" },
+    { name: "Mode VAT", selector: (row) => CNMODEVATMap[row.MODE_VAT] || row.MODE_VAT || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Item Description", selector: (row) => row.ITEM_DESCRIPTION || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Packages", selector: (row) => row.TOTAL_PACKAGES || "-", sortable: true, wrap: true, width: "150px" },
     { name: "Total Weight", selector: (row) => row.TOTAL_WEIGHT || "-", sortable: true, wrap: true, width: "150px" },
@@ -778,7 +794,11 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                       formErrors[field.name] ? "border-red-500" : "border-gray-300"
                     } ${field.readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   />
-                  {field.name === "moment_type" && editRowData.moment_type && CNMODEVATMap[editRowData.moment_type]}
+                  {field.name === "moment_type" && editRowData.moment_type && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {CNMODEVATMap[editRowData.moment_type] || "Unknown Mode"}
+                    </p>
+                  )}
                   {formErrors[field.name] && (
                     <p className="text-red-500 text-xs mt-1">{formErrors[field.name]}</p>
                   )}
