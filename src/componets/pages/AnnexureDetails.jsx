@@ -301,6 +301,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   };
 
   const checkRecordExists = async (cnNo) => {
+    
     try {
       const response = await axios.post(
         "https://vmsnode.omlogistics.co.in/api/checkBillVerification",
@@ -320,13 +321,12 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       return false;
     }
   };
-
   const handleSave = async () => {
     let recordExists = false; // Define recordExists outside the try block
     try {
       recordExists = await checkRecordExists(editFormData.CN_NO);
       const apiUrl = recordExists
-        ? "http://localhost:3001/api/updateBillVerification"
+        ? "https://vmsnode.omlogistics.co.in/api/updateBillVerification"
         : "https://vmsnode.omlogistics.co.in/api/insertBillVerification";
 
       const payload = {
@@ -349,13 +349,14 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle,
         [recordExists ? "BRANCH_MODIFIED_BY" : "BRANCH_ENTERED_BY"]: USER_ID,
       };
-
+   
       const response = await axios.post(apiUrl, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+      
 
       console.log(`${recordExists ? "updateBillVerification" : "insertBillVerification"} response:`, response.data);
 
