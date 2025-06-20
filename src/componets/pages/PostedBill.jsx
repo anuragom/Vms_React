@@ -12,14 +12,14 @@ const PostedBill = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "" : "";
 
   const CNMODEVATMap = {
-    "1": "NRGP",
-    "2": "SRN",
-    "3": "CAM",
-    "4": "IUT",
-    "5": "RMO",
-    "6": "MGMT GR",
-    "7": "FIX NRGP",
-    "8": "FIX SRN",
+    "1": "1/NRGP",
+    "2": "2/SRN",
+    "3": "3/CAM",
+    "4": "4/IUT",
+    "5": "5/RMO",
+    "6": "6/MGMT GR",
+    "7": "7/FIX NRGP",
+    "8": "8/FIX SRN",
   };
 
   // State variables
@@ -305,7 +305,7 @@ const PostedBill = ({ isNavbarCollapsed }) => {
 
   const handleNumericInputChange = (field, value) => {
     const filteredValue =
-      field === "moment_type" || field === "floor"
+      field === "floor"
         ? value.replace(/[^\d]/g, "")
         : value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
     handleInputChange({ target: { name: field, value: filteredValue } });
@@ -790,7 +790,6 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                 { name: "kilometer", label: "Kilometer", type: "number", required: true },
                 { name: "site_id", label: "Site ID", type: "number", readOnly: true },
                 { name: "floor", label: "Floor", type: "number" },
-                { name: "moment_type", label: "Moment Type", type: "number" },
                 { name: "rate", label: "Rate", type: "number", required: true },
                 { name: "latitude", label: "Latitude", type: "number", required: true },
                 { name: "longitude", label: "Longitude", type: "number", required: true },
@@ -830,16 +829,34 @@ const PostedBill = ({ isNavbarCollapsed }) => {
                       formErrors[field.name] ? "border-red-500" : "border-gray-300"
                     } ${field.readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   />
-                  {field.name === "moment_type" && editRowData.moment_type && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      {CNMODEVATMap[editRowData.moment_type] || "Unknown Mode"}
-                    </p>
-                  )}
                   {formErrors[field.name] && (
                     <p className="text-red-500 text-xs mt-1">{formErrors[field.name]}</p>
                   )}
                 </div>
               ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Moment Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="moment_type"
+                  value={editRowData.moment_type || ""}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200 ${
+                    formErrors.moment_type ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Select Mode</option>
+                  {Object.entries(CNMODEVATMap).map(([key, value]) => (
+                    <option key={key} value={key}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.moment_type && (
+                  <p className="text-red-500 text-xs mt-1">{formErrors.moment_type}</p>
+                )}
+              </div>
               <div>
                 <label className="flex items-center">
                   <input

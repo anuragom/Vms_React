@@ -36,6 +36,16 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const CNMODEVATMap = {
+    1: "1/NRGP",
+    2: "2/SRN",
+    3: "3/CAM",
+    4: "4/IUT",
+    5: "5/RMO",
+    6: "6/MGMT GR",
+    7: "7/FIX NRGP",
+    8: "8/FIX SRN",
+  };
+  const CNMODEVATMapforExcel = {
     1: "NRGP",
     2: "SRN",
     3: "CAM",
@@ -637,13 +647,13 @@ const LrDetails = ({ isNavbarCollapsed }) => {
     const templateData = [
       {
         "CN No": "",
-        Kilometer: "",
-        Floor: "",
+        "Kilometer": "",
+        "Floor": "",
         "Moment Type": "",
-        Locations: "",
+        "Locations": "",
         "Rate (per Km)": "",
-        Latitude: "",
-        Longitude: "",
+        "Latitude": "",
+        "Longitude": "",
         "Union/Km": "",
         "Extra Point": "",
         "Dt Expense": "",
@@ -658,7 +668,7 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         "Chain Pulley Expense": "",
         "Toll Tax": "",
         "Packing Expense": "",
-        Remarks: "",
+        "Remarks": "",
       },
     ];
 
@@ -1780,30 +1790,30 @@ const LrDetails = ({ isNavbarCollapsed }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Moment Type
-                  </label>
-                  <input
-                    type="text"
-                    value={
-                      CNMODEVATMap[selectedRow.MOMENT_TYPE] ||
-                      selectedRow.MOMENT_TYPE ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      handleInputChange("MOMENT_TYPE", e.target.value)
-                    } // Use handleInputChange, not handleNumericInputChange
-                    readOnly={formReadOnly}
-                    className={`w-full border rounded-lg p-2 ${
-                      formErrors.MOMENT_TYPE ? "border-red-500" : ""
-                    }`}
-                  />
-                  {formErrors.MOMENT_TYPE && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {formErrors.MOMENT_TYPE}
-                    </p>
-                  )}
-                </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Moment Type
+  </label>
+  <select
+    value={selectedRow.MOMENT_TYPE || ""}
+    onChange={(e) => handleInputChange("MOMENT_TYPE", e.target.value)}
+    disabled={formReadOnly}
+    className={`w-full border rounded-lg p-2 ${
+      formErrors.MOMENT_TYPE ? "border-red-500" : ""
+    }`}
+  >
+    <option value="">Select Moment Type</option>
+    {Object.entries(CNMODEVATMap).map(([key, value]) => (
+      <option key={key} value={key}>
+        {value}
+      </option>
+    ))}
+  </select>
+  {formErrors.MOMENT_TYPE && (
+    <p className="text-red-500 text-xs mt-1">
+      {formErrors.MOMENT_TYPE}
+    </p>
+  )}
+</div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Floor
@@ -2229,6 +2239,28 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             <p className="text-red-700 ">
               We recommend uploading expenses for more than 7 days at once.
             </p>
+             
+            <p className="text-sm text-gray-600 mb-4">
+              Please ensure the Excel file follows the given MODEVAT
+              </p>
+
+            <table className="min-w-full border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border px-4 py-2">Key</th>
+            <th className="border px-4 py-2">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(CNMODEVATMapforExcel).map(([key, value]) => (
+            <tr key={key}>
+              <td className="border px-4 py-2 text-center">{key}</td>
+              <td className="border px-4 py-2">{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Upload Excel File (.xlsx, .xls, .csv)

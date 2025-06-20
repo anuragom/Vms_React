@@ -255,22 +255,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             setSelectedRow(row);
             setEditFormData({
               CN_NO: row.CN_NO,
-              BRANCH_Weight: "",
-              BRANCH_LOCATIONS: "",
-              BRANCH_FLOOR: "",
-              BRANCH_Item_Description: "",
-              BRANCH_KM: "",
-              BRANCH_Latitude: "",
-              BRANCH_Longitude: "",
-              BRANCH_Flag: "Y",
-              BRANCH_REMARKS: "",
-              BRANCH_Crane: "",
-              BRANCH_Hydra: "",
-              BRANCH_Chain_Pulling: "",
-              BRANCH_HKM: "",
-              BRANCH_Labour_expenses: "",
-              BRANCH_Other_expenses: "",
-              BRANCH_Special_Vehicle: "",
+              BRANCH_Weight: row.BRANCH_Weight || "",
+              BRANCH_LOCATIONS: row.BRANCH_LOCATIONS || "",
+              BRANCH_FLOOR: row.BRANCH_FLOOR || "",
+              BRANCH_Item_Description: row.BRANCH_Item_Description || "",
+              BRANCH_KM: row.BRANCH_KM || "",
+              BRANCH_Latitude: row.BRANCH_Latitude || "",
+              BRANCH_Longitude: row.BRANCH_Longitude || "",
+              BRANCH_Flag: row.BRANCH_Flag || "Y",
+              BRANCH_REMARKS: row.BRANCH_REMARKS || "",
+              BRANCH_Crane: row.BRANCH_Crane || "",
+              BRANCH_Hydra: row.BRANCH_Hydra || "",
+              BRANCH_Chain_Pulling: row.BRANCH_Chain_Pulling || "",
+              BRANCH_HKM: row.BRANCH_HKM || "",
+              BRANCH_Labour_expenses: row.BRANCH_Labour_expenses || "",
+              BRANCH_Other_expenses: row.BRANCH_Other_expenses || "",
+              BRANCH_Special_Vehicle: row.BRANCH_Special_Vehicle || "",
               BRANCH_ENTERED_BY: USER_ID,
             });
             setEditModalOpen(true);
@@ -300,30 +300,11 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     }));
   };
 
-  const handleSave = async () => {
+  const checkRecordExists = async (cnNo) => {
     try {
       const response = await axios.post(
-        "https://vmsnode.omlogistics.co.in/api/insertBillVerification",
-        {
-          CN_NO: editFormData.CN_NO,
-          BRANCH_Weight: editFormData.BRANCH_Weight,
-          BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS,
-          BRANCH_FLOOR: editFormData.BRANCH_FLOOR,
-          BRANCH_Item_Description: editFormData.BRANCH_Item_Description,
-          BRANCH_KM: editFormData.BRANCH_KM,
-          BRANCH_Latitude: editFormData.BRANCH_Latitude,
-          BRANCH_Longitude: editFormData.BRANCH_Longitude,
-          BRANCH_Flag: editFormData.BRANCH_Flag,
-          BRANCH_REMARKS: editFormData.BRANCH_REMARKS,
-          BRANCH_Crane: editFormData.BRANCH_Crane,
-          BRANCH_Hydra: editFormData.BRANCH_Hydra,
-          BRANCH_Chain_Pulling: editFormData.BRANCH_Chain_Pulling,
-          BRANCH_HKM: editFormData.BRANCH_HKM,
-          BRANCH_Labour_expenses: editFormData.BRANCH_Labour_expenses,
-          BRANCH_Other_expenses: editFormData.BRANCH_Other_expenses,
-          BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle,
-          BRANCH_ENTERED_BY: USER_ID,
-        },
+        "https://vmsnode.omlogistics.co.in/api/checkBillVerification",
+        { CN_NO: cnNo },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -331,23 +312,64 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
           },
         }
       );
+      // Return true if error is false (record exists, so update), false otherwise (record doesn't exist, so insert)
+      return !response.data.error;
+    } catch (error) {
+      console.error("Error checking record existence:", error);
+      // Default to insert if check fails
+      return false;
+    }
+  };
 
-      console.log("insertBillVerification response:", response.data);
+  const handleSave = async () => {
+    let recordExists = false; // Define recordExists outside the try block
+    try {
+      recordExists = await checkRecordExists(editFormData.CN_NO);
+      const apiUrl = recordExists
+        ? "https://vmsnode.omlogistics.co.in/api/updateBillVerification"
+        : "https://vmsnode.omlogistics.co.in/api/insertBillVerification";
+
+      const payload = {
+        CN_NO: editFormData.CN_NO,
+        BRANCH_Weight: editFormData.BRANCH_Weight,
+        BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS,
+        BRANCH_FLOOR: editFormData.BRANCH_FLOOR,
+        BRANCH_Item_Description: editFormData.BRANCH_Item_Description,
+        BRANCH_KM: editFormData.BRANCH_KM,
+        BRANCH_Latitude: editFormData.BRANCH_Latitude,
+        BRANCH_Longitude: editFormData.BRANCH_Longitude,
+        BRANCH_Flag: editFormData.BRANCH_Flag,
+        BRANCH_REMARKS: editFormData.BRANCH_REMARKS,
+        BRANCH_Crane: editFormData.BRANCH_Crane,
+        BRANCH_Hydra: editFormData.BRANCH_Hydra,
+        BRANCH_Chain_Pulling: editFormData.BRANCH_Chain_Pulling,
+        BRANCH_HKM: editFormData.BRANCH_HKM,
+        BRANCH_Labour_expenses: editFormData.BRANCH_Labour_expenses,
+        BRANCH_Other_expenses: editFormData.BRANCH_Other_expenses,
+        BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle,
+        [recordExists ? "BRANCH_MODIFIED_BY" : "BRANCH_ENTERED_BY"]: USER_ID,
+      };
+
+      const response = await axios.post(apiUrl, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log(`${recordExists ? "updateBillVerification" : "insertBillVerification"} response:`, response.data);
 
       if (response.data.error === false) {
         await fetchAnnexureDetails();
         setEditModalOpen(false);
-        toast.success("Data inserted successfully!");
-        window.location.reload();
+        toast.success(recordExists ? "Data updated successfully!" : "Data inserted successfully!");
       } else {
         const errorMessage = response.data.msg || "Unknown error occurred";
-        toast.error(`Failed to insert data: ${errorMessage}`);
+        toast.error(`Failed to ${recordExists ? "update" : "insert"} data: ${errorMessage}`);
       }
     } catch (error) {
-      console.error("Error inserting data:", error);
-      const errorMessage =
-        error.response?.data?.msg || "Network error occurred";
-      toast.error(`An error occurred while inserting data: ${errorMessage}`);
+      const errorMessage = error.response?.data?.msg || "Network error occurred";
+      toast.error(`An error occurred while ${recordExists ? "updating" : "inserting"} data: ${errorMessage}`);
     }
   };
 
@@ -378,7 +400,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             onChange={(e) => setFromDate(e.target.value)}
           />
         </div>
-
         <div>
           <label
             htmlFor="toDate"
@@ -394,7 +415,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
-
         <div className="col-span-1 space-y-2 md:flex items-end pb-1 gap-2 w-full">
           <div className="w-[70%]">
             <label
@@ -490,14 +510,13 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
       {editModalOpen && selectedRow && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto mt-100"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto"
           onClick={() => setEditModalOpen(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 mt-100 max-w-4xl max-h-[90vh] w-full max-w-4xl overflow-y-auto"
+            className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] w-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-         
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div>
@@ -522,7 +541,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     disabled
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Locations (Original)
@@ -536,7 +554,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                   Floor (Original)
+                    Floor (Original)
                   </label>
                   <input
                     type="text"
@@ -545,7 +563,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     disabled
                   />
                 </div>
-             
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item Description (Original)
@@ -677,7 +694,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </div>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -785,7 +801,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     onChange={handleInputChange}
                   />
                 </div>
-               
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-2">
