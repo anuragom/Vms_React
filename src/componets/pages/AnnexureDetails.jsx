@@ -326,7 +326,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     try {
       recordExists = await checkRecordExists(editFormData.CN_NO);
       const apiUrl = recordExists
-        ? "https://vmsnode.omlogistics.co.in/api/updateBillVerification"
+        ? "http://localhost:3001/api/updateBillVerification"
         : "https://vmsnode.omlogistics.co.in/api/insertBillVerification";
 
       const payload = {
