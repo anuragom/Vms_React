@@ -201,8 +201,8 @@ const PostedBill = ({ isNavbarCollapsed }) => {
     if (!acc[annexureNo]) {
       acc[annexureNo] = {
         annexureNo,
-        enteredDate: row.CN_DATE
-          ? new Date(row.CN_DATE).toLocaleDateString()
+        enteredDate: row.ENTERED_DATE
+          ? new Date(row.ENTERED_DATE).toLocaleDateString()
           : "-",
         totalFreight: 0,
         rows: [],
