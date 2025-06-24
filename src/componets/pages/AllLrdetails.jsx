@@ -71,6 +71,7 @@ const AllLrdetails = ({ isNavbarCollapsed }) => {
       } else {
         setError(error.response?.data?.message || "An error occurred while fetching data.");
       }
+    }
 
     setLoading(false);
   };
