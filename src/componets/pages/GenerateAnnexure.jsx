@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import  { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { getToken } from "../../Auth/auth";
 import { saveAs } from "file-saver";
@@ -117,7 +117,12 @@ const GenerateAnnexure = ({ isNavbarCollapsed }) => {
       setTotalRows(response.data.totalRecords || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
     }
 
     setUpdateLoading(false);
@@ -157,7 +162,12 @@ const GenerateAnnexure = ({ isNavbarCollapsed }) => {
       setTotalRows(response.data.totalRecords || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
     }
 
     setLoading(false);
@@ -290,6 +300,12 @@ const GenerateAnnexure = ({ isNavbarCollapsed }) => {
     } catch (error) {
       console.error("Error processing selected rows:", error);
       toast.error(error.response?.data?.msg || "Error processing selected rows");
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
     } finally {
       setLoading(false);
     }

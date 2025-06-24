@@ -111,7 +111,12 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
       setData([]);
       setFilteredData([]);
       setRawData([]);
@@ -317,6 +322,12 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       return !response.data.error;
     } catch (error) {
       console.error("Error checking record existence:", error);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
       // Default to insert if check fails
       return false;
     }
@@ -358,8 +369,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       });
       
 
-      console.log(`${recordExists ? "updateBillVerification" : "insertBillVerification"} response:`, response.data);
-
       if (response.data.error === false) {
         await fetchAnnexureDetails();
         setEditModalOpen(false);
@@ -369,7 +378,13 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         toast.error(`Failed to ${recordExists ? "update" : "insert"} data: ${errorMessage}`);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.msg || "Network error occurred";
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
+     
       toast.error(`An error occurred while ${recordExists ? "updating" : "inserting"} data: ${errorMessage}`);
     }
   };

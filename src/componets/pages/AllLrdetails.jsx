@@ -65,8 +65,12 @@ const AllLrdetails = ({ isNavbarCollapsed }) => {
       setTotalRows(response.data.total || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
-    }
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
 
     setLoading(false);
   };

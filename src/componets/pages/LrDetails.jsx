@@ -332,7 +332,12 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       setTotalRows(response.data.totalRecords || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
     }
 
     setUpdateLoading(false);
@@ -372,7 +377,12 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       setTotalRows(response.data.totalRecords || response.data.data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(true);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
     }
 
     setLoading(false);
@@ -737,26 +747,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         data.forEach((row, index) => {
           const cnDateStr = row["CN Date"];
           console.log("CN Date:", cnDateStr);
-          if (!cnDateStr) {
-            dateValidationResults.push({
-              row: index + 2,
-              cnNo: row["CN No"],
-              error: "CN Date is missing",
-            });
-            dateValidationFailed = true;
-            return;
-          }
 
           const cnDate = new Date(cnDateStr);
-          if (isNaN(cnDate.getTime())) {
-            dateValidationResults.push({
-              row: index + 2,
-              cnNo: row["CN No"],
-              error: "Invalid CN Date format",
-            });
-            dateValidationFailed = true;
-            return;
-          }
+
 
           if (cnDate < from || cnDate > to) {
             dateValidationResults.push({
@@ -851,6 +844,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
           TOTAL_AMOUNT: totalAmount,
           REMARKS: row["Remarks"] || "",
+          CNTODATE: new Date(toDate),
+          CNFROMDATE: new Date(fromDate),
           ENTERED_BY: USER_ID,
           MODIFIED_BY: USER_ID,
         };
@@ -972,6 +967,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               toll_tax: item.TOLL_TAX,
               packing_expense: item.PACKING_EXPENSE,
               total_amount: item.TOTAL_AMOUNT,
+              cntodate: new Date(toDate),
+              cnfromdate: new Date(fromDate),
               remarks: item.REMARKS,
               modified_by: item.MODIFIED_BY,
             }));
@@ -1050,6 +1047,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             toll_tax: item.TOLL_TAX,
             packing_expense: item.PACKING_EXPENSE,
             total_amount: item.TOTAL_AMOUNT,
+            cntodate: new Date(toDate),
+            cnfromdate: new Date(fromDate),
             remarks: item.REMARKS,
             modified_by: item.MODIFIED_BY,
           }));

@@ -63,6 +63,7 @@ const VendorDetails = () => {
   const [isVendorCodeDisabled, setIsVendorCodeDisabled] = useState(false);
 
   const [showChar, setShowChar] = useState(false);
+    const [error, setError] = useState(null);
 
   const handleTogglePassword = (userId) => {
     setVisiblePasswordId((prevId) => (prevId === userId ? null : userId));
@@ -98,7 +99,13 @@ const VendorDetails = () => {
           )
         );
       }
-    } catch (err) {
+    } catch (error) {
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
       toast.error("Failed to update status");
     }
   }
@@ -128,6 +135,12 @@ const VendorDetails = () => {
         setTableData(mappedData);
       }
     } catch (error) {
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        setError(error.response?.data?.message || "An error occurred while fetching data.");
+      }
       console.error("Error fetching data:", error);
     }
   };
