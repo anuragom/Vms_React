@@ -357,6 +357,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         USER_ID,
       };
 
+
+
       const response = await axios.post(
         "https://vmsnode.omlogistics.co.in/api/lrDetails",
         payload,
@@ -736,64 +738,144 @@ const LrDetails = ({ isNavbarCollapsed }) => {
         throw new Error("No valid data found in the file");
       }
       // DATE VALIDATION ===================================================
-      let dateValidationFailed = false;
-      const dateValidationResults = [];
+// DATE VALIDATION USING lrDetails API
+let dateValidationFailed = false;
+const dateValidationResults = [];
+const cnDateCache = new Map(); // Cache for CN Date responses
 
-      if (fromDate && toDate) {
-        const from = new Date(fromDate);
-        const to = new Date(toDate);
-        to.setHours(23, 59, 59, 999); // Include entire end day
+if (fromDate && toDate) {
+  const from = new Date(fromDate);
+  const to = new Date(toDate);
+  to.setHours(23, 59, 59, 999); // Include entire end day
 
-        data.forEach((row, index) => {
-          const cnDateStr = row["CN Date"];
-          console.log("CN Date:", cnDateStr);
+  // Build map from existing table data
+  const existingCnData = new Map(
+    data.map((item) => [item.CN_CN_NO, item.CN_CN_DATE])
+  );
 
-          const cnDate = new Date(cnDateStr);
+  for (const [index, row] of data.entries()) {
+    const cnNo = row["CN No"];
+    if (!cnNo) {
+      dateValidationResults.push({
+        row: index + 2,
+        cnNo: cnNo || "Unknown",
+        error: "CN No is missing",
+      });
+      dateValidationFailed = true;
+      continue;
+    }
 
+    let cnDateStr;
 
-          if (cnDate < from || cnDate > to) {
-            dateValidationResults.push({
-              row: index + 2,
-              cnNo: row["CN No"],
-              error: `CN Date (${cnDateStr}) is not between ${fromDate} and ${toDate}`,
-            });
-            dateValidationFailed = true;
-          }
-        });
-      }
+    // Check table data first
+    if (existingCnData.has(cnNo)) {
+      cnDateStr = existingCnData.get(cnNo);
+    } else if (cnDateCache.has(cnNo)) {
+      // Check cache
+      cnDateStr = cnDateCache.get(cnNo);
+    } else {
+      // Fetch from API
+      try {
+        const payload = {
+          page: 1,
+          limit: 1,
+          FROMDATE: "",
+          TODATE: "",
+          CNNO: cnNo,
+          USER_ID,
+        };
 
-      if (dateValidationFailed) {
-        setUploadResults({
-          total: data.length,
-          invalid: dateValidationResults,
-          valid: 0,
-          added: 0,
-          updated: 0,
-          failed: data.length,
-          errors: [
-            {
-              cnNo: "Multiple",
-              message: "Date validation failed",
-              operation: "validation",
-            },
-          ],
-        });
-
-        toast.error(
-          "CN Date validation failed. Please check dates in your file.",
+        const response = await axios.post(
+          "https://vmsnode.omlogistics.co.in/api/lrDetails",
+          payload,
           {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
         );
-        return;
+
+        if (response.data.data.length === 0) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo,
+            error: `No data found for CN No ${cnNo}`,
+          });
+          dateValidationFailed = true;
+          continue;
+        }
+
+        cnDateStr = response.data.data[0].CN_CN_DATE;
+        cnDateCache.set(cnNo, cnDateStr); // Cache the result
+      } catch (error) {
+        dateValidationResults.push({
+          row: index + 2,
+          cnNo,
+          error: `Failed to fetch CN Date for CN No ${cnNo}: ${
+            error.response?.data?.msg || error.message
+          }`,
+        });
+        dateValidationFailed = true;
+        continue;
       }
-      // END DATE VALIDATION ===============================================
+    }
+
+    const cnDate = new Date(cnDateStr);
+
+    if (isNaN(cnDate.getTime())) {
+      dateValidationResults.push({
+        row: index + 2,
+        cnNo,
+        error: `Invalid CN Date for CN No ${cnNo} :${
+            error.response?.data?.msg || error.message}`,
+      });
+      dateValidationFailed = true;
+      continue;
+    }
+
+    if (cnDate < from || cnDate > to) {
+      dateValidationResults.push({
+        row: index + 2,
+        cnNo,
+        error: `CN Date (${cnDate.toLocaleDateString()}) is not between ${fromDate} and ${toDate}`,
+      });
+      dateValidationFailed = true;
+    }
+  }
+}
+
+if (dateValidationFailed) {
+  setUploadResults({
+    total: data.length,
+    invalid: dateValidationResults,
+    valid: 0,
+    added: 0,
+    updated: 0,
+    failed: data.length,
+    errors: [
+      {
+        cnNo: "Multiple",
+        message: "Date validation failed",
+        operation: "validation",
+      },
+    ],
+  });
+
+  toast.error(
+    "CN Date validation failed. Please check the CN Nos and dates.",
+    {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+    }
+  );
+  return;
+}
 
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
@@ -844,8 +926,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
           TOTAL_AMOUNT: totalAmount,
           REMARKS: row["Remarks"] || "",
-          CNTODATE: new Date(toDate),
-          CNFROMDATE: new Date(fromDate),
+          CNTODATE: toDate,
+          CNFROMDATE: fromDate,
           ENTERED_BY: USER_ID,
           MODIFIED_BY: USER_ID,
         };
@@ -967,8 +1049,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
               toll_tax: item.TOLL_TAX,
               packing_expense: item.PACKING_EXPENSE,
               total_amount: item.TOTAL_AMOUNT,
-              cntodate: new Date(toDate),
-              cnfromdate: new Date(fromDate),
+              cntodate: toDate,
+              cnfromdate: fromDate,
               remarks: item.REMARKS,
               modified_by: item.MODIFIED_BY,
             }));
@@ -1047,8 +1129,8 @@ const LrDetails = ({ isNavbarCollapsed }) => {
             toll_tax: item.TOLL_TAX,
             packing_expense: item.PACKING_EXPENSE,
             total_amount: item.TOTAL_AMOUNT,
-            cntodate: new Date(toDate),
-            cnfromdate: new Date(fromDate),
+            cntodate: toDate,
+            cnfromdate: fromDate,
             remarks: item.REMARKS,
             modified_by: item.MODIFIED_BY,
           }));
