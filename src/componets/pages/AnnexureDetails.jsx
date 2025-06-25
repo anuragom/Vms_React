@@ -373,6 +373,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         await fetchAnnexureDetails();
         setEditModalOpen(false);
         toast.success(recordExists ? "Data updated successfully!" : "Data inserted successfully!");
+        window.location.reload();
       } else {
         const errorMessage = response.data.msg || "Unknown error occurred";
         toast.error(`Failed to ${recordExists ? "update" : "insert"} data: ${errorMessage}`);
