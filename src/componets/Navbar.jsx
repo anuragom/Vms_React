@@ -20,7 +20,7 @@ const roleBasedMenuItems = {
      "reports", "process-billing", "posted-bill", "all-Lr", "bill-status"
   ],
   BRANCH: [
-    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details"
+    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details" , "branch-verified"
   ],
   CORDINATOR: [
     "dashboard", "assigned-vendor", "verify-expaness-of-cn", "bill-status", "cn-reports",
@@ -74,6 +74,12 @@ const lrBillingSubItems = [
     path: "/annexure-details",
     icon: FileText,
   },
+  {
+    id: "branch-verified",
+    label: "Approved Bills",
+    path: "/branch-verified",
+    icon: FileText,
+  }
 ];
 
 const Navbar = ({ items, isCollapsed }) => {

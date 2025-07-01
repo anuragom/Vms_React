@@ -36,4 +36,5 @@ export const menuItems = [
   { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
   { id: 'annexure-details', label: 'Annexure Details', icon: FileSpreadsheet, path: '/annexure-details', roles: ['BRANCH'] },
   { id: 'all-Lr', label: 'All LR', icon: FileSpreadsheet, path: '/all-Lr', roles: ['VENDOR'] },
+  { id: 'branch-verified', label: 'Approved Bills', icon: FileSpreadsheet, path: '/branch-verified', roles: ['BRANCH'] }
 ];
