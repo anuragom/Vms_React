@@ -1,207 +1,390 @@
-
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
-import { CustomTable } from "../Ui/CustomTable";
-import { useEffect, useState } from "react";
-import { getToken } from "../../Auth/auth";
-import {ToastContainer } from "react-toastify";
+import { getToken } from "../../Auth/auth"; // Ensure this is correctly implemented
+import { CustomTable } from "../Ui/CustomTable"; // Ensure this component exists
+import { jwtDecode } from "jwt-decode";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ApprovedBills = ({ isNavbarCollapsed }) => {
+  const marginClass = isNavbarCollapsed ? "ml-16" : "ml-30"; // Adjusted margin for consistency
 
-    const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
-    // State variables
-    const [data, setData] = useState([]);
-    const [search, setSearch] = useState("");
-    const [filteredData, setFilteredData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(20);
-    const [fromDate, setFromDate] = useState("");
-    const [toDate, setToDate] = useState("");
-    const [totalRows, setTotalRows] = useState(0);
-    const [modalOpen, setModalOpen] = useState(false);
-    const token = getToken();
+  // State declarations
+  const [data, setData] = useState([]);
+  const [rawData, setRawData] = useState([]); // Added missing rawData state
+  const [filteredData, setFilteredData] = useState([]);
+  const [modalData, setModalData] = useState([]); // Separate state for modal data
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // Changed to null for better error handling
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [chlnVendorCode, setChlnVendorCode] = useState("");
+  const [totalRows, setTotalRows] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
 
-    
-  
-    const fetchPostedBillData = async () => {
-      setLoading(true);
-      setError(false);
-  
-      try {
+  const token = getToken();
 
-        const response = await axios.get(
-          "https://vmsnode.omlogistics.co.in/api/getApprovedBills",
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-  
-        if (response.data.data.length === 0) {
-          setError(true);
-        }
-  
-        setData(response.data.data);
-        setFilteredData(response.data.data);
-        setTotalRows(response.data.total || response.data.data.length);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        if (error.response?.status === 403) {
-          setError("Session expired. Please log in again.");
-          window.location.href = "/login";
-        } else {
-          setError(error.response?.data?.message || "An error occurred while fetching data.");
-        }
+  // Group data by ANNEXURE_NO
+  const groupDataByAnnexure = (rawData) => {
+    if (!Array.isArray(rawData)) return [];
+
+    const grouped = rawData.reduce((acc, item) => {
+      const annexureNo = item.ANNEXURE_NO || "Unknown"; // Fallback for missing ANNEXURE_NO
+      if (!acc[annexureNo]) {
+        acc[annexureNo] = {
+          ANNEXURE_NO: annexureNo,
+          RNUM: item.RNUM || 0,
+          items: [],
+        };
       }
-  
+      acc[annexureNo].TOTAL_AMOUNT += parseFloat(item.TOTAL_AMOUNT || 0);
+      acc[annexureNo].items.push({
+        ...item,
+        ANNEXURE_NO: annexureNo,
+      });
+      return acc;
+    }, {});
+
+    return Object.values(grouped).map((group, index) => ({
+      ...group,
+      RNUM: index + 1, // Assign row number
+    }));
+  };
+
+  // Fetch annexure details from API
+  const fetchAnnexureDetails = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.get(
+        "https://vmsnode.omlogistics.co.in/api/getApprovedBill",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          payload: {
+            page,
+            limit,
+            fromDate,
+            toDate,
+          },
+        }
+      );
+
+      if (!response.data || !Array.isArray(response.data.data)) {
+        throw new Error("Invalid response format from API");
+      }
+
+      if (response.data.data.length === 0) {
+        setError("No data found for the selected criteria.");
+        setData([]);
+        setFilteredData([]);
+        setRawData([]);
+        setTotalRows(0);
+        toast.info("No data found for the selected criteria.");
+      } else {
+        const groupedData = groupDataByAnnexure(response.data.data);
+        setRawData(response.data.data);
+        setData(groupedData);
+        setFilteredData(groupedData);
+        setTotalRows(response.data.totalRecords || groupedData.length);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      let errorMessage = "An error occurred while fetching data.";
+      if (error.response?.status === 403) {
+        errorMessage = "Session expired. Please log in again.";
+        toast.error(errorMessage);
+        window.location.href = "/login";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      setError(errorMessage);
+      setData([]);
+      setFilteredData([]);
+      setRawData([]);
+      setTotalRows(0);
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
-    };
-  
-    useEffect(() => {
-      fetchPostedBillData();
-    }, [page, limit, fromDate, toDate, search]);
-  
-    const handleSearch = () => {
-      setPage(1);
-      fetchPostedBillData();
-    };
-  
-    const handlePageChange = (page) => {
-      setPage(page);
-  
-    };
-  
-    const handleRowsPerPageChange = (newLimit, page) => {
-      setLimit(newLimit);
-      setPage(page);
-  
-    };
-  
-  
-    const columns = [
-      { name: "Row No", selector: (row) => row.ROW_NUM || "-", sortable: true, wrap: true, width: "100px" },
-      { name: "CN No", selector: (row) => row.CN_CN_NO || "-", sortable: true, wrap: true, width: "150px" },
-      { name: "CN Date", selector: (row) => (row.CN_CN_DATE ? new Date(row.CN_CN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "150px" },
-      { name: "Source Branch Code", selector: (row) => row.CN_SOURCE_BRANCH_CODE || "-", sortable: true, wrap: true, width: "170px" },
-      { name: "Destination Branch Code", selector: (row) => row.CN_DESTINATION_BRANCH_CODE || "-", sortable: true, wrap: true, width: "190px" },
-      { name: "Challan No", selector: (row) => row.CHLN_CHLN_NO || "-", sortable: true, wrap: true, width: "150px" },
-      { name: "Challan Date", selector: (row) => (row.CHLN_CHLN_DATE ? new Date(row.CHLN_CHLN_DATE).toLocaleDateString() : "-"), sortable: true, wrap: true, width: "170px" },
-      { name: "Lorry No", selector: (row) => row.CHLN_LORRY_NO || "-", sortable: true, wrap: true, width: "150px" }
-     
-    ];
-  
-  
-  
-    const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  
-    return (
-      <div className={` bg-gray-50 p-6 ${marginClass} transition-all duration-300`}>
-        <ToastContainer />
-  
-        <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-8xl mx-auto ">
-          <div>
-            <label htmlFor="fromDate" className="block text-xs font-medium text-gray-700 mb-1">
-              From Date
+    }
+  };
+
+  // Fetch data when dependencies change
+  useEffect(() => {
+    fetchAnnexureDetails();
+  }, [page, limit, fromDate, toDate, chlnVendorCode]);
+
+  // Filter data based on search input
+  useEffect(() => {
+    const result = data.filter(
+      (item) =>
+        item.ANNEXURE_NO?.toString().toLowerCase().includes(search.toLowerCase()) 
+       
+    );
+    setFilteredData(result);
+  }, [search, data]);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleRowsPerPageChange = (newLimit, newPage) => {
+    setLimit(newLimit);
+    setPage(newPage);
+  };
+
+  // Table columns for main table
+  const columns = [
+    {
+      name: "Row No",
+      selector: (row) => row.RNUM,
+      sortable: true,
+      wrap: true,
+      width: "100px",
+    },
+    {
+      name: "Annexure No.",
+      selector: (row) => row.ANNEXURE_NO || "-",
+      sortable: true,
+      wrap: true,
+    },
+
+  ];
+
+  // Columns for modal table
+  const modalColumns = [
+    {
+      name: "LR No.",
+      selector: (row) => row.CN_NO || "-",
+      sortable: true,
+      wrap: true,
+      width: "150px",
+    },
+    {
+      name: "Updated Weight",
+      selector: (row) => row.BRANCH_WEIGHT || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Packet Count",
+      selector: (row) => row.TOTAL_PACKAGES || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Weight",
+      selector: (row) => row.TOTAL_WEIGHT || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Item",
+      selector: (row) => row.ITEM_DESCRIPTION || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "KM",
+      selector: (row) => row.KILOMETER || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Latitude",
+      selector: (row) => row.LATITUDE || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Longitude",
+      selector: (row) => row.LONGITUDE || "-",
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Floor (GPT, RRT)",
+      selector: (row) => row.FLOOR || "-",
+      sortable: true,
+      wrap: true,
+    },
+  ];
+
+  const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
+
+  // Handle row click to open modal
+  const handleRowClick = (row) => {
+    setModalData(row.items || []);
+    setModalOpen(true);
+  };
+
+  // Close modal and reset modal data
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setModalData([]);
+  };
+
+  return (
+    <div
+      className={`bg-gray-50 py-3 px-6 ${marginClass} transition-all duration-300 min-h-screen`}
+    >
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+      />
+
+      {/* Filter Inputs */}
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-8xl mx-auto">
+        <div>
+          <label
+            htmlFor="fromDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            From Date
+          </label>
+          <input
+            id="fromDate"
+            type="date"
+            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="toDate"
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
+            To Date
+          </label>
+          <input
+            id="toDate"
+            type="date"
+            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </div>
+        <div className="col-span-1 space-y-2 md:flex items-end pb-1 gap-2 w-full">
+          <div className="w-[70%]">
+            <label
+              htmlFor="search"
+              className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1"
+            >
+              Search by Annex No or Vendor Code
             </label>
             <input
-              id="fromDate"
-              type="date"
+              id="search"
+              type="text"
+              placeholder="Search by Annex No or Vendor Code"
               className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div>
-            <label htmlFor="toDate" className="block text-xs font-medium text-gray-700 mb-1">
-              To Date
-            </label>
-            <input
-              id="toDate"
-              type="date"
-              className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-            />
-          </div>
-          <div className="col-span-3 space-y-2 md:flex items-end pb-1 gap-2">
-            <div className="w-full">
-              <label htmlFor="search" className="whitespace-nowrap block text-xs font-medium text-gray-700 mb-1 ">
-                Search by CN No
-              </label>
-              <input
-                id="search"
-                type="text"
-                placeholder="Enter CN No"
-                className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="w-full md:w-auto">
-              <button
-                onClick={handleSearch}
-                className="whitespace-nowrap px-4 w-full md:w-auto py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
-              >
-                Search
-              </button>
-            </div>
-  
+            <button
+              onClick={fetchAnnexureDetails}
+              className="whitespace-nowrap px-4 w-full py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors"
+            >
+              Search
+            </button>
           </div>
         </div>
-  
-        {loading && <div className="text-center text-blue-600 text-lg">Loading...</div>}
-        {error && <div className="text-center text-red-600 text-lg">No data found</div>}
-  
-        {!loading && !error && data.length > 0 && (
-          <>
-            <CustomTable  page={page} columns={columns} data={filteredData} totalRows={totalRows} limit={limit} rowPerPageOptions={rowPerPageOptions} handlePageChange={handlePageChange} handleRowsPerPageChange={handleRowsPerPageChange} filteredData={filteredData} />
-          </>
-        )}
-        {modalOpen && (
+      </div>
+
+      {/* Loading and Error States */}
+      {loading && (
+        <div className="text-center text-blue-600 text-lg">Loading...</div>
+      )}
+      {error && (
+        <div className="text-center text-red-600 text-lg">{error}</div>
+      )}
+
+      {/* Main Table */}
+      {!loading && !error && data.length > 0 && (
+        <CustomTable
+          handleRowClick={handleRowClick}
+          page={page}
+          columns={columns}
+          data={filteredData}
+          totalRows={totalRows}
+          limit={limit}
+          rowPerPageOptions={rowPerPageOptions}
+          handlePageChange={handlePageChange}
+          handleRowsPerPageChange={handleRowsPerPageChange}
+          filteredData={filteredData}
+        />
+      )}
+
+      {/* Modal for Detailed View */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={handleModalClose}
+        >
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            onClick={() => setModalOpen(false)}
+            className="bg-white rounded-lg overflow-hidden w-full m-2 max-w-5xl max-h-[80vh] overflow-y-auto shadow-lg relative"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="rounded-lg overflow-hidden w-full m-2 max-w-4xl overflow-y-auto shadow-lg relative"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className=" overflow-x-auto max-w-8xl mx-auto shadow-xl">
-                <DataTable
-            
-                  data={filteredData}
-                  pagination
-                  paginationServer
-                  paginationTotalRows={totalRows}
-                  paginationPerPage={limit}
-                  paginationDefaultPage={page}
-                  paginationRowsPerPageOptions={rowPerPageOptions}
-                  onChangePage={handlePageChange}
-                  onChangeRowsPerPage={handleRowsPerPageChange}
-                  highlightOnHover
-                  responsive
-                  customStyles={{
-                    headRow: {
-                      style: {
-                        fontSize: "13px",
-                      }
-                    }
-                  }}
-                  fixedHeader
-                  fixedHeaderScrollHeight="70vh"
-                />
-  
-              </div>
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-lg font-semibold">Annexure Details</h2>
+              <button
+                onClick={handleModalClose}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <DataTable
+                columns={modalColumns}
+                data={modalData}
+                pagination
+                paginationServer
+                paginationTotalRows={modalData.length}
+                paginationPerPage={limit}
+                paginationDefaultPage={page}
+                paginationRowsPerPageOptions={rowPerPageOptions}
+                onChangePage={handlePageChange}
+                onChangeRowsPerPage={handleRowsPerPageChange}
+                highlightOnHover
+                responsive
+                customStyles={{
+                  headRow: {
+                    style: {
+                      fontSize: "13px",
+                      backgroundColor: "#f9fafb",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      fontSize: "12px",
+                    },
+                  },
+                }}
+                fixedHeader
+                fixedHeaderScrollHeight="60vh"
+                noDataComponent={<div className="text-center p-4">No details available</div>}
+              />
             </div>
           </div>
-        )}
-      </div>
-    );
-}
+        </div>
+      )}
+    </div>
+  );
+};
 
-export default ApprovedBills
+export default ApprovedBills;
