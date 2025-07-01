@@ -31,7 +31,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
   
       try {
 
-        const response = await axios.post(
+        const response = await axios.get(
           "https://vmsnode.omlogistics.co.in/api/getApprovedBills",
           {},
           {
