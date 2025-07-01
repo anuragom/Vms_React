@@ -1199,7 +1199,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       const payload = {
         CN_NO: editFormData.CN_NO,
         ANNEXURE_NO: selectedRow.ANNEXURE_NO,
-        CHALLAN_VENDOR_CODE: selectedRow.CHALLAN_VENDOR_CODE,
+        VENDOR_CODE: selectedRow.CHALLAN_VENDOR_CODE,
         BRANCH_Weight: editFormData.BRANCH_Weight,
         BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS,
         BRANCH_FLOOR: editFormData.BRANCH_FLOOR,
