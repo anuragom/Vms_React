@@ -65,7 +65,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
 
     try {
       const response = await axios.get(
-        "http://localhost:3001/api/getApprovedBill",
+        "https://vmsnode.omlogistics.co.in/api/getApprovedBill",
         {
           headers: {
             Authorization: `Bearer ${token}`,
