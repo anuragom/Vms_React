@@ -637,7 +637,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Crane"
+                      name="BRANCH_CRANE"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_CRANE === "Y"}
                       onChange={handleInputChange}
@@ -649,7 +649,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Hydra"
+                      name="BRANCH_HYDRA"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_HYDRA === "Y"}
                       onChange={handleInputChange}
@@ -661,7 +661,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Chain_Pulling"
+                      name="BRANCH_CHAIN_PULLING"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_CHAIN_PULLING === "Y"}
                       onChange={handleInputChange}
@@ -685,7 +685,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Labour_expenses"
+                      name="BRANCH_LABOUR_EXPENSES"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_LABOUR_EXPENSES === "Y"}
                       onChange={handleInputChange}
@@ -697,7 +697,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Other_expenses"
+                      name="BRANCH_OTHER_EXPENSES"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_OTHER_EXPENSES === "Y"}
                       onChange={handleInputChange}
@@ -709,7 +709,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     </label>
                     <input
                       type="checkbox"
-                      name="BRANCH_Special_Vehicle"
+                      name="BRANCH_SPECIAL_VEHICLE"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
                       checked={editFormData.BRANCH_SPECIAL_VEHICLE === "Y"}
                       onChange={handleInputChange}
@@ -735,7 +735,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="BRANCH_Weight"
+                    name="BRANCH_WEIGHT"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
                     value={editFormData.BRANCH_WEIGHT}
                     onChange={handleInputChange}
@@ -771,7 +771,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="BRANCH_Item_Description"
+                    name="BRANCH_ITEM_DESCRIPTION"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
                     value={editFormData.BRANCH_ITEM_DESCRIPTION}
                     onChange={handleInputChange}
@@ -795,7 +795,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="BRANCH_Latitude"
+                    name="BRANCH_LATITUDE"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
                     value={editFormData.BRANCH_LATITUDE}
                     onChange={handleInputChange}
@@ -807,7 +807,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </label>
                   <input
                     type="text"
-                    name="BRANCH_Longitude"
+                    name="BRANCH_LONGITUDE"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
                     value={editFormData.BRANCH_LONGITUDE}
                     onChange={handleInputChange}
