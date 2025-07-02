@@ -37,6 +37,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
       if (!acc[annexureNo]) {
         acc[annexureNo] = {
           ANNEXURE_NO: annexureNo,
+          VENDOR_CODE: item.VENDOR_CODE, 
           RNUM: item.RNUM || 0,
           items: [],
         };
@@ -45,6 +46,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
       acc[annexureNo].items.push({
         ...item,
         ANNEXURE_NO: annexureNo,
+ 
       });
       return acc;
     }, {});
@@ -60,9 +62,10 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
     setLoading(true);
     setError(null);
 
+
     try {
       const response = await axios.get(
-        "https://vmsnode.omlogistics.co.in/api/getApprovedBill",
+        "http://localhost:3001/api/getApprovedBill",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,8 +74,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
           payload: {
             page,
             limit,
-            fromDate,
-            toDate,
+            searchValue: search 
           },
         }
       );
@@ -126,6 +128,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
     const result = data.filter(
       (item) =>
         item.ANNEXURE_NO?.toString().toLowerCase().includes(search.toLowerCase()) 
+        || item.VENDOR_CODE?.toString().toLowerCase().includes(search.toLowerCase())
        
     );
     setFilteredData(result);
@@ -157,6 +160,12 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
       sortable: true,
       wrap: true,
     },
+    {
+        name: "Vendor Code.",
+        selector: (row) => row.VENDOR_CODE || "-",
+        sortable: true,
+        wrap: true,
+      },
 
   ];
 
@@ -176,47 +185,90 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
       wrap: true,
     },
     {
-      name: "Packet Count",
-      selector: (row) => row.TOTAL_PACKAGES || "-",
+      name: "Updated Locations",
+      selector: (row) => row.BRANCH_LOCATIONS || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "Weight",
-      selector: (row) => row.TOTAL_WEIGHT || "-",
+      name: "Updated Floor",
+      selector: (row) => row.BRANCH_FLOOR || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "Item",
-      selector: (row) => row.ITEM_DESCRIPTION || "-",
+      name: "Updated Item Description",
+      selector: (row) => row.BRANCH_ITEM_DESCRIPTION || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "KM",
-      selector: (row) => row.KILOMETER || "-",
+      name: "Updated KM",
+      selector: (row) => row.BRANCH_KM || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "Latitude",
-      selector: (row) => row.LATITUDE || "-",
+      name: "Updated Latitude",
+      selector: (row) => row.BRANCH_LATITUDE || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "Longitude",
-      selector: (row) => row.LONGITUDE || "-",
+      name: "Updated Longitude",
+      selector: (row) => row.BRANCH_LONGITUDE || "-",
       sortable: true,
       wrap: true,
     },
     {
-      name: "Floor (GPT, RRT)",
-      selector: (row) => row.FLOOR || "-",
+      name: "Updated Remarks",
+      selector: (row) => row.BRANCH_REMARKS || "-",
       sortable: true,
       wrap: true,
     },
+    {
+        name: "Updated Crane",
+        selector: (row) => row.BRANCH_CRANE || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updated Hydra",
+        selector: (row) => row.BRANCH_HYDRA || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updated Chain Pulling",
+        selector: (row) => row.BRANCH_CHAIN_PULLING || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updated HKM",
+        selector: (row) => row.BRANCH_HKM || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updated Labour Expenses",
+        selector: (row) => row.BRANCH_LABOUR_EXPENSES || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updates Other Expenses",
+        selector: (row) => row.BRANCH_SPECIAL_VEHICLE || "-",
+        sortable: true,
+        wrap: true,
+      },
+      {
+        name: "Updates Special Vehicle",
+        selector: (row) => row.BRANCH_SPECIAL_VEHICLE || "-",
+        sortable: true,
+        wrap: true,
+      },
+      
   ];
 
   const rowPerPageOptions = [20, 50, 100, 200, 500, 1000, 5000, 10000];
@@ -247,36 +299,7 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
 
       {/* Filter Inputs */}
       <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-8xl mx-auto">
-        <div>
-          <label
-            htmlFor="fromDate"
-            className="block text-xs font-medium text-gray-700 mb-1"
-          >
-            From Date
-          </label>
-          <input
-            id="fromDate"
-            type="date"
-            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="toDate"
-            className="block text-xs font-medium text-gray-700 mb-1"
-          >
-            To Date
-          </label>
-          <input
-            id="toDate"
-            type="date"
-            className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200 w-full"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
-        </div>
+
         <div className="col-span-1 space-y-2 md:flex items-end pb-1 gap-2 w-full">
           <div className="w-[70%]">
             <label
@@ -339,15 +362,15 @@ const ApprovedBills = ({ isNavbarCollapsed }) => {
             className="bg-white rounded-lg overflow-hidden w-full m-2 max-w-5xl max-h-[80vh] overflow-y-auto shadow-lg relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">Annexure Details</h2>
-              <button
-                onClick={handleModalClose}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                ✕
-              </button>
-            </div>
+      <div className="flex justify-end items-center p-2 ">
+  <button
+    onClick={handleModalClose}
+    className="text-gray-600 hover:text-gray-800 focus:outline-none"
+  >
+    ✕
+  </button>
+</div>
+
             <div className="p-4">
               <DataTable
                 columns={modalColumns}
