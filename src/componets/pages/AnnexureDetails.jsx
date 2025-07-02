@@ -262,7 +262,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             setSelectedRow(row);
             setEditFormData({
               CN_NO: row.CN_NO,
-              BRANCH_Weight: row.BRANCH_WEIGHT || "",
+              BRANCH_WEIGHT: row.BRANCH_WEIGHT || "",
               BRANCH_LOCATIONS: row.BRANCH_LOCATIONS || "",
               BRANCH_FLOOR: row.BRANCH_FLOOR || "",
               BRANCH_ITEM_DESCRIPTION: row.BRANCH_ITEM_DESCRIPTION|| "",
