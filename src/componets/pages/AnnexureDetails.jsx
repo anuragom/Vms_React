@@ -30,22 +30,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const USER_ID = decodedToken.id;
   const [editFormData, setEditFormData] = useState({
     CN_NO: "",
-    BRANCH_Weight: "",
+    BRANCH_WEIGHT: "",
     BRANCH_LOCATIONS: "",
     BRANCH_FLOOR: "",
-    BRANCH_Item_Description: "",
+    BRANCH_ITEM_DESCRIPTION: "",
     BRANCH_KM: "",
-    BRANCH_Latitude: "",
-    BRANCH_Longitude: "",
-    BRANCH_Flag: "Y",
+    BRANCH_LATITUDE: "",
+    BRANCH_LONGITUDE: "",
+    BRANCH_FLAG: "Y",
     BRANCH_REMARKS: "",
-    BRANCH_Crane: "",
-    BRANCH_Hydra: "",
-    BRANCH_Chain_Pulling: "",
+    BRANCH_CRANE: "",
+    BRANCH_HYDRA: "",
+    BRANCH_CHAIN_PULLING: "",
     BRANCH_HKM: "",
-    BRANCH_Labour_expenses: "",
-    BRANCH_Other_expenses: "",
-    BRANCH_Special_Vehicle: "",
+    BRANCH_LABOUR_EXPENSES: "",
+    BRANCH_OTHER_EXPENSES: "",
+    BRANCH_SPECIAL_VEHICLE: "",
     BRANCH_ENTERED_BY: USER_ID,
   });
 
@@ -262,22 +262,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             setSelectedRow(row);
             setEditFormData({
               CN_NO: row.CN_NO,
-              BRANCH_Weight: row.BRANCH_Weight || "",
+              BRANCH_Weight: row.BRANCH_WEIGHT || "",
               BRANCH_LOCATIONS: row.BRANCH_LOCATIONS || "",
               BRANCH_FLOOR: row.BRANCH_FLOOR || "",
-              BRANCH_Item_Description: row.BRANCH_Item_Description || "",
+              BRANCH_ITEM_DESCRIPTION: row.BRANCH_ITEM_DESCRIPTION|| "",
               BRANCH_KM: row.BRANCH_KM || "",
-              BRANCH_Latitude: row.BRANCH_Latitude || "",
-              BRANCH_Longitude: row.BRANCH_Longitude || "",
-              BRANCH_Flag: row.BRANCH_Flag || "Y",
+              BRANCH_LATITUDE: row.BRANCH_LATITUDE || "",
+              BRANCH_LONGITUDE: row.BRANCH_LONGITUDE || "",
+              BRANCH_FLAG: row.BRANCH_FLAG || "Y",
               BRANCH_REMARKS: row.BRANCH_REMARKS || "",
-              BRANCH_Crane: row.BRANCH_Crane || "",
-              BRANCH_Hydra: row.BRANCH_Hydra || "",
-              BRANCH_Chain_Pulling: row.BRANCH_Chain_Pulling || "",
+              BRANCH_CRANE: row.BRANCH_CRANE || "",
+              BRANCH_HYDRA: row.BRANCH_HYDRA || "",
+              BRANCH_CHAIN_PULLING: row.BRANCH_CHAIN_PULLING || "",
               BRANCH_HKM: row.BRANCH_HKM || "",
-              BRANCH_Labour_expenses: row.BRANCH_Labour_expenses || "",
-              BRANCH_Other_expenses: row.BRANCH_Other_expenses || "",
-              BRANCH_Special_Vehicle: row.BRANCH_Special_Vehicle || "",
+              BRANCH_LABOUR_EXPENSES: row.BRANCH_LABOUR_EXPENSES || "",
+              BRANCH_OTHER_EXPENSES: row.BRANCH_OTHER_EXPENSES || "",
+              BRANCH_SPECIAL_VEHICLE: row.BRANCH_SPECIAL_VEHICLE || "",
               BRANCH_ENTERED_BY: USER_ID,
             });
             setEditModalOpen(true);
@@ -350,22 +350,22 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         CN_NO: editFormData.CN_NO || selectedRow.CN_NO || "",
         ANNEXURE_NO: selectedRow.ANNEXURE_NO || "",
         VENDOR_CODE: selectedRow.CHALLAN_VENDOR_CODE || "",
-        BRANCH_Weight: editFormData.BRANCH_Weight || selectedRow.TOTAL_WEIGHT || "",
+        BRANCH_WEIGHT: editFormData.BRANCH_WEIGHT || selectedRow.TOTAL_WEIGHT || "",
         BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS || selectedRow.LOCATIONS || "",
         BRANCH_FLOOR: editFormData.BRANCH_FLOOR || selectedRow.FLOOR || "",
-        BRANCH_Item_Description: editFormData.BRANCH_Item_Description || selectedRow.ITEM_DESCRIPTION || "",
+        BRANCH_ITEM_DESCRIPTION: editFormData.BRANCH_ITEM_DESCRIPTION || selectedRow.ITEM_DESCRIPTION || "",
         BRANCH_KM: editFormData.BRANCH_KM || selectedRow.KILOMETER || "",
-        BRANCH_Latitude: editFormData.BRANCH_Latitude || selectedRow.LATITUDE || "",
-        BRANCH_Longitude: editFormData.BRANCH_Longitude || selectedRow.LONGITUDE || "",
-        BRANCH_Flag: editFormData.BRANCH_Flag || selectedRow.BRANCH_Flag || "Y",
+        BRANCH_LATITUDE: editFormData.BRANCH_LATITUDE || selectedRow.LATITUDE || "",
+        BRANCH_LONGITUDE: editFormData.BRANCH_LONGITUDE || selectedRow.LONGITUDE || "",
+        BRANCH_FLAG: editFormData.BRANCH_FLAG || selectedRow.BRANCH_Flag || "Y",
         BRANCH_REMARKS: editFormData.BRANCH_REMARKS || selectedRow.BRANCH_REMARKS || "",
-        BRANCH_Crane: editFormData.BRANCH_Crane || selectedRow.BRANCH_Crane || "",
-        BRANCH_Hydra: editFormData.BRANCH_Hydra || selectedRow.BRANCH_Hydra || "",
-        BRANCH_Chain_Pulling: editFormData.BRANCH_Chain_Pulling || selectedRow.BRANCH_Chain_Pulling || "",
+        BRANCH_CRANE: editFormData.BRANCH_CRANE || selectedRow.BRANCH_CRANE || "",
+        BRANCH_HYDRA: editFormData.BRANCH_HYDRA || selectedRow.BRANCH_HYDRA || "",
+        BRANCH_CHAIN_PULLING: editFormData.BRANCH_CHAIN_PULLING || selectedRow.BRANCH_CHAIN_PULLING || "",
         BRANCH_HKM: editFormData.BRANCH_HKM || selectedRow.BRANCH_HKM || "",
-        BRANCH_Labour_expenses: editFormData.BRANCH_Labour_expenses || selectedRow.BRANCH_Labour_expenses || "",
-        BRANCH_Other_expenses: editFormData.BRANCH_Other_expenses || selectedRow.BRANCH_Other_expenses || "",
-        BRANCH_Special_Vehicle: editFormData.BRANCH_Special_Vehicle || selectedRow.BRANCH_Special_Vehicle || "",
+        BRANCH_LABOUR_EXPENSES: editFormData.BRANCH_LABOUR_EXPENSES || selectedRow.BRANCH_LABOUR_EXPENSES || "",
+        BRANCH_OTHER_EXPENSES: editFormData.BRANCH_OTHER_EXPENSES || selectedRow.BRANCH_OTHER_EXPENSES || "",
+        BRANCH_SPECIAL_VEHICLE: editFormData.BRANCH_SPECIAL_VEHICLE || selectedRow.BRANCH_SPECIAL_VEHICLE || "",
         [recordExists ? "BRANCH_MODIFIED_BY" : "BRANCH_ENTERED_BY"]: USER_ID,
       };
 
@@ -639,7 +639,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Crane"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Crane === "Y"}
+                      checked={editFormData.BRANCH_CRANE === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -651,7 +651,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Hydra"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Hydra === "Y"}
+                      checked={editFormData.BRANCH_HYDRA === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -663,7 +663,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Chain_Pulling"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Chain_Pulling === "Y"}
+                      checked={editFormData.BRANCH_CHAIN_PULLING === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -687,7 +687,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Labour_expenses"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Labour_expenses === "Y"}
+                      checked={editFormData.BRANCH_LABOUR_EXPENSES === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -699,7 +699,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Other_expenses"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Other_expenses === "Y"}
+                      checked={editFormData.BRANCH_OTHER_EXPENSES === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -711,7 +711,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                       type="checkbox"
                       name="BRANCH_Special_Vehicle"
                       className="h-5 w-5 text-blue-600 focus:ring-blue-200"
-                      checked={editFormData.BRANCH_Special_Vehicle === "Y"}
+                      checked={editFormData.BRANCH_SPECIAL_VEHICLE === "Y"}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -737,7 +737,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     type="text"
                     name="BRANCH_Weight"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.BRANCH_Weight}
+                    value={editFormData.BRANCH_WEIGHT}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -773,7 +773,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     type="text"
                     name="BRANCH_Item_Description"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.BRANCH_Item_Description}
+                    value={editFormData.BRANCH_ITEM_DESCRIPTION}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -797,7 +797,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     type="text"
                     name="BRANCH_Latitude"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.BRANCH_Latitude}
+                    value={editFormData.BRANCH_LATITUDE}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -809,7 +809,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     type="text"
                     name="BRANCH_Longitude"
                     className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.BRANCH_Longitude}
+                    value={editFormData.BRANCH_LONGITUDE}
                     onChange={handleInputChange}
                   />
                 </div>
