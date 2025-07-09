@@ -244,7 +244,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       selector: (row) => {
         if (row.BRANCH_FLAG === "Y") {
           return (
-            <span className="text-green-500 font-bold">✔</span>
+            <span className="font-bold">✅</span>
           );
         }
         return "❌";

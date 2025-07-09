@@ -34,6 +34,9 @@ const LrDetails = ({ isNavbarCollapsed }) => {
   const [showLocation, setShowLocation] = useState(false); // New state for checkbox toggle
   const firstUpdate = useRef(true);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [BulkfromDate, setBulkFromDate] = useState("");
+  const [BulktoDate, setBulkToDate] = useState("");
+  
 
   const CNMODEVATMap = {
     1: "1/NRGP",
@@ -728,160 +731,206 @@ const LrDetails = ({ isNavbarCollapsed }) => {
       });
       return;
     }
-
+  
+    if (!BulkfromDate || !BulktoDate) {
+      toast.error("Please select both From Date and To Date", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      return;
+    }
+  
     setUploadProgress(0);
     setUploadResults(null);
-
+  
     try {
       const data = await readExcelFile(uploadFile);
       if (!data || data.length === 0) {
         throw new Error("No valid data found in the file");
       }
-      // DATE VALIDATION ===================================================
-// DATE VALIDATION USING lrDetails API
-let dateValidationFailed = false;
-const dateValidationResults = [];
-const cnDateCache = new Map(); // Cache for CN Date responses
+  
+      // DATE VALIDATION USING lrDetails API
+      let dateValidationFailed = false;
+      const dateValidationResults = [];
+      const cnDateCache = new Map(); // Cache for CN Date responses
+  
+      const from = new Date(BulkfromDate);
+      const to = new Date(BulktoDate);
+      to.setHours(23, 59, 59, 999); // Include entire end day
+  
+      // Build map from existing table data
+      const existingCnData = new Map(
+        data.map((item) => [item.CN_CN_NO, item.CN_CN_DATE])
+      );
+const dateonly = new Date(from).toISOString();
+const datefrom = dateonly.split('T')[0];
+const dateonly2 = new Date(to).toISOString();
+const dateto = dateonly2.split('T')[0];
 
-if (fromDate && toDate) {
-  const from = new Date(fromDate);
-  const to = new Date(toDate);
-  to.setHours(23, 59, 59, 999); // Include entire end day
 
-  // Build map from existing table data
-  const existingCnData = new Map(
-    data.map((item) => [item.CN_CN_NO, item.CN_CN_DATE])
-  );
-
-  for (const [index, row] of data.entries()) {
-    const cnNo = row["CN No"];
-    if (!cnNo) {
-      dateValidationResults.push({
-        row: index + 2,
-        cnNo: cnNo || "Unknown",
-        error: "CN No is missing",
-      });
-      dateValidationFailed = true;
-      continue;
-    }
-
-    let cnDateStr;
-
-    // Check table data first
-    if (existingCnData.has(cnNo)) {
-      cnDateStr = existingCnData.get(cnNo);
-    } else if (cnDateCache.has(cnNo)) {
-      // Check cache
-      cnDateStr = cnDateCache.get(cnNo);
-    } else {
-      // Fetch from API
-      try {
-        const payload = {
-          page: 1,
-          limit: 1,
-          FROMDATE: "",
-          TODATE: "",
-          CNNO: cnNo,
-          USER_ID,
-        };
-
-        const response = await axios.post(
-          "https://vmsnode.omlogistics.co.in/api/lrDetails",
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+      const dateresponse = await axios.get(
+        "http://localhost:3001/api/checkDateExist",
+        
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          params: {
+            from_date: datefrom,
+            to_date: dateto,
+            USER_ID: USER_ID
           }
-        );
+        }
+      );
 
-        if (response.data.data.length === 0) {
+if(dateresponse.data.data === "EXISTS"){
+        toast.error("Expenses already added for this date range. Please choose a different date range.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+        return;
+}
+      
+  
+      for (const [index, row] of data.entries()) {
+        const cnNo = row["CN No"];
+        if (!cnNo) {
           dateValidationResults.push({
             row: index + 2,
-            cnNo,
-            error: `No data found for CN No ${cnNo}`,
+            cnNo: cnNo || "Unknown",
+            error: "CN No is missing",
           });
           dateValidationFailed = true;
           continue;
         }
-
-        cnDateStr = response.data.data[0].CN_CN_DATE;
-        cnDateCache.set(cnNo, cnDateStr); // Cache the result
-      } catch (error) {
-        dateValidationResults.push({
-          row: index + 2,
-          cnNo,
-          error: `Failed to fetch CN Date for CN No ${cnNo}: ${
-            error.response?.data?.msg || error.message
-          }`,
-        });
-        dateValidationFailed = true;
-        continue;
+  
+        let cnDateStr;
+  
+        // Check table data first
+        if (existingCnData.has(cnNo)) {
+          cnDateStr = existingCnData.get(cnNo);
+        } else if (cnDateCache.has(cnNo)) {
+          // Check cache
+          cnDateStr = cnDateCache.get(cnNo);
+        } else {
+          // Fetch from API
+          try {
+            const payload = {
+              page: 1,
+              limit: 1,
+              FROMDATE: "",
+              TODATE: "",
+              CNNO: cnNo,
+              USER_ID,
+            };
+  
+            const response = await axios.post(
+              "https://vmsnode.omlogistics.co.in/api/lrDetails",
+              payload,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+  
+            if (response.data.data.length === 0) {
+              dateValidationResults.push({
+                row: index + 2,
+                cnNo,
+                errors: `No data found for CN No ${cnNo}`,
+              });
+              dateValidationFailed = true;
+              continue;
+            }
+  
+            cnDateStr = response.data.data[0].CN_CN_DATE;
+            cnDateCache.set(cnNo, cnDateStr); // Cache the result
+          } catch (error) {
+            dateValidationResults.push({
+              row: index + 2,
+              cnNo,
+              errors: `Failed to fetch CN Date for CN No ${cnNo}: ${
+                error.response?.data?.msg || error.message
+              }`,
+            });
+            dateValidationFailed = true;
+            continue;
+          }
+        }
+  
+        const cnDate = new Date(cnDateStr);
+  
+        if (isNaN(cnDate.getTime())) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo,
+            errors: `Invalid CN Date for CN No ${cnNo}`,
+          });
+          dateValidationFailed = true;
+          continue;
+        }
+  
+        if (cnDate < from || cnDate > to) {
+          dateValidationResults.push({
+            row: index + 2,
+            cnNo,
+            errors: `CN Date (${cnDate.toDateString()}) is not between (${from.toDateString()}) and (${to.toDateString()
+            })`,
+          });
+          dateValidationFailed = true;
+        }
       }
-    }
-
-    const cnDate = new Date(cnDateStr);
-
-    if (isNaN(cnDate.getTime())) {
-      dateValidationResults.push({
-        row: index + 2,
-        cnNo,
-        error: `Invalid CN Date for CN No ${cnNo} :${
-            error.response?.data?.msg || error.message}`,
-      });
-      dateValidationFailed = true;
-      continue;
-    }
-
-    if (cnDate < from || cnDate > to) {
-      dateValidationResults.push({
-        row: index + 2,
-        cnNo,
-        error: `CN Date (${cnDate.toLocaleDateString()}) is not between ${fromDate} and ${toDate}`,
-      });
-      dateValidationFailed = true;
-    }
-  }
-}
-
-if (dateValidationFailed) {
-  setUploadResults({
-    total: data.length,
-    invalid: dateValidationResults,
-    valid: 0,
-    added: 0,
-    updated: 0,
-    failed: data.length,
-    errors: [
-      {
-        cnNo: "Multiple",
-        message: "Date validation failed",
-        operation: "validation",
-      },
-    ],
-  });
-
-  toast.error(
-    "CN Date validation failed. Please check the CN Nos and dates.",
-    {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      theme: "colored",
-    }
-  );
-  return;
-}
-
+  
+      if (dateValidationFailed) {
+        setUploadResults({
+          total: data.length,
+          invalid: dateValidationResults,
+          valid: 0,
+          added: 0,
+          updated: 0,
+          failed: data.length,
+          errors: [
+            {
+              cnNo: "Multiple",
+              message: "Date validation failed",
+              operation: "validation",
+            },
+          ],
+        });
+  
+        toast.error(
+          "CN Date validation failed. Please check the CN No and cndates.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          }
+        );
+        return;
+      }
+  
       const processedData = data.map((row) => {
         const kilometer = parseFloat(row["Kilometer"]) || 0;
         const rate = parseFloat(row["Rate (per Km)"]) || 0;
         const freight = kilometer * rate;
-
+  
         const expenses = [
           freight,
           parseFloat(row["Union/Km"]) || 0,
@@ -899,7 +948,7 @@ if (dateValidationFailed) {
           parseFloat(row["Packing Expense"]) || 0,
         ];
         const totalAmount = expenses.reduce((sum, val) => sum + val, 0);
-
+  
         return {
           CN_CN_NO: row["CN No"],
           FLOOR: row["Floor"] || "",
@@ -926,13 +975,13 @@ if (dateValidationFailed) {
           PACKING_EXPENSE: parseFloat(row["Packing Expense"]) || 0,
           TOTAL_AMOUNT: totalAmount,
           REMARKS: row["Remarks"] || "",
-          CNTODATE: toDate,
-          CNFROMDATE: fromDate,
+          CNTODATE: BulktoDate,
+          CNFROMDATE: BulkfromDate,
           ENTERED_BY: USER_ID,
           MODIFIED_BY: USER_ID,
         };
       });
-
+  
       const validationResults = data.map((row, index) => {
         const errors = [];
         if (!row["CN No"]) errors.push("CN No is required");
@@ -948,7 +997,7 @@ if (dateValidationFailed) {
           errors.push("Latitude is required");
         if (!row["Longitude"] && row["Longitude"] !== 0)
           errors.push("Longitude is required");
-
+  
         const numericFields = [
           "Kilometer",
           "Rate (per Km)",
@@ -975,7 +1024,7 @@ if (dateValidationFailed) {
             errors.push(`${field.replace(/_/g, " ")} must be a valid number`);
           }
         });
-
+  
         return {
           row: index + 2,
           cnNo: row["CN No"],
@@ -983,7 +1032,7 @@ if (dateValidationFailed) {
           errors: errors.length > 0 ? errors.join(", ") : null,
         };
       });
-
+  
       const invalidRows = validationResults.filter((item) => !item.isValid);
       if (invalidRows.length > 0) {
         setUploadResults({
@@ -997,14 +1046,14 @@ if (dateValidationFailed) {
         });
         return;
       }
-
+  
       const results = {
         added: 0,
         updated: 0,
         failed: 0,
         errors: [],
       };
-
+  
       try {
         const addResponse = await axios.post(
           "https://vmsnode.omlogistics.co.in/api/addExpenses",
@@ -1016,7 +1065,7 @@ if (dateValidationFailed) {
             },
           }
         );
-
+  
         if (addResponse.data.error === false) {
           results.added += processedData.length;
         } else {
@@ -1049,12 +1098,12 @@ if (dateValidationFailed) {
               toll_tax: item.TOLL_TAX,
               packing_expense: item.PACKING_EXPENSE,
               total_amount: item.TOTAL_AMOUNT,
-              cntodate: toDate,
-              cnfromdate: fromDate,
+              cntodate: BulktoDate,
+              cnfromdate: BulkfromDate,
               remarks: item.REMARKS,
               modified_by: item.MODIFIED_BY,
             }));
-
+  
             try {
               const updateResponse = await axios.post(
                 "https://vmsnode.omlogistics.co.in/api/updateExpenses",
@@ -1066,15 +1115,14 @@ if (dateValidationFailed) {
                   },
                 }
               );
-
+  
               if (updateResponse.data.error === false) {
                 results.updated += processedData.length;
               } else {
                 results.failed += processedData.length;
                 results.errors.push({
                   cnNo: "Multiple",
-                  message:
-                    updateResponse.data.msg || "Failed to update expenses",
+                  message: updateResponse.data.msg || "Failed to update expenses",
                   operation: "update",
                 });
               }
@@ -1129,12 +1177,12 @@ if (dateValidationFailed) {
             toll_tax: item.TOLL_TAX,
             packing_expense: item.PACKING_EXPENSE,
             total_amount: item.TOTAL_AMOUNT,
-            cntodate: toDate,
-            cnfromdate: fromDate,
+            cntodate: BulktoDate,
+            cnfromdate: BulkfromDate,
             remarks: item.REMARKS,
             modified_by: item.MODIFIED_BY,
           }));
-
+  
           try {
             const updateResponse = await axios.post(
               "https://vmsnode.omlogistics.co.in/api/updateExpenses",
@@ -1146,7 +1194,7 @@ if (dateValidationFailed) {
                 },
               }
             );
-
+  
             if (updateResponse.data.error === false) {
               results.updated += processedData.length;
             } else {
@@ -1180,7 +1228,7 @@ if (dateValidationFailed) {
           });
         }
       }
-
+  
       setUploadResults({
         total: processedData.length,
         invalid: [],
@@ -1191,7 +1239,7 @@ if (dateValidationFailed) {
         errors: results.errors,
       });
       setUploadProgress(100);
-
+  
       if (results.added > 0) {
         toast.success(`${results.added} records added successfully`, {
           position: "top-right",
@@ -1225,7 +1273,7 @@ if (dateValidationFailed) {
           theme: "colored",
         });
       }
-
+  
       fetchLrDetailsData();
     } catch (error) {
       toast.error(
@@ -2295,23 +2343,23 @@ if (dateValidationFailed) {
             <div className="mb-4 flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  From Date
+                  From Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
+                  value={BulkfromDate}
+                  onChange={(e) => setBulkFromDate(e.target.value)}
                   className="w-full border border-gray-300 rounded-md p-2 text-sm"
                 />
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  To Date
+                  To Date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
+                  value={BulktoDate}
+                  onChange={(e) => setBulkToDate(e.target.value)}
                   className="w-full border border-gray-300 rounded-md p-2 text-sm"
                 />
               </div>
