@@ -774,7 +774,7 @@ const dateto = dateonly2.split('T')[0];
 
 
       const dateresponse = await axios.get(
-        "http://localhost:3001/api/checkDateExist",
+        "https://vmsnode.omlogistics.co.in/api/checkDateExist",
         
         {
           headers: {
