@@ -6,6 +6,7 @@ import { CustomTable } from "../Ui/CustomTable";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Papa from "papaparse";
 
 const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const marginClass = isNavbarCollapsed ? "ml-16" : "ml-66";
@@ -25,6 +26,9 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
   const [rawData, setRawData] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [modalFile, setModalFile] = useState(null);
+  const [selectedAnnexureNo, setSelectedAnnexureNo] = useState("");
+  const [checkResults, setCheckResults] = useState([]); // New state for check results
   const token = getToken();
   const decodedToken = jwtDecode(token);
   const USER_ID = decodedToken.id;
@@ -33,7 +37,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     BRANCH_WEIGHT: "",
     BRANCH_LOCATIONS: "",
     BRANCH_FLOOR: "",
-    BRANCH_ITEM_DESCRIPTION: "",
     BRANCH_KM: "",
     BRANCH_LATITUDE: "",
     BRANCH_LONGITUDE: "",
@@ -42,6 +45,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     BRANCH_CRANE: "",
     BRANCH_HYDRA: "",
     BRANCH_CHAIN_PULLING: "",
+    BRANCH_HKMINPUT: "",
     BRANCH_HKM: "",
     BRANCH_LABOUR_EXPENSES: "",
     BRANCH_OTHER_EXPENSES: "",
@@ -148,6 +152,307 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     setPage(page);
   };
 
+  // Handle file selection for modal bulk upload
+  const handleModalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && (selectedFile.type === "text/csv" || selectedFile.type.includes("excel"))) {
+      setModalFile(selectedFile);
+    } else {
+      toast.error("Please upload a valid CSV or Excel file.");
+    }
+  };
+
+//handle data array
+
+
+
+
+const checkRecordExists = (cnNo) => {
+  let obj = {};
+  
+  // Flatten CN_NO values from data into obj
+  data.forEach(i => {
+    i.items.forEach(item => {
+      obj[item.CN_NO] = true;
+    });
+  });
+
+  // Check each cnNo value
+  for (let i = 0; i < cnNo.length; i++) {
+    const currentCN = cnNo[i];
+
+    if (currentCN === undefined || currentCN === null || currentCN === "") {
+      return toast.error("Please upload a CN");
+    }
+
+    if (!obj[currentCN]) {
+      return false; // CN_NO not found in data
+    }
+  }
+
+  return true; // All CN_NO values exist
+};
+
+
+  // Handle bulk upload with strict annexure validation
+  const handleBulkUpload = async (fileToUpload, annexureNo) => {
+    if (!fileToUpload) {
+      toast.error("Please select a file to upload.");
+      return;
+    }
+  
+    setLoading(true);
+  
+    try {
+      Papa.parse(fileToUpload, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (result) => {
+          console.log("Parsed CSV Data:", result.data);
+  
+          // Validate parsed data
+          if (!result.data || result.data.length === 0) {
+            toast.error("No valid records found in the CSV file.");
+            setLoading(false);
+            return;
+          }
+          for(let i=0; i<result.data.length; i++){ 
+            result.data[i]["ANNEXURE_NO"] = selectedAnnexureNo; 
+          
+           }
+  
+          // Filter records with matching ANNEXURE_NO
+          const validRecords = result.data.filter(
+            (row) => row.ANNEXURE_NO && row.ANNEXURE_NO === annexureNo
+          );
+          console.log("Valid Records:", validRecords);
+  
+          if (validRecords.length === 0) {
+            toast.error("No records match the selected annexure number.");
+            setLoading(false);
+            return;
+          }
+  
+          if (validRecords.length < result.data.length) {
+            toast.warn(
+              `${result.data.length - validRecords.length} records skipped due to incorrect ANNEXURE_NO.`
+            );
+          }
+  
+          // Extract CN numbers for validation
+          const cnNumbers = validRecords.map((row) => row.CN_NO);
+          console.log("CN Numbers:", cnNumbers);
+  
+          // Validate CN numbers with annexure
+          try {
+            await checkMultipleCnWithAnnexure(cnNumbers, annexureNo);
+          } catch (error) {
+            console.error("Error in checkMultipleCnWithAnnexure:", error);
+            toast.error("Error validating CN numbers: " + error.message);
+            setLoading(false);
+            return;
+          }
+  
+          // Map valid records to API-compatible format
+          const parsedData = validRecords.map((row) => ({
+            CN_NO: row.CN_NO || "",
+            VENDOR_CODE: row.VENDOR_CODE || "",
+            BRANCH_WEIGHT: row.BRANCH_WEIGHT || "",
+            BRANCH_LOCATIONS: row.BRANCH_LOCATIONS || "",
+            BRANCH_FLOOR: row.BRANCH_FLOOR || "",
+            BRANCH_KM: row.BRANCH_KM || "",
+            BRANCH_LATITUDE: row.BRANCH_LATITUDE || "",
+            BRANCH_LONGITUDE: row.BRANCH_LONGITUDE || "",
+            BRANCH_FLAG: row.BRANCH_FLAG || "Y",
+            BRANCH_REMARKS: row.BRANCH_REMARKS || "",
+            BRANCH_CRANE: row.BRANCH_CRANE || "",
+            BRANCH_HYDRA: row.BRANCH_HYDRA || "",
+            BRANCH_CHAIN_PULLING: row.BRANCH_CHAIN_PULLING || "",
+            BRANCH_HKMINPUT: row.BRANCH_HKMINPUT || "",
+            BRANCH_HKM: row.BRANCH_HKM || "",
+            BRANCH_LABOUR_EXPENSES: row.BRANCH_LABOUR_EXPENSES || "",
+            BRANCH_OTHER_EXPENSES: row.BRANCH_OTHER_EXPENSES || "",
+            BRANCH_SPECIAL_VEHICLE: row.BRANCH_SPECIAL_VEHICLE || "",
+            BRANCH_ENTERED_BY: USER_ID,
+            BRANCH_MODIFIED_BY: USER_ID,
+            ANNEXURE_NO: selectedAnnexureNo,
+          }));
+          console.log("Parsed Data for API:", parsedData);
+  
+          // Process each record (insert or update)
+          const promises = parsedData.map(async (row) => {
+            try {
+              const AllCN = [];
+              AllCN.push(row.CN_NO)
+              const recordExists = await checkRecordExists(AllCN);
+              console.log(recordExists, "Record exists for CN_NO:", row.CN_NO);
+              const apiUrl = recordExists
+                ? "https://vmsnode.omlogistics.co.in/api/updateBillVerification"
+                : "https://vmsnode.omlogistics.co.in/api/insertBillVerification";
+  
+              console.log(`Sending request for CN_NO ${row.CN_NO} to ${apiUrl}:`, row);
+  
+              const response = await axios.post(apiUrl, parsedData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              });
+  
+              console.log(`Response for CN_NO ${row.CN_NO}:`, response.data);
+  
+              if (response.data.error) {
+                throw new Error(response.data.msg || "Unknown error");
+              }
+  
+              return {
+                success: true,
+                row,
+                message: recordExists ? "Updated" : "Inserted",
+              };
+            } catch (error) {
+              console.error("Error processing CN_NO ", error);
+              return {
+                success: false,
+                row,
+                message: error.message || "Failed to process record",
+              };
+            }
+          });
+  
+          const results = await Promise.all(promises);
+          console.log("API Results:", results);
+  
+          const successes = results.filter((r) => r.success);
+          const failures = results.filter((r) => !r.success);
+  
+          if (successes.length > 0) {
+            toast.success(
+              `${successes.length} records processed successfully for annexure ${annexureNo}!`
+            );
+            await fetchAnnexureDetails();
+            setModalFile(null);
+            setModalOpen(false);
+          }
+  
+          if (failures.length > 0) {
+            failures.forEach((f) => {
+              toast.error(`Failed to process CN_NO ${f.row.CN_NO}: ${f.message}`);
+            });
+          }
+        },
+        error: (error) => {
+          console.error("Papa Parse Error:", error);
+          toast.error("Error parsing file: " + error.message);
+          setLoading(false);
+        },
+      });
+    } catch (error) {
+      console.error("Error uploading bulk data:", error);
+      if (error.response?.status === 403) {
+        setError("Session expired. Please log in again.");
+        window.location.href = "/login";
+      } else {
+        toast.error(error.response?.data?.message || "An error occurred while uploading data.");
+      }
+      setLoading(false);
+    }
+  };
+
+  // Download sample CSV
+  const downloadSampleCSV = () => {
+    const headers = [
+      "CN_NO",
+      "VENDOR_CODE",
+      "BRANCH_WEIGHT",
+      "BRANCH_LOCATIONS",
+      "BRANCH_FLOOR",
+      "BRANCH_KM",
+      "BRANCH_LATITUDE",
+      "BRANCH_LONGITUDE",
+      "BRANCH_REMARKS",
+      "BRANCH_FLAG",
+      "BRANCH_CRANE",
+      "BRANCH_HYDRA",
+      "BRANCH_CHAIN_PULLING",
+      "BRANCH_HKMINPUT",
+      "BRANCH_HKM",
+      "BRANCH_LABOUR_EXPENSES",
+      "BRANCH_OTHER_EXPENSES",
+      "BRANCH_SPECIAL_VEHICLE",
+    ];
+    const sampleRow = [
+      "12345",
+      "VC001",
+      "500",
+      "Location1",
+      "2",
+      "10",
+      "12.34",
+      "56.78",
+      "Remark",
+      "Y",
+      "Y",
+      "Y",
+      "Y",
+      "5",
+      "Y",
+      "Y",
+      "Y",
+      "Y",
+    ];
+    const csvContent = [
+      headers.join(","),
+      sampleRow.join(","),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.setAttribute("href", URL.createObjectURL(blob));
+    link.setAttribute("download", `sample_lr_data_${selectedAnnexureNo}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Function to check multiple CN_NO against a specific ANNEXURE_NO
+  const checkMultipleCnWithAnnexure = (cnNos, annexureNo) => {
+    const results = [];
+    
+    // Iterate through each CN_NO
+    for (const cnNo of cnNos) {
+      // Find the record with the given CN_NO in rawData
+      const record = rawData.find(item => item.CN_NO === cnNo);
+      if (!record) {
+        results.push({
+          CN_NO: cnNo,
+          ANNEXURE_NO: null,
+          STATUS: false,
+          MESSAGE: `CN_NO ${cnNo} not found in the dataset.`,
+        });
+      } else if (record.ANNEXURE_NO === annexureNo) {
+        results.push({
+          CN_NO: cnNo,
+          ANNEXURE_NO: annexureNo,
+          STATUS: true,
+          MESSAGE: `CN_NO ${cnNo} is associated with ANNEXURE_NO ${annexureNo}.`,
+          ...record // Include all fields from the record to match response.data.data structure
+        });
+      } else {
+        results.push({
+          CN_NO: cnNo,
+          ANNEXURE_NO: record.ANNEXURE_NO,
+          STATUS: false,
+          MESSAGE: `CN_NO ${cnNo} is associated with ANNEXURE_NO ${record.ANNEXURE_NO}, not ${annexureNo}.`,
+          ...record // Include all fields from the record to match response.data.data structure
+        });
+      }
+    }
+    
+    return { data: results }; // Wrap results in a 'data' object to mimic API response structure
+  };
+
+
   const columns = [
     {
       name: "Row No",
@@ -210,12 +515,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       wrap: true,
     },
     {
-      name: "Item",
-      selector: (row) => row.ITEM_DESCRIPTION || "-",
-      sortable: true,
-      wrap: true,
-    },
-    {
       name: "KM",
       selector: (row) => row.KILOMETER || "-",
       sortable: true,
@@ -243,9 +542,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
       name: "Verify",
       selector: (row) => {
         if (row.BRANCH_FLAG === "Y") {
-          return (
-            <span className="font-bold">✅</span>
-          );
+          return <span className="font-bold">✅</span>;
         }
         return "❌";
       },
@@ -265,7 +562,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
               BRANCH_WEIGHT: row.BRANCH_WEIGHT || "",
               BRANCH_LOCATIONS: row.BRANCH_LOCATIONS || "",
               BRANCH_FLOOR: row.BRANCH_FLOOR || "",
-              BRANCH_ITEM_DESCRIPTION: row.BRANCH_ITEM_DESCRIPTION|| "",
               BRANCH_KM: row.BRANCH_KM || "",
               BRANCH_LATITUDE: row.BRANCH_LATITUDE || "",
               BRANCH_LONGITUDE: row.BRANCH_LONGITUDE || "",
@@ -275,6 +571,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
               BRANCH_HYDRA: row.BRANCH_HYDRA || "",
               BRANCH_CHAIN_PULLING: row.BRANCH_CHAIN_PULLING || "",
               BRANCH_HKM: row.BRANCH_HKM || "",
+              BRANCH_HKMINPUT: row.BRANCH_HKMINPUT || "",
               BRANCH_LABOUR_EXPENSES: row.BRANCH_LABOUR_EXPENSES || "",
               BRANCH_OTHER_EXPENSES: row.BRANCH_OTHER_EXPENSES || "",
               BRANCH_SPECIAL_VEHICLE: row.BRANCH_SPECIAL_VEHICLE || "",
@@ -296,6 +593,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
   const handleRowClick = (row) => {
     setFilteredData(row.items);
+    setSelectedAnnexureNo(row.ANNEXURE_NO);
     setModalOpen(true);
   };
 
@@ -307,31 +605,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
     }));
   };
 
-  const checkRecordExists = async (cnNo) => {
-    try {
-      const response = await axios.post(
-        "https://vmsnode.omlogistics.co.in/api/checkBillVerification",
-        { CN_NO: cnNo },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return !response.data.error;
-    } catch (error) {
-      console.error("Error checking record existence:", error);
-      if (error.response?.status === 403) {
-        setError("Session expired. Please log in again.");
-        window.location.href = "/login";
-      } else {
-        setError(error.response?.data?.message || "An error occurred while fetching data.");
-      }
-      return false;
-    }
-  };
-
   const handleSave = async () => {
     if (!selectedRow?.ANNEXURE_NO) {
       toast.error("Annexure Number is missing for this CN_NO.");
@@ -340,12 +613,14 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
 
     let recordExists = false;
     try {
-      recordExists = await checkRecordExists(editFormData.CN_NO);
+      const AllCN1 = [];
+      AllCN1.push(editFormData.CN_NO)
+      recordExists = await checkRecordExists(AllCN1);
+      console.log(recordExists, "Record exists for CN_NO:", editFormData.CN_NO);
       const apiUrl = recordExists
         ? "https://vmsnode.omlogistics.co.in/api/updateBillVerification"
         : "https://vmsnode.omlogistics.co.in/api/insertBillVerification";
 
-      // Merge editFormData with selectedRow to include all fields (changed or unchanged)
       const payload = {
         CN_NO: editFormData.CN_NO || selectedRow.CN_NO || "",
         ANNEXURE_NO: selectedRow.ANNEXURE_NO || "",
@@ -353,15 +628,15 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         BRANCH_WEIGHT: editFormData.BRANCH_WEIGHT || selectedRow.TOTAL_WEIGHT || "",
         BRANCH_LOCATIONS: editFormData.BRANCH_LOCATIONS || selectedRow.LOCATIONS || "",
         BRANCH_FLOOR: editFormData.BRANCH_FLOOR || selectedRow.FLOOR || "",
-        BRANCH_ITEM_DESCRIPTION: editFormData.BRANCH_ITEM_DESCRIPTION || selectedRow.ITEM_DESCRIPTION || "",
         BRANCH_KM: editFormData.BRANCH_KM || selectedRow.KILOMETER || "",
         BRANCH_LATITUDE: editFormData.BRANCH_LATITUDE || selectedRow.LATITUDE || "",
         BRANCH_LONGITUDE: editFormData.BRANCH_LONGITUDE || selectedRow.LONGITUDE || "",
-        BRANCH_FLAG: editFormData.BRANCH_FLAG || selectedRow.BRANCH_Flag || "Y",
+        BRANCH_FLAG: editFormData.BRANCH_FLAG || selectedRow.BRANCH_FLAG || "Y",
         BRANCH_REMARKS: editFormData.BRANCH_REMARKS || selectedRow.BRANCH_REMARKS || "",
         BRANCH_CRANE: editFormData.BRANCH_CRANE || selectedRow.BRANCH_CRANE || "",
         BRANCH_HYDRA: editFormData.BRANCH_HYDRA || selectedRow.BRANCH_HYDRA || "",
         BRANCH_CHAIN_PULLING: editFormData.BRANCH_CHAIN_PULLING || selectedRow.BRANCH_CHAIN_PULLING || "",
+        BRANCH_HKMINPUT: editFormData.BRANCH_HKMINPUT || selectedRow.HEADLOAD_KM || "",
         BRANCH_HKM: editFormData.BRANCH_HKM || selectedRow.BRANCH_HKM || "",
         BRANCH_LABOUR_EXPENSES: editFormData.BRANCH_LABOUR_EXPENSES || selectedRow.BRANCH_LABOUR_EXPENSES || "",
         BRANCH_OTHER_EXPENSES: editFormData.BRANCH_OTHER_EXPENSES || selectedRow.BRANCH_OTHER_EXPENSES || "",
@@ -464,6 +739,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             </button>
           </div>
         </div>
+
       </div>
 
       {loading && (
@@ -490,42 +766,132 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
         </>
       )}
 
+      {/* Display check results */}
+      {checkResults.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold mb-2">CN Number Check Results</h2>
+          <DataTable
+            columns={[
+              {
+                name: "CN Number",
+                selector: (row) => row.CN_NO,
+                sortable: true,
+                wrap: true,
+              },
+              {
+                name: "Annexure No.",
+                selector: (row) => row.ANNEXURE_NO || "-",
+                sortable: true,
+                wrap: true,
+              },
+              {
+                name: "Status",
+                selector: (row) => (row.STATUS ? "✅ Matched" : "❌ Not Matched"),
+                sortable: true,
+                wrap: true,
+              },
+              {
+                name: "Message",
+                selector: (row) => row.MESSAGE,
+                sortable: true,
+                wrap: true,
+              },
+              {
+                name: "Total Weight",
+                selector: (row) => row.TOTAL_WEIGHT || "-",
+                sortable: true,
+                wrap: true,
+              },
+
+            ]}
+            data={checkResults}
+            highlightOnHover
+            responsive
+            customStyles={{
+              headRow: {
+                style: {
+                  fontSize: "13px",
+                },
+              },
+            }}
+          />
+        </div>
+      )}
+
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={() => {
             setFilteredData(data);
             setModalOpen(false);
+            setModalFile(null);
+            setSelectedAnnexureNo("");
           }}
         >
           <div
-            className="rounded-lg overflow-hidden w-full m-2 max-w-5xl overflow-y-auto shadow-lg relative"
+            className="bg-white rounded-lg overflow-hidden w-full m-2 max-w-5xl overflow-y-auto shadow-lg relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="overflow-x-auto max-w-10xl mx-auto shadow-xl">
-              <DataTable
-                columns={modalColumns}
-                data={filteredData}
-                pagination
-                paginationServer
-                paginationTotalRows={filteredData.length}
-                paginationPerPage={limit}
-                paginationDefaultPage={page}
-                paginationRowsPerPageOptions={rowPerPageOptions}
-                onChangePage={handlePageChange}
-                onChangeRowsPerPage={handleRowsPerPageChange}
-                highlightOnHover
-                responsive
-                customStyles={{
-                  headRow: {
-                    style: {
-                      fontSize: "13px",
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">
+                  LR Details for Annexure {selectedAnnexureNo}
+                </h2>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <label
+                      htmlFor="modalFileUpload"
+                      className="block text-xs font-medium text-gray-700 mb-1"
+                    >
+                      Upload CSV for Annexure {selectedAnnexureNo}
+                    </label>
+                    <input
+                      id="modalFileUpload"
+                      type="file"
+                      accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
+                      onChange={handleModalFileChange}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleBulkUpload(modalFile, selectedAnnexureNo)}
+                    className="px-4 py-2 bg-[#01588E] text-white rounded-lg font-semibold hover:bg-[#014a73] transition-colors mt-6"
+                  >
+                    Upload
+                  </button>
+                  <button
+                    onClick={downloadSampleCSV}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors mt-6"
+                  >
+                    Download Sample CSV
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto max-w-10xl mx-auto shadow-xl">
+                <DataTable
+                  columns={modalColumns}
+                  data={filteredData}
+                  pagination
+                  paginationServer
+                  paginationTotalRows={filteredData.length}
+                  paginationPerPage={limit}
+                  paginationDefaultPage={page}
+                  paginationRowsPerPageOptions={rowPerPageOptions}
+                  onChangePage={handlePageChange}
+                  onChangeRowsPerPage={handleRowsPerPageChange}
+                  highlightOnHover
+                  responsive
+                  customStyles={{
+                    headRow: {
+                      style: {
+                        fontSize: "13px",
+                      },
                     },
-                  },
-                }}
-                fixedHeader
-                fixedHeaderScrollHeight="70vh"
-              />
+                  }}
+                  fixedHeader
+                  fixedHeaderScrollHeight="70vh"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -588,17 +954,6 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item Description (Original)
-                  </label>
-                  <input
-                    type="text"
-                    className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
-                    value={selectedRow.ITEM_DESCRIPTION || ""}
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     KM (Original)
                   </label>
                   <input
@@ -627,6 +982,17 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     type="text"
                     className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
                     value={selectedRow.LONGITUDE || ""}
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Headload KM (Original)
+                  </label>
+                  <input
+                    type="text"
+                    className="p-2 border border-gray-300 rounded-lg w-full bg-gray-100"
+                    value={selectedRow.HEADLOAD_KM || ""}
                     disabled
                   />
                 </div>
@@ -669,7 +1035,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      HKM
+                      Headload Expenses
                     </label>
                     <input
                       type="checkbox"
@@ -765,18 +1131,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                     onChange={handleInputChange}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Item Description
-                  </label>
-                  <input
-                    type="text"
-                    name="BRANCH_ITEM_DESCRIPTION"
-                    className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
-                    value={editFormData.BRANCH_ITEM_DESCRIPTION}
-                    onChange={handleInputChange}
-                  />
-                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     KM
@@ -784,7 +1139,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                   <input
                     type="text"
                     name="BRANCH_KM"
-                    className="p-2(border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
+                    className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
                     value={editFormData.BRANCH_KM}
                     onChange={handleInputChange}
                   />
@@ -815,6 +1170,18 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Headload KM
+                  </label>
+                  <input
+                    type="text"
+                    name="BRANCH_HKMINPUT"
+                    className="p-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring focus:ring-blue-200"
+                    value={editFormData.BRANCH_HKMINPUT}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Remarks
                   </label>
                   <textarea
@@ -829,7 +1196,7 @@ const AnnextureDetails = ({ isNavbarCollapsed }) => {
             <div className="mt-6 flex justify-end space-x-2">
               <button
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
-                onClick={() => setEditModalOpen(false)}
+                onClick={() => setEdit-modalOpen(false)}
               >
                 Close
               </button>
