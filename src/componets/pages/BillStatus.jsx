@@ -317,7 +317,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3001/api/searchBillverification",
+        "https://vmsnode.omlogistics.co.in/api/searchBillverification",
         {
           page,
           limit,
@@ -727,8 +727,8 @@ const BillStatus = ({ isNavbarCollapsed }) => {
 
       const apiUrl =
         mode === "add"
-          ? "http://localhost:3001/api/billVerifyExpenses"
-          : "http://localhost:3001/api/updateBillVerifyExpenses";
+          ? "https://vmsnode.omlogistics.co.in/api/billVerifyExpenses"
+          : "https://vmsnode.omlogistics.co.in/api/updateBillVerifyExpenses";
 
       const response = await axios.post(apiUrl, payload, {
         headers: {
