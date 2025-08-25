@@ -318,7 +318,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     try {
       const response = await axios.post(
         "https://vmsnode.omlogistics.co.in/api/searchBillverification",
-        {
+        { 
           page,
           limit,
         },
