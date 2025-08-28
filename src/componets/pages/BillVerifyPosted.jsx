@@ -17,7 +17,7 @@ const BillVerifyPosted = () => {
     const fetchData = async () => {
       try {
         const res = await axios.post(
-          "http://localhost:3001/api/searchBillVerified",
+          "https://vmsnode.omlogistics.co.in/api/searchBillVerified",
           { page, limit },
           {
             headers: {
@@ -34,7 +34,7 @@ const BillVerifyPosted = () => {
         if (responseData.length > 0) {
             let generatedColumns = Object.keys(responseData[0]).map((key) => {
               const column = {
-                name: key.replace(/_/g, " "),
+                name: key.replace(/^BILL_/, "").replace(/_/g, " "),
                 selector: (row) =>
                   row[key] !== null && row[key] !== undefined
                     ? row[key].toString()
@@ -51,7 +51,7 @@ const BillVerifyPosted = () => {
                   >
                     {row[key] !== null && row[key] !== undefined
                       ? row[key].toString()
-                      : "N/A"}
+                      : "-"}
                   </button>
                 );
               } else {
@@ -59,7 +59,7 @@ const BillVerifyPosted = () => {
                   <div className="text-gray-800">
                     {row[key] !== null && row[key] !== undefined
                       ? row[key].toString()
-                      : "N/A"}
+                      : "-"}
                   </div>
                 );
               }
@@ -115,31 +115,42 @@ const BillVerifyPosted = () => {
     headRow: {
       style: {
         backgroundColor:"#01588E",
+        borderTopLeftRadius: "0.5rem",
+        borderTopRightRadius: "0.5rem",
+      },
+    },
+    headCells: {
+      style: {
         fontSize: "13px",
         fontWeight: "bold",
-        color: "#ffff", 
-        zIndex: 10,
-        padding: "15px", // Match padding
-        borderTopLeftRadius: "0.5rem",
-        borderTopRightRadius: "0.5rem"      },
+        color: "#fff",
+        padding: "15px",
+        whiteSpace: "normal",   // allow wrapping
+        wordBreak: "break-word", // break long text
+        textOverflow: "clip",   // remove "..."
+        overflow: "visible",
+        minWidth: "150px",
+        maxWidth: "250px",      // optional (prevents headers from stretching too much)
+      },
     },
     cells: {
       style: {
         fontSize: "12px",
-        color: "#374151", // Gray-700 for cell text
-        padding: "8px",
+        color: "#374151",
+        padding: "12px",
       },
     },
     table: {
       style: {
         zIndex: 10,
-        backgroundColor: "#ffffff", // White background for table
-        borderRadius: "0.5rem", // Rounded corners
+        backgroundColor: "#ffffff",
+        borderRadius: "0.5rem",
         boxShadow:
-          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", // Shadow-xl
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
       },
     },
   };
+  
 
   return (
     <div className="bg-gray-50 py-3 px-6 transition-all duration-300">
