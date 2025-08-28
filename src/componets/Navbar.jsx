@@ -26,7 +26,7 @@ const roleBasedMenuItems = {
     "dashboard", "assigned-vendor", "verify-expaness-of-cn", "bill-status", "cn-reports",
   ],
   "BILL VERIFY": [
-    "dashboard", "assigned-vendor", "verify-bill-for-posting", "bill-status", "cn-reports",
+    "dashboard", "assigned-vendor", "verify-bill-for-posting", "bill-status","approved-bills", "cn-reports",
   ],
   ACCOUNTS: [
     "dashboard", "posting-bill", "bill-status",
@@ -66,6 +66,12 @@ const lrBillingSubItems = [
     id: "bill-status",
     label: "Bill Status",
     path: "/bill-status",
+    icon: FileText,
+  },
+  {
+    id: "approved-bills",
+    label: "Approved Bills",
+    path: "/approved-bills",
     icon: FileText,
   },
   {

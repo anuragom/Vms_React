@@ -19,6 +19,7 @@ export const menuItems = [
   { id: 'lr-details', label: 'LR Details', icon: Activity, path: '/lr-details', roles: ['VENDOR', 'BRANCH'] },
   { id: 'cn-details', label: 'CN Details', icon: FileSpreadsheet, path: '/cn-details', roles: ['ADMIN'] },
   { id: 'bill-status', label: 'Bill Status', icon: Printer, path: '/bill-status', roles: ['ADMIN', 'VENDOR', 'BRANCH', 'CORDINATOR', 'BILL VERIFY', 'ACCOUNTS', 'AUDIT'] },
+  { id: 'approved-bills', label: 'Approved Bills', icon: Printer, path: '/approved-bills', roles: ['VENDOR', 'BILL VERIFY'] },
   { id: 'bill-generate-using-exel-upload', label: 'Bill Generate Using Excel Upload', icon: FileText, path: '/bill-generate-using-exel-upload', roles: ['VENDOR'] },
   { id: 'bill-noc', label: 'Bill NOC', icon: FileText, path: '/bill-noc', roles: ['VENDOR'] },
   { id: 'Generate-Annexure', label: 'Generate Annexure', icon: AlertTriangle, path: '/Generate-Annexure', roles: ['ADMIN', 'VENDOR', 'AUDIT'] },

@@ -35,6 +35,7 @@ import AnnexureDetails from "./componets/pages/AnnexureDetails";
 import { ToastContainer } from "react-toastify";
 import AllLr from "./componets/pages/AllLrdetails";
 import ApprovedBills from "./componets/pages/ApprovedBills";
+import BillVerifyPosted from "./componets/pages/BillVerifyPosted";
 
 // Layout Component
 const Layout = ({ children, isNavbarCollapsed, toggleNavbar }) => {
@@ -116,6 +117,10 @@ function App() {
           <Route
             path="/bill-status"
             element={<ProtectedRoute element={<BillStatus />} />}
+          />
+          <Route
+            path="/approved-bills"
+            element={<ProtectedRoute element={<BillVerifyPosted />} />}
           />
 
           <Route

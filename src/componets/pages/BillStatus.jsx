@@ -509,12 +509,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
   };
 
   const handleCnClick = (row) => {
-    console.log(
-      "Selected CN:",
-      typeof row.CN_NO,
-      "Bill Verification:",
-      row.billVerification ? typeof row.billVerification.BILL_CN_CN_NO : "null/undefined"
-    );
+
     setSelectedCnData(row);
     console.log("Selected CN Data:", row);
     setBranchModalOpen(true);
