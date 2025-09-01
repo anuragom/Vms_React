@@ -13,15 +13,15 @@ const BillVerifiedVendor = () => {
   const rowPerPageOptions = [10, 20, 30, 50];
 
   const token = getToken();
-  const enteredBy = getUserId();
+  const BILL_ENTERED_BY = getUserId();
   
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.post(
           "https://vmsnode.omlogistics.co.in/api/searchBillVerifiedOnVendor",
-          { page, limit,BILL_ENTERED_BY: enteredBy },
+          { page, limit, BILL_ENTERED_BY },
           {
             headers: {
               Authorization: `Bearer ${token}`,
