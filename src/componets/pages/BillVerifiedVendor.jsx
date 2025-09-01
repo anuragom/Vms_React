@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import axios from "axios";
-import { getToken } from "../../Auth/auth";
+import { getToken,getUserId } from "../../Auth/auth";
 
 
 const BillVerifiedVendor = () => {
@@ -13,13 +13,15 @@ const BillVerifiedVendor = () => {
   const rowPerPageOptions = [10, 20, 30, 50];
 
   const token = getToken();
+  const enteredBy = getUserId();
+  
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.post(
           "https://vmsnode.omlogistics.co.in/api/searchBillVerifiedOnVendor",
-          { page, limit },
+          { page, limit,BILL_ENTERED_BY: enteredBy },
           {
             headers: {
               Authorization: `Bearer ${token}`,
