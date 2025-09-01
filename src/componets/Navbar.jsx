@@ -17,10 +17,11 @@ const roleBasedMenuItems = {
   ],
   VENDOR: [
     "dashboard", "lr-details", "bill-generate-using-exel-upload", "bill-status", "bill-noc",
-     "reports", "process-billing", "posted-bill", "all-Lr", "bill-status"
+     "reports", "process-billing", "posted-bill", "all-Lr", "bill-status","approved-bills","assigned-vendor"
   ],
   BRANCH: [
-    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details" , "branch-verified"
+    "dashboard", "lr-details", "upload-lr-detail", "bill-status", "process-billing", "posted-bill", "annexure-details",
+     "branch-verified"
   ],
   CORDINATOR: [
     "dashboard", "assigned-vendor", "verify-expaness-of-cn", "bill-status", "cn-reports",
@@ -84,6 +85,12 @@ const lrBillingSubItems = [
     id: "branch-verified",
     label: "Approved Bills",
     path: "/branch-verified",
+    icon: FileText,
+  },
+  {
+    id: "assigned-vendor",
+    label: "Approved Bill by Bill Verifier",
+    path: "/assigned-vendor",
     icon: FileText,
   }
 ];

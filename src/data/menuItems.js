@@ -28,7 +28,7 @@ export const menuItems = [
   { id: 'cn-reports', label: 'CN Reports', icon: BarChart, path: '/cn-reports', roles: ['ADMIN', 'CORDINATOR', 'BILL VERIFY'] },
   { id: 'user-management', label: 'User Management', icon: Users, path: '/user-management', roles: ['ADMIN'] },
   { id: 'user-log', label: 'User Log', icon: Activity, path: '/user-log', roles: ['ADMIN'] },
-  { id: 'assigned-vendor', label: 'Assigned Vendor', icon: Users, path: '/assigned-vendor', roles: ['CORDINATOR', 'BILL VERIFY'] },
+  { id: 'assigned-vendor', label: 'Approved Bill by Bill Verifier', icon: Users, path: '/assigned-vendor', roles: ['CORDINATOR','VENDOR'] },
   { id: 'posted-bill', label: 'Posted Bill', icon: FileSpreadsheet, path: '/posted-bill', roles: ['AUDIT'] },
   { id: 'posting-bill', label: 'Posting Bill', icon: FileSpreadsheet, path: '/posting-bill', roles: ['ACCOUNTS'] },
   { id: 'verify-expaness-of-cn', label: 'Verify Expanses of CN', icon: FileSpreadsheet, path: '/verify-expance-of-cn', roles: ['CORDINATOR'] },
@@ -37,5 +37,5 @@ export const menuItems = [
   { id: 'verify-bill-for-posting', label: 'Verify Bill For Posting', icon: FileSpreadsheet, path: '/verify-bill-for-posting', roles: ['BILL VERIFY'] },
   { id: 'annexure-details', label: 'Annexure Details', icon: FileSpreadsheet, path: '/annexure-details', roles: ['BRANCH'] },
   { id: 'all-Lr', label: 'All LR', icon: FileSpreadsheet, path: '/all-Lr', roles: ['VENDOR'] },
-  { id: 'branch-verified', label: 'Approved Bills', icon: FileSpreadsheet, path: '/branch-verified', roles: ['BRANCH'] }
+  { id: 'branch-verified', label: 'Approved Bills', icon: FileSpreadsheet, path: '/branch-verified', roles: ['BRANCH','VENDOR'] }
 ];

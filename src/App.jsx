@@ -28,7 +28,7 @@ import LrDetails from "./componets/pages/LrDetails";
 import BillGenerateUsingExlUpload from "./componets/pages/BillGenerateUsingExlUpload";
 import Reports from "./componets/pages/Reports";
 import BillNoc from "./componets/pages/BillNoc";
-import AssignedVendor from "./componets/pages/AssignedVendor";
+import BillVerifiedVendor from "./componets/pages/BillVerifiedVendor";
 import VerifyExpansesofCN from "./componets/pages/VerifyExpansesofCN";
 import PostedBill from "./componets/pages/PostedBill";
 import AnnexureDetails from "./componets/pages/AnnexureDetails";
@@ -190,7 +190,7 @@ function App() {
 
           <Route
             path="/assigned-vendor"
-            element={<ProtectedRoute element={<AssignedVendor />} />}
+            element={<ProtectedRoute element={<BillVerifiedVendor />} />}
           />
 
           <Route
