@@ -5,11 +5,10 @@ let userRole = null;
 let userId = null;  // Store User_id
 
 // Set user, token, role, and User_id after login
-export const setUser = (userData, userToken, role, ) => {
+export const setUser = (userData, userToken, role) => {
   user = userData;
   token = userToken;
   userRole = role;
-  userId = id;
 
   // Persist data in sessionStorage
   sessionStorage.setItem("user", JSON.stringify(userData));

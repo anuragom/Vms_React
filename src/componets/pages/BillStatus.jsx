@@ -30,6 +30,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
   const [formMode, setFormMode] = useState("add");
   const [formData, setFormData] = useState({
     CN_CN_NO: "",
+    VENDOR_CODE: "", // Added VENDOR_CODE to formData
     KILOMETER: "",
     MOMENT_TYPE: "",
     FLOOR: "",
@@ -75,7 +76,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
   // Updated validation function with extra validation logic
   const validateForm = (row) => {
     const errors = {};
-    const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
+    const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER", "VENDOR_CODE"]; // Added VENDOR_CODE to required fields
 
     // Validate Location if checkbox is checked
     if (showLocation) {
@@ -92,7 +93,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     requiredFields.forEach((field) => {
       if (!row[field] && row[field] !== 0) {
         errors[field] = `${field.replace(/_/g, " ")} is required`;
-      } else if (isNaN(parseFloat(row[field]))) {
+      } else if (field !== "VENDOR_CODE" && isNaN(parseFloat(row[field]))) {
         errors[field] = `${field.replace(/_/g, " ")} must be a valid number`;
       } else {
         // Additional validations for specific fields
@@ -195,12 +196,12 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     // Validate the field on change
     setFormErrors((prev) => {
       const errors = { ...prev };
-      const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER"];
+      const requiredFields = ["RATE", "LATITUDE", "LONGITUDE", "KILOMETER", "VENDOR_CODE"]; // Added VENDOR_CODE to required fields
 
       if (requiredFields.includes(field)) {
         if (!value && value !== 0) {
           errors[field] = `${field.replace(/_/g, " ")} is required`;
-        } else if (isNaN(parseFloat(value))) {
+        } else if (field !== "VENDOR_CODE" && isNaN(parseFloat(value))) {
           errors[field] = `${field.replace(/_/g, " ")} must be a valid number`;
         } else {
           // Additional validations for specific fields
@@ -478,6 +479,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     setFormModalOpen(false);
     setFormData({
       CN_CN_NO: "",
+      VENDOR_CODE: "", // Added VENDOR_CODE
       KILOMETER: "",
       MOMENT_TYPE: "",
       FLOOR: "",
@@ -509,7 +511,6 @@ const BillStatus = ({ isNavbarCollapsed }) => {
   };
 
   const handleCnClick = (row) => {
-
     setSelectedCnData(row);
     console.log("Selected CN Data:", row);
     setBranchModalOpen(true);
@@ -534,6 +535,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     setFormMode(billData ? "update" : "add");
     setFormData({
       CN_CN_NO: row.CN_NO || "",
+      VENDOR_CODE: row.VENDOR_CODE || "", // Set VENDOR_CODE from row
       KILOMETER: billData?.BILL_KILOMETER || "",
       MOMENT_TYPE: billData?.BILL_MOMENT_TYPE || "",
       FLOOR: billData?.BILL_FLOOR || "",
@@ -595,6 +597,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     console.log("getOtherModalData for CN:", row.CN_NO, "Bill Verification:", row.billVerification);
     const fieldMap = {
       CN_CN_NO: "CN No",
+      VENDOR_CODE: "Vendor Code", // Added VENDOR_CODE to other modal
       SITE_ID: "Site ID",
       KILOMETER: "Km",
       BILL_KILOMETER: "Bill Km",
@@ -667,7 +670,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     const errors = validateForm(formData);
     setFormErrors(errors);
 
-    const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE"];
+    const requiredFields = ["KILOMETER", "RATE", "LATITUDE", "LONGITUDE", "VENDOR_CODE"]; // Added VENDOR_CODE to required fields
     if (showLocation) {
       requiredFields.push("LOCATIONS");
     }
@@ -691,6 +694,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
     try {
       const payload = {
         BILL_CN_CN_NO: formData.CN_CN_NO,
+        BILL_VENDOR_CODE: formData.VENDOR_CODE, // Added VENDOR_CODE to payload
         BILL_KILOMETER: parseFloat(formData.KILOMETER) || 0,
         BILL_MOMENT_TYPE: formData.MOMENT_TYPE || "",
         BILL_FLOOR: formData.FLOOR || "",
@@ -748,6 +752,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
         setFormModalOpen(false);
         setFormData({
           CN_CN_NO: "",
+          VENDOR_CODE: "", // Added VENDOR_CODE
           KILOMETER: "",
           MOMENT_TYPE: "",
           FLOOR: "",
@@ -929,6 +934,7 @@ const BillStatus = ({ isNavbarCollapsed }) => {
             setFormModalOpen(false);
             setFormData({
               CN_CN_NO: "",
+              VENDOR_CODE: "", // Added VENDOR_CODE
               KILOMETER: "",
               MOMENT_TYPE: "",
               FLOOR: "",
@@ -1084,6 +1090,21 @@ const BillStatus = ({ isNavbarCollapsed }) => {
                       className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
                       readOnly
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Vendor Code <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="VENDOR_CODE"
+                      value={formData.VENDOR_CODE}
+                      className="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed"
+                      readOnly
+                    />
+                    {formErrors.VENDOR_CODE && (
+                      <p className="text-red-500 text-xs mt-1">{formErrors.VENDOR_CODE}</p>
+                    )}
                   </div>
                   <div className="mt-4">
                     <label className="flex items-center">

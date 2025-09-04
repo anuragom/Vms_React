@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import axios from "axios";
-import { getToken,getUserId } from "../../Auth/auth";
+import { getToken } from "../../Auth/auth";
+import { jwtDecode } from "jwt-decode";
+
 
 
 const BillVerifiedVendor = () => {
@@ -13,14 +15,15 @@ const BillVerifiedVendor = () => {
   const rowPerPageOptions = [10, 20, 30, 50];
 
   const token = getToken();
-  const BILL_ENTERED_BY = getUserId();
+  const decodedToken = jwtDecode(token);
+  const BILL_ENTERED_BY = decodedToken?.id;
   
   
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.post(
-          "https://vmsnode.omlogistics.co.in/api/searchBillVerifiedOnVendor",
+          "http://localhost:3001/api/searchBillVerifiedOnVendor",
           { page, limit, BILL_ENTERED_BY },
           {
             headers: {
